@@ -291,3 +291,10 @@ dialog button{min-height:44px}
 #match-save-exit{background:linear-gradient(150deg,#dcb373,#9b6c3a)!important;color:#28190f!important}
 #match-resign{border-color:#d9867e;background:#59302b}
 #match-menu-feedback{color:#f7d3a1;font-size:.78rem;line-height:1.4;margin:4px 0 10px}
+
+/* CH-01 SCR-20/21: no simulated rank, Elo, gems, or winnings. */
+.profile-stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.profile-stat-grid>div{min-height:88px;border:1px solid #957459;border-radius:13px;padding:14px;background:#241816}
+.profile-stat-grid strong{display:block;color:var(--ch-color-brand-gold);font-size:1.5rem;font-variant-numeric:tabular-nums}
+.profile-stat-grid small{display:block;color:var(--ch-color-brand-sand);font-size:.75rem;margin-top:3px}
+.stat-disclosure{font-size:.7rem;line-height:1.5;color:var(--ch-color-brand-sand);margin-bottom:0}
