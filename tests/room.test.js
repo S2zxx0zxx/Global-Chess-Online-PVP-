@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Room } from '../server/worker.js';
+import worker, { Room } from '../server/worker.js';
 
 test('invite is single-use and both seats recover the persisted match', async () => {
   const records = new Map();
@@ -56,4 +56,13 @@ test('room input limit is enforced before touching room storage', async () => {
   assert.equal(response.status,413);
   const malformed = await room.fetch(new Request('https://room/join',{method:'POST',body:'[]'}));
   assert.equal(malformed.status,400);
+});
+
+
+test('rejected room creation does not allocate a Durable Object', async () => {
+  const response = await worker.fetch(new Request('https://chess.test/api/rooms',{method:'POST'}),{
+    ROOM_CREATION_LIMIT:{limit:async () => ({success:false})},
+    ROOMS:{getByName() { throw new Error('Rate-limited request allocated a room'); }},
+  });
+  assert.equal(response.status,429);
 });

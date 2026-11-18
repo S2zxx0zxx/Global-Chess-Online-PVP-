@@ -38,6 +38,10 @@ export default {
   async fetch(request, env) {
     const path = new URL(request.url).pathname;
     if (path === '/api/rooms' && request.method === 'POST') {
+      const address = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+      if (env.ROOM_CREATION_LIMIT && !(await env.ROOM_CREATION_LIMIT.limit({key:address})).success) {
+        return json({error:'Too many rooms created. Try again shortly.'},429);
+      }
       const id = token();
       return env.ROOMS.getByName(id).fetch(new Request('https://room/create', {
         method: 'POST', body: JSON.stringify({id}),
