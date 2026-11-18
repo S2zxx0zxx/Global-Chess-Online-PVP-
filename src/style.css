@@ -25,3 +25,8 @@ dialog{border:1px solid #c59e65;border-radius:12px;background:#39212a}
 .time-control{display:grid;gap:6px;margin-bottom:12px;font-size:.87rem}
 .time-control select{font:inherit;padding:8px;border:1px solid #82604b;border-radius:8px;background:#39212a;color:#f7e7ce}
 #clocks{margin-top:12px;color:#f2ce8d;font-variant-numeric:tabular-nums;font-weight:700}
+#history-dialog{width:min(480px,94vw);max-height:90dvh}
+#history-list{display:grid;gap:6px;max-height:140px;overflow:auto}
+#replay-board span{display:grid;place-items:center;font-size:clamp(16px,6vw,36px);color:#241918;text-shadow:0 1px 1px #fff9}
+#replay button{margin-top:8px}
+#history-button,#claim{margin-top:8px;padding:7px;border:1px solid #82604b;border-radius:8px;background:#39212a;color:#f7e7ce}

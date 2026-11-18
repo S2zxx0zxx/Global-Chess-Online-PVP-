@@ -1,3 +1,5 @@
+import { Chess } from 'chess.js';
+import { readHistory, recordMatch } from './history.js';
 import { startClock, remainingClock } from './clock.js';
 import './style.css';
 import { restoreGame, serializeGame, result, claimableDraw } from './game.js';
@@ -119,7 +121,10 @@ function render(move) {
 
 function save() {
   try {
-    localStorage.setItem(key, serializeGame(state.game, state.mode, state.drawClaim, state.clock));
+    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock);
+    localStorage.setItem(key, snapshot);
+    const completed = outcome(state.game);
+    if (completed) recordMatch(localStorage, completed, snapshot);
     notice = '';
   } catch {
     notice = 'Storage unavailable. This match may not resume after closing.';
@@ -202,3 +207,57 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden && state.clock) save();
 });
 window.addEventListener('pagehide', () => { if (state.clock) save(); });
+
+
+const historyDialog = document.querySelector('#history-dialog');
+const historyList = document.querySelector('#history-list');
+const replaySection = document.querySelector('#replay');
+let timeline = [];
+let ply = 0;
+
+function showReplayPosition() {
+  const game = new Chess();
+  for (const move of timeline.slice(0, ply)) game.move(move);
+  document.querySelector('#replay-position').textContent = 'Move ' + ply + ' of ' + timeline.length;
+  document.querySelector('#previous').disabled = ply === 0;
+  document.querySelector('#next').disabled = ply === timeline.length;
+  document.querySelector('#replay-board').replaceChildren(...game.board().flat().map((piece, index) => {
+    const cell = document.createElement('span');
+    cell.className = (Math.floor(index / 8) + index % 8) % 2 ? 'dark' : 'light';
+    if (piece) {
+      cell.textContent = glyphs[piece.color]['kqrbnp'.indexOf(piece.type)];
+      cell.setAttribute('aria-label', piece.square + ' ' + (piece.color === 'w' ? 'White ' : 'Black ') + names[piece.type]);
+    }
+    return cell;
+  }));
+}
+
+document.querySelector('#previous').onclick = () => { if (ply > 0) ply--; showReplayPosition(); };
+document.querySelector('#next').onclick = () => { if (ply < timeline.length) ply++; showReplayPosition(); };
+document.querySelector('#history-button').onclick = () => {
+  replaySection.hidden = true;
+  historyList.replaceChildren();
+  try {
+    const entries = readHistory(localStorage);
+    if (!entries.length) historyList.textContent = 'No completed matches yet.';
+    for (const entry of entries) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = entry.outcome;
+      button.onclick = () => {
+        try {
+          timeline = restoreGame(entry.snapshot).game.history();
+          ply = 0;
+          replaySection.hidden = false;
+          showReplayPosition();
+        } catch {
+          button.textContent = 'Replay could not be loaded.';
+        }
+      };
+      historyList.append(button);
+    }
+  } catch {
+    historyList.textContent = 'Match history is unavailable.';
+  }
+  historyDialog.showModal();
+};
