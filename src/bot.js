@@ -6,14 +6,14 @@ function score(game) {
   return game.board().flat().reduce((total, piece) =>
     piece ? total + values[piece.type] * (piece.color === 'b' ? 1 : -1) : total, 0);
 }
-self.onmessage = ({data: {fen}}) => {
+self.onmessage = ({data: {fen, difficulty}}) => {
   const game = new Chess(fen);
   let best;
   let bestScore = -Infinity;
   for (const candidate of game.moves({verbose: true})) {
     game.move(candidate);
     let worst = score(game);
-    const replies = game.isGameOver() ? [] : game.moves({verbose: true});
+    const replies = difficulty === 'easy' || game.isGameOver() ? [] : game.moves({verbose: true});
     if (replies.length) worst = Infinity;
     for (const reply of replies) {
       game.move(reply);

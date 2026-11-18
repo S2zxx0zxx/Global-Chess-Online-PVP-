@@ -6,12 +6,14 @@ export function restoreGame(raw) {
   let mode = 'local';
   let drawClaim;
   let clock = null;
+  let difficulty = 'standard';
   if (raw) {
     const save = JSON.parse(raw);
     if (save.version !== 1 || !Array.isArray(save.moves) || !['local', 'computer'].includes(save.mode)) {
       throw new Error('Unsupported match save');
     }
     mode = save.mode;
+    if (save.difficulty === 'easy') difficulty = 'easy';
     if (save.clock !== undefined) {
       if (!validClock(save.clock)) throw new Error('Invalid saved clock');
       clock = save.clock;
@@ -25,12 +27,12 @@ export function restoreGame(raw) {
       drawClaim = save.drawClaim;
     }
   }
-  return { game, mode, drawClaim, clock };
+  return { game, mode, drawClaim, clock, difficulty };
 }
 
-export function serializeGame(game, mode, drawClaim, clock) {
+export function serializeGame(game, mode, drawClaim, clock, difficulty) {
   const moves = game.history({ verbose: true }).map(({from, to, promotion}) => ({from, to, promotion}));
-  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock });
+  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty });
 }
 
 export function result(game) {

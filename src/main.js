@@ -121,7 +121,7 @@ function render(move) {
 
 function save() {
   try {
-    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock);
+    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty);
     localStorage.setItem(key, snapshot);
     const completed = outcome(state.game);
     if (completed) recordMatch(localStorage, completed, snapshot);
@@ -156,7 +156,7 @@ function playComputer() {
   };
   job.onmessage = ({data}) => finish(data);
   job.onerror = () => finish();
-  job.postMessage({fen:game.fen()});
+  job.postMessage({fen:game.fen(), difficulty:state.difficulty});
 }
 
 async function selectSquare(square) {
@@ -184,7 +184,7 @@ for (const mode of ['local', 'computer']) {
     if (state.game.history().length && !outcome(state.game) && !confirm('Replace this match?')) return;
     worker?.terminate();
     worker = undefined;
-    state = {...restoreGame(), mode, clock: startClock(document.querySelector('#preset').value)};
+    state = {...restoreGame(), mode, difficulty: document.querySelector('#difficulty').value, clock: startClock(document.querySelector('#preset').value)};
     tickAt = performance.now();
     selected = undefined;
     save();
@@ -213,6 +213,7 @@ const historyDialog = document.querySelector('#history-dialog');
 const historyList = document.querySelector('#history-list');
 const replaySection = document.querySelector('#replay');
 let timeline = [];
+let replayPgn = '';
 let ply = 0;
 
 function showReplayPosition() {
@@ -246,7 +247,12 @@ document.querySelector('#history-button').onclick = () => {
       button.textContent = entry.outcome;
       button.onclick = () => {
         try {
-          timeline = restoreGame(entry.snapshot).game.history();
+          const restored = restoreGame(entry.snapshot);
+          const resultCode = entry.outcome.startsWith('White wins') ? '1-0' :
+            entry.outcome.startsWith('Black wins') ? '0-1' : '1/2-1/2';
+          restored.game.setHeader('Result', resultCode);
+          replayPgn = restored.game.pgn();
+          timeline = restored.game.history();
           ply = 0;
           replaySection.hidden = false;
           showReplayPosition();
@@ -260,4 +266,13 @@ document.querySelector('#history-button').onclick = () => {
     historyList.textContent = 'Match history is unavailable.';
   }
   historyDialog.showModal();
+};
+
+document.querySelector('#export-pgn').onclick = () => {
+  const url = URL.createObjectURL(new Blob([replayPgn], {type:'application/x-chess-pgn'}));
+  const download = document.createElement('a');
+  download.href = url;
+  download.download = 'global-chess-match.pgn';
+  download.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 };

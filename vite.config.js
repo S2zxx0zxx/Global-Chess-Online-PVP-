@@ -6,7 +6,7 @@ export default defineConfig({
     name: 'offline-game-shell',
     apply: 'build',
     generateBundle(_, bundle) {
-      const files = ['index.html', ...Object.keys(bundle).filter(file => file !== 'index.html')];
+      const files = ['index.html', 'manifest.webmanifest', 'icon.svg', ...Object.keys(bundle).filter(file => file !== 'index.html')];
       const revision = createHash('sha256').update(JSON.stringify(files)).digest('hex').slice(0,16);
       this.emitFile({
         type: 'asset',
