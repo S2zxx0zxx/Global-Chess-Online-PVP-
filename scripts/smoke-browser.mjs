@@ -165,6 +165,29 @@ try {
   await evaluate('document.querySelector("#profile-dialog form[method=dialog] button").click(); true');
   await evaluate('document.querySelector("#bottom-nav [data-nav=play]").click(); true');
   if (!(await evaluate('document.documentElement.dataset.view === "play"'))) throw new Error('Play tab did not open');
+  await evaluate(`window.confirm = () => true;
+    document.getElementById('setup-format').value = 'untimed';
+    document.getElementById('setup-opponent').value = 'computer';
+    document.getElementById('setup-opponent').dispatchEvent(new Event('change'));
+    document.getElementById('setup-side').value = 'b';
+    document.getElementById('setup-difficulty').value = 'easy';
+    document.getElementById('setup-start').click();
+    true`);
+  await waitUntil(() => evaluate('document.documentElement.dataset.view === "match"'));
+  await waitUntil(() => evaluate('document.querySelector("#moves li")?.textContent?.length > 0'), 30000);
+  const blackGame = await evaluate(`JSON.stringify({
+    blackBottom: document.getElementById('match-area').classList.contains('black-bottom'),
+    opponent: document.getElementById('white-player').textContent,
+    human: document.getElementById('black-player').textContent,
+    current: document.getElementById('match-state').textContent
+  })`);
+  const black = JSON.parse(blackGame);
+  if (!black.blackBottom || !black.opponent.includes('Computer') || !black.human.includes('You')) {
+    throw new Error('Human Black match orientation invalid: ' + blackGame);
+  }
+  console.log('Computer as White and human as Black: passed');
+  const blackShot = await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/chess-black-player-mobile.png',Buffer.from(blackShot.data,'base64'));
   if (errors.length) throw new Error('Browser exceptions: ' + errors.join(' | '));
   console.log('v3 mobile navigation, preserved match, learning/profile and three responsive widths: passed');
 } catch (error) {
