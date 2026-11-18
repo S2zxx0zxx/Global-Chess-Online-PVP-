@@ -284,3 +284,10 @@ dialog button{min-height:44px}
 #match-area .match-footer{order:9}
 #match-area:has(.coach-tip:not([hidden])) .board,
 #match-area:has(.coach-tip:not([hidden])) #scene{width:min(100%,calc(100svh - 340px),600px)}
+
+/* CH-01 SCR-09/10: in-game controls are functioning, never fake buttons. */
+.match-menu-actions{display:grid;grid-template-columns:1fr;gap:9px;padding:2px 0 14px;margin:0 0 12px;border-bottom:1px solid #a17b586b}
+.match-menu-actions button{min-height:48px;border:1px solid #c79a6b;border-radius:11px;padding:10px 12px;text-align:left;background:#6c4332;color:var(--ch-color-brand-cream);font-weight:750}
+#match-save-exit{background:linear-gradient(150deg,#dcb373,#9b6c3a)!important;color:#28190f!important}
+#match-resign{border-color:#d9867e;background:#59302b}
+#match-menu-feedback{color:#f7d3a1;font-size:.78rem;line-height:1.4;margin:4px 0 10px}
