@@ -7,6 +7,7 @@ import { openGameStorage } from './storage.js';
 import { bindOnline } from './online.js';
 import { Chess } from 'chess.js';
 import { readHistory, recordMatch } from './history.js';
+import { summarizeLocalHistory } from './profile-stats.js';
 import { startClock, remainingClock, localClockIsRunning } from './clock.js';
 import './style.css';
 import { restoreGame, serializeGame, result, claimableDraw, intendedDraw, timeoutResult } from './game.js';
@@ -469,6 +470,9 @@ lobby = bindLobby({
   startMatch:startLocalMatch,
   historyCount() {
     try { return readHistory(gameStorage).length; } catch { return null; }
+  },
+  historySummary() {
+    return summarizeLocalHistory(readHistory(gameStorage));
   },
 });
 bindNavigation();
