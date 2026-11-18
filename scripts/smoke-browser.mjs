@@ -197,6 +197,22 @@ try {
   console.log('Computer as White and human as Black: passed');
   const blackShot = await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/chess-black-player-mobile.png',Buffer.from(blackShot.data,'base64'));
+
+  await evaluate('document.getElementById("match-menu").click(); true');
+  if (!(await evaluate('document.documentElement.classList.contains("tools-open")'))) {
+    throw new Error('Mobile match options did not open');
+  }
+  await evaluate('document.getElementById("match-resign").click(); true');
+  await waitUntil(() => evaluate('document.getElementById("result-dialog").open'));
+  if (!(await evaluate('document.getElementById("result-copy").textContent.includes("White wins by resignation")'))) {
+    throw new Error('Resignation result did not match human Black side');
+  }
+  if (!(await evaluate('document.getElementById("match-result-trigger").hidden === false'))) {
+    throw new Error('Completed resignation did not expose result action');
+  }
+  console.log('Mobile game menu, confirmed resignation and result presentation: passed');
+  const resultShot = await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/chess-match-result-mobile.png',Buffer.from(resultShot.data,'base64'));
   if (errors.length) throw new Error('Browser exceptions: ' + errors.join(' | '));
   console.log('v3 mobile navigation, preserved match, learning/profile and three responsive widths: passed');
 } catch (error) {
