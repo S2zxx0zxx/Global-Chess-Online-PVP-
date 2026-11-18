@@ -1,0 +1,51 @@
+name: Global Chess verification
+
+on:
+  pull_request:
+    branches:
+      - main
+      - feat/playable-chess-foundation
+  push:
+    branches:
+      - main
+      - feat/playable-chess-foundation
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: global-chess-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Core tests, browser build, and WASM preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Check source syntax
+        run: |
+          find src server scripts tests -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Run automated tests
+        run: npm test
+      - name: Build production PWA
+        run: npm run build
+      - name: Prepare Cloudflare WASM asset
+        run: |
+          node scripts/prepare-worker-solver.js
+          node -e "const fs=require('node:fs');if(!WebAssembly.validate(fs.readFileSync('server/cha.generated.wasm')))process.exit(1)"
+      - name: Confirm offline shell and solver files
+        run: |
+          test -s dist/index.html
+          test -s dist/sw.js
+          test -s dist/manifest.webmanifest
+          test -s dist/solver/cha.wasm.gz
+          test -s public/solver/LICENSE.txt
