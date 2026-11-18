@@ -12,7 +12,7 @@ import { startClock, remainingClock, localClockIsRunning } from './clock.js';
 import './style.css';
 import { restoreGame, serializeGame, result, claimableDraw, intendedDraw, timeoutResult } from './game.js';
 
-import { matchKey as key, exportBackup, importBackup } from './backup.js';
+import { matchKey as key, historyKey, exportBackup, importBackup } from './backup.js';
 async function initialize() {
 // The optional WASM mating solver must not delay guest-first gameplay.
 const gameStorage = await openGameStorage();
@@ -466,14 +466,22 @@ online = bindOnline({
     playComputer();
   },
 });
+let cachedHistoryRaw;
+let cachedHistorySummary;
+function localHistorySummary() {
+  const raw = gameStorage.getItem(historyKey) ?? '[]';
+  if (raw === cachedHistoryRaw) return cachedHistorySummary;
+  const data = summarizeLocalHistory(readHistory(gameStorage));
+  cachedHistoryRaw = raw;
+  cachedHistorySummary = data;
+  return data;
+}
 lobby = bindLobby({
   startMatch:startLocalMatch,
   historyCount() {
-    try { return readHistory(gameStorage).length; } catch { return null; }
+    try { return localHistorySummary().saved; } catch { return null; }
   },
-  historySummary() {
-    return summarizeLocalHistory(readHistory(gameStorage));
-  },
+  historySummary:localHistorySummary,
 });
 bindNavigation();
 render();
