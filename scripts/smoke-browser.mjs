@@ -96,11 +96,30 @@ try {
   await send('Page.navigate', {url:'http://127.0.0.1:4173/'});
   await waitUntil(() => evaluate('document.readyState === "complete" && !!document.getElementById("local")'));
   await waitUntil(() => evaluate('document.getElementById("launch").hidden === true'));
-  await evaluate('document.getElementById("local").click(); true');
+  if (await evaluate('document.getElementById("welcome-dialog").open')) {
+    await evaluate('document.getElementById("guest-start").click(); true');
+    await waitUntil(() => evaluate('document.getElementById("welcome-dialog").open === false'));
+  }
+  await waitUntil(() => evaluate('document.documentElement.dataset.view === "home"'));
+  await evaluate('document.getElementById("lobby-classic").click(); true');
+  await waitUntil(() => evaluate('document.documentElement.dataset.view === "match"'));
+  if (!(await evaluate('getComputedStyle(document.getElementById("lobby")).display === "none"'))) {
+    throw new Error('Home remained visible during a match');
+  }
   await evaluate('document.querySelector("#board [data-square=e2]").click(); true');
   await evaluate('document.querySelector("#board [data-square=e4]").click(); true');
   await waitUntil(() => evaluate('document.querySelector("#moves li")?.textContent?.includes("e4") === true'));
   console.log('Browser local chess move: passed');
+
+  // Returning Home must not destroy an active saved match.
+  await evaluate('document.getElementById("match-exit").click(); true');
+  await waitUntil(() => evaluate('document.documentElement.dataset.view === "home"'));
+  await waitUntil(() => evaluate('document.getElementById("lobby-resume").hidden === false'));
+  await evaluate('document.getElementById("lobby-resume").click(); true');
+  await waitUntil(() => evaluate('document.documentElement.dataset.view === "match"'));
+  if (!(await evaluate('document.querySelector("#moves li")?.textContent?.includes("e4") === true'))) {
+    throw new Error('Resumed match lost its move history');
+  }
 
   await evaluate('document.getElementById("view").click(); true');
   await waitUntil(() => evaluate(
@@ -112,6 +131,42 @@ try {
   await mkdir('artifacts', {recursive:true});
   const screenshot = await send('Page.captureScreenshot', {format:'png', captureBeyondViewport:false});
   await writeFile('artifacts/chess-3d-browser-smoke.png', Buffer.from(screenshot.data,'base64'));
+
+  await evaluate('document.getElementById("match-exit").click(); true');
+  for (const [width,height] of [[320,568],[360,800],[412,915]]) {
+    await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:2,mobile:true});
+    await waitUntil(() => evaluate('window.innerWidth === ' + width));
+    await waitUntil(() => evaluate('document.documentElement.dataset.view === "home"'));
+    const metrics = await evaluate(JSON.stringify({
+      width:0,
+    }).replace('{"width":0}',`JSON.stringify({
+      width: innerWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      visible: getComputedStyle(document.getElementById('lobby')).display !== 'none',
+      otherHidden: getComputedStyle(document.getElementById('match-layout')).display === 'none',
+      navVisible: getComputedStyle(document.getElementById('bottom-nav')).display !== 'none'
+    })`));
+    const state = JSON.parse(metrics);
+    if (state.scrollWidth > state.width + 2 || !state.visible || !state.otherHidden || !state.navVisible) {
+      throw new Error('Invalid responsive Home layout at ' + width + 'px: ' + metrics);
+    }
+    const shot = await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+    await writeFile('artifacts/chess-home-' + width + '.png',Buffer.from(shot.data,'base64'));
+  }
+  await evaluate('document.querySelector("#bottom-nav [data-nav=learn]").click(); true');
+  if (!(await evaluate('document.documentElement.dataset.view === "learn"'))) throw new Error('Learn tab did not open');
+  await evaluate('document.getElementById("learn-open").click(); true');
+  if (!(await evaluate('document.getElementById("learn-dialog").open'))) throw new Error('Lessons did not open');
+  await evaluate('document.querySelector("#learn-dialog form[method=dialog] button").click(); true');
+  await evaluate('document.querySelector("#bottom-nav [data-nav=profile]").click(); true');
+  if (!(await evaluate('document.documentElement.dataset.view === "profile"'))) throw new Error('Profile tab did not open');
+  await evaluate('document.getElementById("profile-edit").click(); true');
+  if (!(await evaluate('document.getElementById("profile-dialog").open'))) throw new Error('Edit profile did not open');
+  await evaluate('document.querySelector("#profile-dialog form[method=dialog] button").click(); true');
+  await evaluate('document.querySelector("#bottom-nav [data-nav=play]").click(); true');
+  if (!(await evaluate('document.documentElement.dataset.view === "play"'))) throw new Error('Play tab did not open');
+  if (errors.length) throw new Error('Browser exceptions: ' + errors.join(' | '));
+  console.log('v3 mobile navigation, preserved match, learning/profile and three responsive widths: passed');
 } catch (error) {
   throw new Error(error.message + (previewLog ? '\nPreview logs:\n' + previewLog.slice(-3000) : ''));
 } finally {
