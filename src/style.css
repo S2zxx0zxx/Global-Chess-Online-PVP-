@@ -67,3 +67,7 @@ dialog form{margin-top:8px}
 #versus strong{color:#f2ce8d;font:700 1.4rem Georgia,serif}
 @keyframes versus-appear{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
 @media(prefers-reduced-motion:reduce){#versus{animation:none}}
+#learn-dialog{width:min(440px,94vw)}
+#lesson-board{width:100%;max-height:none}
+#lesson-board button[aria-pressed=true]{outline:3px solid #f9d08b;outline-offset:-3px;z-index:1}
+#lesson-progress,#lesson-feedback{font-size:.85rem;color:#f2ce8d}

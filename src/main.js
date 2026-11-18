@@ -1,3 +1,4 @@
+import { bindLearning } from './learning.js';
 import { bindLobby } from './lobby.js';
 import { openGameStorage } from './storage.js';
 import { bindOnline } from './online.js';
@@ -496,24 +497,7 @@ backupFile.onchange = async () => {
   }
 };
 
-const lessons = [
-  ['Control the center', 'Try 1. e4 or 1. d4 to fight for the central squares and open lines for your pieces.'],
-  ['Develop your pieces', 'Bring knights and bishops into play before spending turns moving the same piece again.'],
-  ['Protect your king', 'Castle when legal to move your king toward the edge and bring your rook closer to the center.'],
-];
-let lessonIndex = 0;
-const learnDialog = document.querySelector('#learn-dialog');
-function renderLesson() {
-  const [title, description] = lessons[lessonIndex];
-  const heading = document.createElement('h3');
-  heading.textContent = title;
-  const body = document.createElement('p');
-  body.textContent = description;
-  document.querySelector('#lesson').replaceChildren(heading, body);
-  document.querySelector('#lesson-next').disabled = lessonIndex === lessons.length - 1;
-}
-document.querySelector('#learn').onclick = () => { renderLesson(); learnDialog.showModal(); };
-document.querySelector('#lesson-next').onclick = () => { lessonIndex++; renderLesson(); };
+bindLearning(glyphs,names);
 
 window.addEventListener('chess-storage-error', () => {
   notice = 'Could not write the game save.';
