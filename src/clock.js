@@ -13,3 +13,11 @@ export function validClock(clock) {
   return clock === null || (clock && ['w', 'b'].every(side =>
     Number.isFinite(clock[side]) && clock[side] >= 0 && clock[side] <= presets.classic));
 }
+
+/**
+ * Local pass-and-play / computer clocks count only during visible match play.
+ * Online match clocks remain authoritative on the Durable Object server.
+ */
+export function localClockIsRunning({documentHidden, screen, menuOpen}) {
+  return !documentHidden && screen === 'match' && !menuOpen;
+}
