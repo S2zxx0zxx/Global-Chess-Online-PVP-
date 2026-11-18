@@ -39,8 +39,19 @@ export default {
   async fetch(request, env) {
     const path = new URL(request.url).pathname;
     if (path === '/api/rooms' && request.method === 'POST') {
+      // Fail closed: a missing or failing limiter must not permit unlimited
+      // Durable Object allocations on a public commercial deployment.
+      if (!env.ROOM_CREATION_LIMIT) {
+        return json({error:'Room creation temporarily unavailable.'},503);
+      }
       const address = request.headers.get('CF-Connecting-IP') ?? 'unknown';
-      if (env.ROOM_CREATION_LIMIT && !(await env.ROOM_CREATION_LIMIT.limit({key:address})).success) {
+      let allowed;
+      try {
+        allowed = (await env.ROOM_CREATION_LIMIT.limit({key:address})).success;
+      } catch {
+        return json({error:'Room creation temporarily unavailable.'},503);
+      }
+      if (!allowed) {
         return json({error:'Too many rooms created. Try again shortly.'},429);
       }
       const id = token();
