@@ -70,6 +70,8 @@ document.getElementById('coach-replay').onclick = () => {
 const claim = document.querySelector('#claim');
 const outcome = game => {
   if (online?.active) return online.match.outcome;
+  if (state.resignedSide) return state.resignedSide === 'w'
+    ? 'Black wins by resignation' : 'White wins by resignation';
   if (state.drawClaim) return 'Draw by ' + state.drawClaim;
   return result(game) ?? (state.clock?.[game.turn()] === 0
     ? timeoutResult(game, game.turn()) : null);
@@ -257,6 +259,7 @@ function render(move) {
   if (outcome(game) && coachActive) finishCoach();
   else syncCoach();
   document.querySelector('#match-result-trigger').hidden = !outcome(game);
+  document.querySelector('#match-resign').disabled = Boolean(outcome(game));
   const moves = game.history();
   const recent = moves.slice(-4);
   document.querySelector('#match-last-moves').textContent = recent.length
@@ -272,7 +275,7 @@ function render(move) {
 function save() {
   if (online?.active) return;
   try {
-    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove, state.preset, state.humanSide);
+    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove, state.preset, state.humanSide, state.resignedSide);
     gameStorage.setItem(key, snapshot);
     const completed = outcome(state.game);
     if (completed) recordMatch(gameStorage, completed, snapshot);
@@ -401,6 +404,36 @@ function startLocalMatch(mode, preset, difficulty, humanSide = 'w') {
   playComputer();
   return true;
 }
+document.getElementById('match-save-exit').onclick = () => {
+  updateClock();
+  save();
+  navigate('home');
+};
+document.getElementById('match-restart').onclick = () => {
+  if (online?.active) {
+    document.getElementById('match-menu-feedback').textContent = 'Return to an offline match before restarting.';
+    return;
+  }
+  if (startLocalMatch(state.mode,state.preset ?? 'untimed',state.difficulty,state.humanSide)) {
+    document.documentElement.classList.remove('tools-open');
+  }
+};
+document.getElementById('match-resign').onclick = () => {
+  const feedback = document.getElementById('match-menu-feedback');
+  if (online?.active) {
+    feedback.textContent = 'Private PvP resignation is not available in this preview.';
+    return;
+  }
+  updateClock();
+  if (outcome(state.game)) { feedback.textContent = 'This match has already ended.'; return; }
+  if (!confirm('Resign this match? The opposing side will be declared the winner.')) return;
+  state.resignedSide = state.mode === 'computer' ? state.humanSide : state.game.turn();
+  stopComputer();
+  save();
+  document.documentElement.classList.remove('tools-open');
+  render();
+  document.getElementById('result-open').click();
+};
 for (const mode of ['local', 'computer']) {
   document.getElementById(mode).onclick = () => startLocalMatch(
     mode, document.querySelector('#preset').value, document.querySelector('#difficulty').value,
