@@ -1,8 +1,18 @@
+// Use Babylon's pure tree-shakeable imports to avoid bundling unrelated 3D systems.
 import {
-  ArcRotateCamera, Color3, DirectionalLight, Engine, HemisphericLight, MeshBuilder, PhysicsAggregate,
+  ArcRotateCamera, Color3, CreateBox, CreateGround, CreateLathe, CreateSphere,
+  DirectionalLight, Engine, HavokPlugin, HemisphericLight, PhysicsAggregate,
   PhysicsMotionType, PhysicsShapeType, Scene, StandardMaterial, Texture, Vector3, VertexBuffer,
-} from '@babylonjs/core';
-import { HavokPlugin } from '@babylonjs/core/Physics/v2/Plugins/havokPlugin.js';
+  RegisterStandardEngineExtensions, RegisterJoinedPhysicsEngineComponent,
+  RegisterPhysicsV2PhysicsEngineComponent, RegisterStandardMaterial, RegisterTexture, RegisterRay,
+} from '@babylonjs/core/pure.js';
+
+RegisterStandardEngineExtensions();
+RegisterJoinedPhysicsEngineComponent();
+RegisterPhysicsV2PhysicsEngineComponent();
+RegisterStandardMaterial();
+RegisterTexture();
+RegisterRay();
 import HavokPhysics from '@babylonjs/havok';
 import havokWasm from '@babylonjs/havok/lib/esm/HavokPhysics.wasm?url';
 
@@ -68,7 +78,7 @@ export async function mountBoard(canvas, selectSquare) {
     const tiles = new Map();
     const active = new Map();
     const effects = new Map();
-    const base = MeshBuilder.CreateBox('frame', {width:8.4,depth:8.4,height:.32}, scene);
+    const base = CreateBox('frame', {width:8.4,depth:8.4,height:.32}, scene);
     base.material = frame;
     base.position.y = -.16;
     new PhysicsAggregate(base, PhysicsShapeType.BOX, {mass:0, friction:.65}, scene);
@@ -76,7 +86,7 @@ export async function mountBoard(canvas, selectSquare) {
     for (let rank = 0; rank < 8; rank++) {
       for (let file = 0; file < 8; file++) {
         const square = squareFor(file, rank);
-        const mesh = MeshBuilder.CreateGround(square, {width:1,height:1}, scene);
+        const mesh = CreateGround(square, {width:1,height:1}, scene);
         mesh.position.set(file - 3.5, 0, rank - 3.5);
         const uv = mesh.getVerticesData(VertexBuffer.UVKind);
         for (let index = 0; index < uv.length; index += 2) {
@@ -91,11 +101,11 @@ export async function mountBoard(canvas, selectSquare) {
     }
     function makePiece(piece, square) {
       const shape = profiles[piece.type].map(([x,y]) => new Vector3(x,y,0));
-      const root = MeshBuilder.CreateLathe(piece.type, {shape, tessellation:24}, scene);
+      const root = CreateLathe(piece.type, {shape, tessellation:24}, scene);
       root.material = pieces[piece.color];
       root.position.copyFrom(tiles.get(square).mesh.position);
       const detail = (name, width, height, depth, x, y, z) => {
-        const mesh = MeshBuilder.CreateBox(name, {width,height,depth}, scene);
+        const mesh = CreateBox(name, {width,height,depth}, scene);
         mesh.parent = root;
         mesh.position.set(x,y,z);
         mesh.material = root.material;
@@ -103,7 +113,7 @@ export async function mountBoard(canvas, selectSquare) {
         return mesh;
       };
       if (piece.type === 'p') {
-        const head = MeshBuilder.CreateSphere('pawn head',{diameter:.34,segments:12},scene);
+        const head = CreateSphere('pawn head',{diameter:.34,segments:12},scene);
         head.parent = root;
         head.position.y = .56;
         head.material = root.material;
