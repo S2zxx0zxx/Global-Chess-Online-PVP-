@@ -12,6 +12,17 @@ export function bindOnline({onMatch, onLeave}) {
   let pending = false;
   let generation = 0;
 
+  function savedSeat() {
+    for (const read of [() => sessionStorage.getItem(storageKey), () => localStorage.getItem(storageKey)]) {
+      try {
+        const saved = JSON.parse(read());
+        if (saved && typeof saved.id === 'string' && typeof saved.credential === 'string' &&
+            ['w','b'].includes(saved.seat)) return saved;
+      } catch { /* Try the other store. */ }
+    }
+    return null;
+  }
+
   async function request(path, body, credential) {
     const headers = {};
     if (body) headers['Content-Type'] = 'application/json';
@@ -51,7 +62,9 @@ export function bindOnline({onMatch, onLeave}) {
 
   function enter(data, saved = data) {
     session = {id:saved.id, credential:saved.credential, seat:saved.seat, invite:saved.invite};
-    try { localStorage.setItem(storageKey, JSON.stringify(session)); } catch { /* Current tab can still play. */ }
+    const encoded = JSON.stringify(session);
+    try { sessionStorage.setItem(storageKey,encoded); } catch { /* Current tab can still play. */ }
+    try { localStorage.setItem(storageKey,encoded); } catch { /* Tab storage can still resume. */ }
     byId('create').hidden = true;
     byId('rejoin').hidden = true;
     byId('leave').hidden = false;
@@ -77,7 +90,8 @@ export function bindOnline({onMatch, onLeave}) {
   }
   byId('create').onclick = run(async () => enter(await request('', {})));
   byId('rejoin').onclick = run(async () => {
-    const saved = JSON.parse(localStorage.getItem(storageKey));
+    const saved = savedSeat();
+    if (!saved) throw new Error('No saved room seat was found.');
     enter(await request('/' + saved.id + '/state', undefined, saved.credential), saved);
   });
   byId('copy').onclick = async () => {
@@ -95,7 +109,7 @@ export function bindOnline({onMatch, onLeave}) {
     submitting = false;
     byId('leave').hidden = invite.hidden = byId('copy').hidden = true;
     byId('create').hidden = false;
-    byId('rejoin').hidden = false;
+    byId('rejoin').hidden = !savedSeat();
     status.textContent = '';
     onLeave();
   };
@@ -108,7 +122,7 @@ export function bindOnline({onMatch, onLeave}) {
       enter(data);
     }));
   }
-  try { byId('rejoin').hidden = !localStorage.getItem(storageKey); } catch { /* Storage is optional. */ }
+  byId('rejoin').hidden = !savedSeat();
 
   function canMove(side) {
     return Boolean(snapshot && !submitting && snapshot.match.turnStartedAt !== null &&

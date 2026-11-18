@@ -46,3 +46,14 @@ test('invite is single-use and both seats recover the persisted match', async ()
   assert.equal(final.match.moves.at(-1).to,'g8');
   assert.equal((await call('claim',draw,white.credential)).status,409);
 });
+
+test('room input limit is enforced before touching room storage', async () => {
+  const room = new Room({storage:{
+    transaction() { throw new Error('A rejected request must not touch room storage'); },
+  }});
+  const body = JSON.stringify({invite:'é'.repeat(1100)});
+  const response = await room.fetch(new Request('https://room/join',{method:'POST',body}));
+  assert.equal(response.status,413);
+  const malformed = await room.fetch(new Request('https://room/join',{method:'POST',body:'[]'}));
+  assert.equal(malformed.status,400);
+});

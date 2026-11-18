@@ -31,7 +31,9 @@ export async function openGameStorage() {
   }
 
   let queued = false;
-  function persist() {
+  const dirty = new Set();
+  function persist(key) {
+    dirty.add(key);
     if (queued) return;
     queued = true;
     queueMicrotask(writeSnapshot);
@@ -43,16 +45,27 @@ export async function openGameStorage() {
     try {
       const transaction = db.transaction('saves', 'readwrite');
       transaction.onabort = reportError;
-      transaction.objectStore('saves').put(Object.fromEntries(values), 'snapshot');
+      const store = transaction.objectStore('saves');
+      const changes = [...dirty].map(key => [key,values.get(key)]);
+      dirty.clear();
+      const read = store.get('snapshot');
+      read.onsuccess = () => {
+        const snapshot = read.result ?? {};
+        for (const [key,value] of changes) {
+          if (value === undefined) delete snapshot[key];
+          else snapshot[key] = value;
+        }
+        store.put(snapshot,'snapshot');
+      };
     } catch {
       reportError();
     }
   }
 
-  if (needsMigration && values.size) persist();
+  if (needsMigration) for (const key of values.keys()) persist(key);
   return {
     getItem: key => values.get(key) ?? null,
-    setItem(key, value) { values.set(key, value); persist(); },
-    removeItem(key) { values.delete(key); persist(); },
+    setItem(key, value) { values.set(key, value); persist(key); },
+    removeItem(key) { values.delete(key); persist(key); },
   };
 }

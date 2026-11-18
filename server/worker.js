@@ -6,6 +6,34 @@ const json = (body, status = 200) => Response.json(body, {
 const token = () => crypto.randomUUID();
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
 
+const maxJsonBytes = 2048;
+
+async function readRoomInput(request) {
+  if (Number(request.headers.get('Content-Length')) > maxJsonBytes) return null;
+  if (!request.body) return undefined;
+  const reader = request.body.getReader();
+  const data = new Uint8Array(maxJsonBytes);
+  let size = 0;
+  try {
+    for (;;) {
+      const {done,value} = await reader.read();
+      if (done) break;
+      if (size + value.byteLength > maxJsonBytes) {
+        await reader.cancel();
+        return null;
+      }
+      data.set(value,size);
+      size += value.byteLength;
+    }
+    const input = JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(data.subarray(0,size)));
+    return input && typeof input === 'object' && !Array.isArray(input) ? input : undefined;
+  } catch {
+    return undefined;
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 export default {
   async fetch(request, env) {
     const path = new URL(request.url).pathname;
@@ -34,10 +62,9 @@ export class Room {
     const action = new URL(request.url).pathname.slice(1);
     let input;
     if (action !== 'state') {
-      const raw = await request.text();
-      if (raw.length > 2048) return json({error:'Request too large'}, 413);
-      try { input = JSON.parse(raw); } catch { return json({error:'Invalid request'}, 400); }
-      if (!input || typeof input !== 'object') return json({error:'Invalid request'}, 400);
+      input = await readRoomInput(request);
+      if (input === null) return json({error:'Request too large'}, 413);
+      if (input === undefined) return json({error:'Invalid request'}, 400);
     }
     const credential = request.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
     return this.storage.transaction(async transaction => {
