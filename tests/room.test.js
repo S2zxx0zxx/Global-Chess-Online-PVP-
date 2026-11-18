@@ -26,4 +26,23 @@ test('invite is single-use and both seats recover the persisted match', async ()
   const recovered = await (await call('state',undefined,black.credential)).json();
   assert.equal(recovered.match.moves[0].to,'e4');
   assert.equal(recovered.credential,undefined);
+
+  let version = recovered.match.version;
+  const cycle = [['g8','f6'],['g1','f3'],['f6','g8'],['f3','g1']];
+  for (const [index,[from,to]] of [...cycle,...cycle.slice(0,3)].entries()) {
+    const credential = index % 2 ? white.credential : black.credential;
+    const response = await call('move',{from,to,expectedVersion:version},credential);
+    assert.equal(response.status,200);
+    version = (await response.json()).match.version;
+  }
+  const draw = {expectedVersion:version,move:{from:'f3',to:'g1'}};
+  assert.equal((await call('claim',draw,black.credential)).status,409);
+  const accepted = await call('claim',draw,white.credential);
+  assert.equal(accepted.status,200);
+  assert.equal((await accepted.json()).match.outcome,'Draw by threefold repetition');
+  room = new Room({storage});
+  const final = await (await call('state',undefined,black.credential)).json();
+  assert.equal(final.match.outcome,'Draw by threefold repetition');
+  assert.equal(final.match.moves.at(-1).to,'g8');
+  assert.equal((await call('claim',draw,white.credential)).status,409);
 });

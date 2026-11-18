@@ -30,7 +30,9 @@ export function restoreGame(raw) {
       preset = save.preset;
     }
     for (const move of save.moves) {
-      if (result(game)) throw new Error('Move after match ended');
+      const outcome = result(game);
+      // Older saves could continue past a closed pawn position.
+      if (outcome && outcome !== 'Draw by dead position') throw new Error('Move after match ended');
       game.move(move);
     }
     if (save.drawClaim !== undefined) {
