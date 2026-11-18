@@ -4,6 +4,7 @@ export async function openGameStorage() {
   const keys = [matchKey, historyKey];
   const values = new Map();
   let db;
+  let needsMigration = false;
   try {
     db = await new Promise((resolve, reject) => {
       const request = indexedDB.open('global-chess', 1);
@@ -17,6 +18,7 @@ export async function openGameStorage() {
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
+    needsMigration = !saved;
     for (const key of keys) {
       let legacy = null;
       try { legacy = localStorage.getItem(key); } catch { /* IndexedDB remains available. */ }
@@ -37,12 +39,17 @@ export async function openGameStorage() {
 
   function writeSnapshot() {
     queued = false;
-    const transaction = db.transaction('saves', 'readwrite');
-    transaction.objectStore('saves').put(Object.fromEntries(values), 'snapshot');
-    transaction.onabort = () => window.dispatchEvent(new Event('chess-storage-error'));
+    const reportError = () => window.dispatchEvent(new Event('chess-storage-error'));
+    try {
+      const transaction = db.transaction('saves', 'readwrite');
+      transaction.onabort = reportError;
+      transaction.objectStore('saves').put(Object.fromEntries(values), 'snapshot');
+    } catch {
+      reportError();
+    }
   }
 
-  if (values.size) persist();
+  if (needsMigration && values.size) persist();
   return {
     getItem: key => values.get(key) ?? null,
     setItem(key, value) { values.set(key, value); persist(); },

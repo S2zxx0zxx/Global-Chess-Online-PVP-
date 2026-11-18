@@ -182,17 +182,26 @@ function commit(move) {
 
 function playComputer() {
   const {game, mode} = state;
-  if (mode !== 'computer' || game.turn() !== 'b' || outcome(game)) return;
-  const job = new Worker(new URL('./bot.js', import.meta.url), {type:'module'});
+  if (worker || mode !== 'computer' || game.turn() !== 'b' || outcome(game)) return;
+  let job;
+  try {
+    job = new Worker(new URL('./bot.js', import.meta.url), {type:'module'});
+  } catch {
+    const [fallback] = game.moves({verbose:true});
+    if (fallback) commit(fallback);
+    return;
+  }
   worker = job;
   const finish = (move) => {
     if (worker !== job) return;
+    clearTimeout(deadline);
     job.terminate();
     worker = undefined;
     const legal = game.moves({verbose:true});
     const candidate = legal.find(option => option.from === move?.from && option.to === move?.to && option.promotion === move?.promotion);
     if (legal.length) commit(candidate ?? legal[0]);
   };
+  const deadline = setTimeout(finish, 5000);
   job.onmessage = ({data}) => finish(data);
   job.onerror = () => finish();
   job.postMessage({fen:game.fen(), difficulty:state.difficulty});
@@ -240,9 +249,12 @@ online = bindOnline({
       worker?.terminate();
       worker = undefined;
     }
+    const previousPly = state === offlineState ? -1 : state.game.history().length;
     state = {...restoreGame(JSON.stringify({version:1, mode:'local', moves:match.moves})), clock:match.clock};
     selected = undefined;
-    render();
+    const played = match.moves.length === previousPly + 1
+      ? state.game.history({verbose:true}).at(-1) : undefined;
+    render(played);
   },
   onLeave() {
     if (!offlineState) return;
@@ -354,14 +366,22 @@ document.querySelector('#export-backup').onclick = () => {
     backupStatus.textContent = 'Backup could not be exported.';
   }
 };
-document.querySelector('#import-backup').onclick = () => backupFile.click();
+document.querySelector('#import-backup').onclick = () => {
+  if (online?.active) {
+    backupStatus.textContent = 'Return to your offline game before restoring a backup.';
+    return;
+  }
+  backupFile.click();
+};
 backupFile.onchange = async () => {
   const file = backupFile.files[0];
   backupFile.value = '';
   if (!file || !confirm('Replace the active match and local match history with this backup?')) return;
   try {
     if (file.size > 2_000_000) throw new Error('Backup too large');
-    const restored = importBackup(gameStorage, await file.text());
+    const contents = await file.text();
+    if (online?.active) throw new Error('Online match in progress');
+    const restored = importBackup(gameStorage, contents);
     worker?.terminate();
     worker = undefined;
     state = restored;

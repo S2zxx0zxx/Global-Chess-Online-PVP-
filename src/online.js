@@ -27,7 +27,8 @@ export function bindOnline({onMatch, onLeave}) {
   }
 
   function accept(data) {
-    if (snapshot && data.match.version < snapshot.match.version) return;
+    if (snapshot && (data.match.version < snapshot.match.version ||
+        (data.match.version === snapshot.match.version && data.serverNow < snapshot.serverNow))) return;
     const changed = data.match.version !== snapshot?.match.version;
     snapshot = data;
     receivedAt = performance.now();
@@ -44,7 +45,7 @@ export function bindOnline({onMatch, onLeave}) {
     } catch {
       if (current === generation) status.textContent = 'Connection interrupted. Reconnecting…';
     } finally {
-      if (current === generation) timer = setTimeout(poll, document.hidden ? 8000 : 2000);
+      if (current === generation && !snapshot?.match.outcome) timer = setTimeout(poll, document.hidden ? 8000 : 2000);
     }
   }
 
@@ -62,7 +63,7 @@ export function bindOnline({onMatch, onLeave}) {
       byId('copy').hidden = !navigator.clipboard;
     }
     accept(data);
-    timer = setTimeout(poll, 1000);
+    if (!snapshot.match.outcome) timer = setTimeout(poll, 1000);
   }
 
   function run(action) {
