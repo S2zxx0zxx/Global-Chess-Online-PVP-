@@ -35,7 +35,19 @@
     <button id="play-computer" class="hub-card" type="button"><strong>VS Computer</strong><small>Three local difficulty levels</small></button>
     <button id="play-local" class="hub-card" type="button"><strong>Local 2 Players</strong><small>Pass-and-play on one device</small></button>
   </div>
-  <div class="play-options"><label for="preset">Time control</label><p>Change time and difficulty in Match Setup, or start straight away from Home.</p></div>
+  <section class="play-options" id="play-setup" aria-labelledby="play-setup-title">
+    <h2 id="play-setup-title">New match setup</h2>
+    <form id="play-setup-form">
+      <div class="setup-fields">
+        <label>Time control<select id="setup-format"><option value="untimed" selected>Untimed</option><option value="classic">Classic · 15 min</option><option value="quick">Quick · 5 min</option></select></label>
+        <label>Opponent<select id="setup-opponent"><option value="computer" selected>VS Computer</option><option value="local">Local 2 Players</option></select></label>
+        <label>Computer difficulty<select id="setup-difficulty"><option value="easy" selected>Beginner</option><option value="standard">Casual</option><option value="hard">Challenging</option></select></label>
+        <label>Play as<select id="setup-side"><option value="w" selected>White</option><option value="b">Black</option><option value="random">Random</option></select></label>
+      </div>
+      <button id="setup-start" type="submit">Start Match</button>
+    </form>
+    <p>Offline games stay on this device. You can resume a saved match from Home.</p>
+  </section>
   <button id="lobby-online" class="optional-online" type="button">Private PvP <span>Experimental · Internet required</span></button>
 </section>
 <section id="learn-hub" class="hub-screen view-screen" aria-labelledby="learn-hub-title">
