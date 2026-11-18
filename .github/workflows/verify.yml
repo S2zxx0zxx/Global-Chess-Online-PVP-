@@ -38,6 +38,8 @@ jobs:
         run: npm test
       - name: Build production PWA
         run: npm run build
+      - name: Enforce 3D bundle performance budget
+        run: node scripts/check-bundle-budget.js
       - name: Prepare Cloudflare WASM asset
         run: |
           node scripts/prepare-worker-solver.js
