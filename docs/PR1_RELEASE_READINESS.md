@@ -7,9 +7,12 @@ Target: private/proprietary commercial Global Chess for PWA + Android, preservin
 ## Review scope and evidence
 
 Reviewed: current PR metadata, changed-file inventory, selected source modules and unit-test sources.
-No clean `npm ci`, `npm test`, `npm run build`, runtime browser test, Android build, production deployment,
-penetration test, or real concurrent-user test has been executed **by this review**. GitHub Actions workflow was
-missing at audit start and is now added; its execution/result is an independent, currently unverified gate.
+The new [GitHub Actions run #44360880550](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/44360880550)
+passed at commit `59cf19fefa8e4775f18222457cca28d9b21f548b`: Node 22 clean dependency install,
+syntax, 27/27 unit tests, production PWA build, 3D bundle-budget gate, local-move and 3D-mount
+headless Chromium smoke, WASM preflight and offline asset assertions. Browser screenshot artifact
+`chess-browser-smoke` was uploaded (artifact #14455700032). This verifies limited hosted browser behavior
+**not** real Android, real network PvP, security or production deployment.
 An absence of REST commit-status records is **not** proof that Checks API has no checks.
 
 ## Confirmed source-level implementation (not a passing-runtime claim)
@@ -33,13 +36,19 @@ An absence of REST commit-status records is **not** proof that Checks API has no
   worker WASM preflight and offline asset check.
 - Mark npm package `private: true`, `license: UNLICENSED`; align lockfile. **This does not make GitHub private.**
 - Stop making app boot wait for optional browser WASM solver; fallback timeout rules remain.
+- Replace Babylon root barrel with documented pure imports and explicit scene/physics/material registration.
+  CI output reduced optional 3D JS from **6,388.55 kB to 1,214.78 kB** (gzip 1,427.36 kB to 290.58 kB).
+- Enforce a 1,800,000-byte post-build 3D JavaScript limit in `scripts/check-bundle-budget.js`.
+- Add headless Chromium test for an actual legal move and 3D/Havok mounting in `scripts/smoke-browser.mjs`.
 - Fail closed when the Cloudflare room-creation rate limiter is missing or throws. Add regression test.
 - Keep PR in draft until evidence gates below pass.
 
 ## Mandatory outstanding gates
 
 ### A. Rules and storage
-- [ ] Execute clean install, all unit tests and build on a pinned SHA; retain logs and fixes.
+- [x] Pinned-SHA hosted CI clean install, 27/27 automated unit tests, build and WASM preflight:
+  [run #44360880550](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/44360880550).
+- [ ] Independent local/device verification and any failing new edge-case tests.
 - [ ] Differential chess-rule tests: all promotions, castling through check, en passant, pins,
   3-/5-fold repetition, 50-/75-move limits, checkmate priority, time forfeits, wrong clocks.
 - [ ] IndexedDB write-failure, quota, incognito and multi-tab concurrency tests; prevent silent save loss.
@@ -89,14 +98,15 @@ An absence of REST commit-status records is **not** proof that Checks API has no
 
 ## Minimum evidence required to remove draft
 
-1. At HEAD: successful `npm ci --no-audit --no-fund`, `npm test`, `npm run build`,
-   `node scripts/prepare-worker-solver.js` and Wasm binary validation.
-2. Independent Playwright/mobile browser game sessions: local, computer, 2D, 3D and offline restore.
+1. CI clean install, 27 tests, PWA build, bundle gate and WASM validation: **verified on
+   `59cf19f`**. Re-check against each new release candidate HEAD; never assume earlier checks transfer.
+2. One Chromium local-move + 3D mount smoke: **verified on `59cf19f`**.
+   Independent multi-device game sessions, Android, offline-restore acceptance and visual review still required.
 3. Two authenticated seats in a real Durable Object; illegal move rejection and reconnect test.
 4. Android installable artifact + real-device smoke test, if Android is claimed as supported.
 5. License/artwork provenance and no unapproved copyleft ingestion.
 6. Readiness decision: **do not merge simply because GitHub reports mergeable=true**.
 
-**Status: partially implemented; release blocked by missing independent execution evidence
-and unfinished full-stack features.** This is not an acceptance of the larger Work Agent mandate
+**Status: source-level foundation and narrow hosted CI/browser smoke verified at `59cf19f`;
+full release blocked by unfinished full-stack features and missing device/deployed-network/security evidence.** This is not an acceptance of the larger Work Agent mandate
 as complete. Continue in small PRs; do not bypass these gates to obtain a green badge.
