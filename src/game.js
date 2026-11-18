@@ -10,6 +10,7 @@ export function restoreGame(raw) {
   let claimMove;
   let clock = null;
   let difficulty = 'standard';
+  let humanSide = 'w';
   let preset;
   if (raw) {
     const save = JSON.parse(raw);
@@ -18,6 +19,10 @@ export function restoreGame(raw) {
     }
     mode = save.mode;
     if (['easy', 'standard', 'hard'].includes(save.difficulty)) difficulty = save.difficulty;
+    if (save.humanSide !== undefined) {
+      if (!['w','b'].includes(save.humanSide)) throw new Error('Invalid human side in save');
+      humanSide = save.humanSide;
+    }
     if (save.clock !== undefined) {
       if (!validClock(save.clock)) throw new Error('Invalid saved clock');
       clock = save.clock;
@@ -43,12 +48,13 @@ export function restoreGame(raw) {
       drawClaim = save.drawClaim;
     }
   }
-  return { game, mode, drawClaim, clock, difficulty, claimMove, preset };
+  return { game, mode, drawClaim, clock, difficulty, claimMove, preset, humanSide };
 }
 
-export function serializeGame(game, mode, drawClaim, clock, difficulty, claimMove, preset) {
+export function serializeGame(game, mode, drawClaim, clock, difficulty, claimMove, preset, humanSide = 'w') {
   const moves = game.history({ verbose: true }).map(({from, to, promotion}) => ({from, to, promotion}));
-  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty, claimMove, preset });
+  if (!['w','b'].includes(humanSide)) throw new Error('Invalid human side');
+  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty, claimMove, preset, humanSide });
 }
 
 export function result(game) {
