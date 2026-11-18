@@ -145,7 +145,11 @@ view.onclick = async () => {
     view.textContent = 'Use 2D board';
     render();
   } catch {
+    renderer?.dispose();
+    renderer = undefined;
     canvas.hidden = true;
+    board.hidden = false;
+    view.textContent = 'Use 3D board';
     notice = '3D unavailable on this device. The 2D match is still available.';
     render();
   } finally {

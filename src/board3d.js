@@ -34,6 +34,7 @@ export async function mountBoard(canvas, selectSquare) {
     keyLight.intensity = .92;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
     const moving = new Map();
+    let needsFrame = true;
     scene.onBeforeRenderObservable.add(() => {
       const now = performance.now();
       for (const [mesh, {start,end,since}] of moving) {
@@ -81,7 +82,7 @@ export async function mountBoard(canvas, selectSquare) {
     const effects = new Map();
     const base = MeshBuilder.CreateBox('frame', {width:8.4,depth:8.4,height:.32}, scene);
     base.material = walnut;
-    base.position.y = -.18;
+    base.position.y = -.16;
     new PhysicsAggregate(base, PhysicsShapeType.BOX, {mass:0, friction:.65}, scene);
 
     for (let rank = 0; rank < 8; rank++) {
@@ -152,6 +153,7 @@ export async function mountBoard(canvas, selectSquare) {
         body.dispose();
         mesh.dispose();
         effects.delete(body);
+        needsFrame = true;
       }, 1100);
       effects.set(body, {timer,mesh});
     }
@@ -168,6 +170,7 @@ export async function mountBoard(canvas, selectSquare) {
 
     let previousGame;
     const syncTurns = (game, selected, targets, move) => {
+      needsFrame = true;
       if (previousGame && game !== previousGame && !move) {
         moving.clear();
         for (const mesh of active.values()) mesh.dispose();
@@ -212,16 +215,29 @@ export async function mountBoard(canvas, selectSquare) {
         }
       }
     };
-    scene.onPointerDown = (_, info) => {
-      const square = info.pickedMesh?.metadata?.square;
+    scene.onPointerDown = () => {
+      const hit = scene.pick(scene.pointerX, scene.pointerY,
+        mesh => tiles.get(mesh.metadata?.square)?.mesh === mesh);
+      const square = hit?.pickedMesh?.metadata?.square;
       if (square) selectSquare(square);
     };
-    const observer = new ResizeObserver(() => engine.resize());
+    const observer = new ResizeObserver(() => {
+      engine.resize();
+      needsFrame = true;
+    });
     observer.observe(canvas);
-    engine.runRenderLoop(() => { if (!document.hidden) scene.render(); });
+    engine.onContextRestoredObservable.add(() => { needsFrame = true; });
+    engine.runRenderLoop(() => {
+      if (document.hidden || !(needsFrame || moving.size || effects.size)) return;
+      needsFrame = false;
+      scene.render();
+    });
     return {
       syncTurns,
-      setFlipped(flipped) { camera.alpha = flipped ? Math.PI / 2 : -Math.PI / 2; },
+      setFlipped(flipped) {
+        camera.alpha = flipped ? Math.PI / 2 : -Math.PI / 2;
+        needsFrame = true;
+      },
       dispose() {
         observer.disconnect();
         for (const [body, {timer}] of effects) {
