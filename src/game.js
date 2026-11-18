@@ -16,7 +16,7 @@ export function restoreGame(raw) {
       throw new Error('Unsupported match save');
     }
     mode = save.mode;
-    if (save.difficulty === 'easy') difficulty = 'easy';
+    if (['easy', 'standard', 'hard'].includes(save.difficulty)) difficulty = save.difficulty;
     if (save.clock !== undefined) {
       if (!validClock(save.clock)) throw new Error('Invalid saved clock');
       clock = save.clock;
