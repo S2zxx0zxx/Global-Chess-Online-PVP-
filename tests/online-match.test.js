@@ -22,3 +22,19 @@ test('server settles expired matches before accepting a move', () => {
   assert.equal(result.match.moves.length,0);
   assert.equal(advanceClock(result.match,302000),result.match);
 });
+
+test('25 isolated room states complete matches for 50 seats', async () => {
+  await Promise.all(Array.from({length:25}, (_, index) => {
+    const startedAt = 1000 + index;
+    let match = startMatch(createMatch(), startedAt);
+    for (const [side,from,to] of [
+      ['w','f2','f3'],['b','e7','e5'],['w','g2','g4'],['b','d8','h4'],
+    ]) {
+      const update = applyMove(match, side, {from,to,expectedVersion:match.version}, startedAt + match.version);
+      assert.equal(update.error, undefined);
+      match = update.match;
+    }
+    assert.equal(match.outcome, 'Black wins by checkmate');
+    assert.equal(match.moves.length, 4);
+  }));
+});

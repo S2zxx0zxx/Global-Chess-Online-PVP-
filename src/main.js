@@ -1,3 +1,4 @@
+import { openGameStorage } from './storage.js';
 import { bindOnline } from './online.js';
 import { Chess } from 'chess.js';
 import { readHistory, recordMatch } from './history.js';
@@ -6,15 +7,19 @@ import './style.css';
 import { restoreGame, serializeGame, result, claimableDraw, intendedDraw, timeoutResult } from './game.js';
 
 import { matchKey as key, exportBackup, importBackup } from './backup.js';
+async function initialize() {
+const gameStorage = await openGameStorage();
 const board = document.querySelector('#board');
 const status = document.querySelector('#status');
+const rematch = document.querySelector('#rematch');
+rematch.onclick = () => document.getElementById(state.mode).click();
 const promotion = document.querySelector('#promotion');
 const glyphs = { w: '♔♕♖♗♘♙', b: '♚♛♜♝♞♟' };
 const names = { k:'King', q:'Queen', r:'Rook', b:'Bishop', n:'Knight', p:'Pawn' };
 let state = restoreGame();
 let notice = '';
 try {
-  state = restoreGame(localStorage.getItem(key));
+  state = restoreGame(gameStorage.getItem(key));
 } catch {
   notice = 'Saved game could not be restored.';
 }
@@ -122,6 +127,7 @@ view.onclick = async () => {
 };
 
 function render(move) {
+  rematch.hidden = Boolean(online?.active) || !outcome(state.game);
   displayClock();
   const {game, mode} = state;
   const activeSquare = document.activeElement?.dataset.square;
@@ -154,9 +160,9 @@ function save() {
   if (online?.active) return;
   try {
     const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove);
-    localStorage.setItem(key, snapshot);
+    gameStorage.setItem(key, snapshot);
     const completed = outcome(state.game);
-    if (completed) recordMatch(localStorage, completed, snapshot);
+    if (completed) recordMatch(gameStorage, completed, snapshot);
     notice = '';
   } catch {
     notice = 'Storage unavailable. This match may not resume after closing.';
@@ -296,7 +302,7 @@ document.querySelector('#history-button').onclick = () => {
   replaySection.hidden = true;
   historyList.replaceChildren();
   try {
-    const entries = readHistory(localStorage);
+    const entries = readHistory(gameStorage);
     if (!entries.length) historyList.textContent = 'No completed matches yet.';
     for (const entry of entries) {
       const button = document.createElement('button');
@@ -343,7 +349,7 @@ document.querySelector('#export-backup').onclick = () => {
   try {
     if (state.clock) updateClock();
     save();
-    downloadFile(exportBackup(localStorage), 'global-chess-backup.json', 'application/json');
+    downloadFile(exportBackup(gameStorage), 'global-chess-backup.json', 'application/json');
   } catch {
     backupStatus.textContent = 'Backup could not be exported.';
   }
@@ -355,7 +361,7 @@ backupFile.onchange = async () => {
   if (!file || !confirm('Replace the active match and local match history with this backup?')) return;
   try {
     if (file.size > 2_000_000) throw new Error('Backup too large');
-    const restored = importBackup(localStorage, await file.text());
+    const restored = importBackup(gameStorage, await file.text());
     worker?.terminate();
     worker = undefined;
     state = restored;
@@ -369,3 +375,31 @@ backupFile.onchange = async () => {
     backupStatus.textContent = 'Could not restore this backup.';
   }
 };
+
+const lessons = [
+  ['Control the center', 'Try 1. e4 or 1. d4 to fight for the central squares and open lines for your pieces.'],
+  ['Develop your pieces', 'Bring knights and bishops into play before spending turns moving the same piece again.'],
+  ['Protect your king', 'Castle when legal to move your king toward the edge and bring your rook closer to the center.'],
+];
+let lessonIndex = 0;
+const learnDialog = document.querySelector('#learn-dialog');
+function renderLesson() {
+  const [title, description] = lessons[lessonIndex];
+  const heading = document.createElement('h3');
+  heading.textContent = title;
+  const body = document.createElement('p');
+  body.textContent = description;
+  document.querySelector('#lesson').replaceChildren(heading, body);
+  document.querySelector('#lesson-next').disabled = lessonIndex === lessons.length - 1;
+}
+document.querySelector('#learn').onclick = () => { renderLesson(); learnDialog.showModal(); };
+document.querySelector('#lesson-next').onclick = () => { lessonIndex++; renderLesson(); };
+
+window.addEventListener('chess-storage-error', () => {
+  notice = 'Could not write the game save.';
+  render();
+});
+}
+initialize().catch(() => {
+  document.querySelector('#status').textContent = 'The game could not start.';
+});

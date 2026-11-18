@@ -25,6 +25,8 @@ export async function mountBoard(canvas, selectSquare) {
     scene.getPhysicsEngine().setTimeStep(1 / 60);
     const camera = new ArcRotateCamera('camera', -Math.PI / 2, .48, 11.6, Vector3.Zero(), scene);
     camera.fov = .86;
+    camera.lowerRadiusLimit = 10;
+    camera.upperRadiusLimit = 15;
     scene.activeCamera = camera;
     const light = new HemisphericLight('room', new Vector3(-.4, 1, -.3), scene);
     light.intensity = 1.15;

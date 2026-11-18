@@ -30,3 +30,5 @@ dialog{border:1px solid #c59e65;border-radius:12px;background:#39212a}
 #replay-board span{display:grid;place-items:center;font-size:clamp(16px,6vw,36px);color:#241918;text-shadow:0 1px 1px #fff9}
 #replay button{margin-top:8px}
 #history-button,#claim{margin-top:8px;padding:7px;border:1px solid #82604b;border-radius:8px;background:#39212a;color:#f7e7ce}
+#learn{margin-bottom:12px;padding:7px 12px;border:1px solid #82604b;border-radius:8px;background:#39212a;color:#f7e7ce}
+#learn-dialog{max-width:min(440px,94vw)}
