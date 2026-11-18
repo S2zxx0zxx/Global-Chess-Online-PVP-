@@ -55,3 +55,13 @@ test('flag fall against a bare king is a draw', () => {
   assert.match(timeoutResult(game,'b'),/^Draw on time/);
   assert.equal(timeoutResult(game,'w'),'Black wins on time');
 });
+
+test('saved matches retain the original clock preset and bot difficulty', () => {
+  const {game} = restoreGame();
+  const saved = serializeGame(game, 'computer', undefined, {w:250000,b:240000}, 'easy', undefined, 'quick');
+  const restored = restoreGame(saved);
+  assert.equal(restored.preset, 'quick');
+  assert.equal(restored.difficulty, 'easy');
+  assert.deepEqual(restored.clock, {w:250000,b:240000});
+  assert.throws(() => restoreGame(saved.replace('"quick"', '"untimed"')));
+});

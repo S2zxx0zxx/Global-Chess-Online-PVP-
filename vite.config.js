@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { defineConfig } from 'vite';
 
@@ -7,7 +8,11 @@ export default defineConfig({
     apply: 'build',
     generateBundle(_, bundle) {
       const files = ['index.html', 'manifest.webmanifest', 'icon.svg', ...Object.keys(bundle).filter(file => file !== 'index.html')];
-      const revision = createHash('sha256').update(JSON.stringify(files)).digest('hex').slice(0,16);
+      const hash = createHash('sha256').update(JSON.stringify(files));
+      for (const file of ['index.html', 'public/manifest.webmanifest', 'public/icon.svg']) {
+        hash.update(readFileSync(new URL(file, import.meta.url)));
+      }
+      const revision = hash.digest('hex').slice(0,16);
       this.emitFile({
         type: 'asset',
         fileName: 'sw.js',
@@ -26,7 +31,11 @@ self.addEventListener('activate', event => {
 });
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
-  const match = event.request.mode === 'navigate' ? url('index.html') : event.request.url;
+  const requestUrl = new URL(event.request.url);
+  const scope = new URL(self.registration.scope);
+  const entry = requestUrl.origin === scope.origin &&
+    (requestUrl.pathname === scope.pathname || requestUrl.pathname === new URL(url('index.html')).pathname);
+  const match = event.request.mode === 'navigate' && entry ? url('index.html') : event.request.url;
   if (!files.some(file => url(file) === match)) return;
   event.respondWith(caches.open(version).then(async cache =>
     (await cache.match(match)) ?? fetch(event.request)));

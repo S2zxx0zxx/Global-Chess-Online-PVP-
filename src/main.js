@@ -12,7 +12,7 @@ const gameStorage = await openGameStorage();
 const board = document.querySelector('#board');
 const status = document.querySelector('#status');
 const rematch = document.querySelector('#rematch');
-rematch.onclick = () => document.getElementById(state.mode).click();
+rematch.onclick = () => startLocalMatch(state.mode, state.preset ?? document.querySelector('#preset').value, state.difficulty);
 const promotion = document.querySelector('#promotion');
 const glyphs = { w: '♔♕♖♗♘♙', b: '♚♛♜♝♞♟' };
 const names = { k:'King', q:'Queen', r:'Rook', b:'Bishop', n:'Knight', p:'Pawn' };
@@ -159,7 +159,7 @@ function render(move) {
 function save() {
   if (online?.active) return;
   try {
-    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove);
+    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove, state.preset);
     gameStorage.setItem(key, snapshot);
     const completed = outcome(state.game);
     if (completed) recordMatch(gameStorage, completed, snapshot);
@@ -228,18 +228,21 @@ async function selectSquare(square) {
   if (chosen && state.game === game) commit(chosen);
 }
 board.addEventListener('click', ({target}) => selectSquare(target.closest('[data-square]')?.dataset.square));
+function startLocalMatch(mode, preset, difficulty) {
+  if (online?.active) return;
+  if (state.game.history().length && !outcome(state.game) && !confirm('Replace this match?')) return;
+  worker?.terminate();
+  worker = undefined;
+  state = {...restoreGame(), mode, preset, difficulty, clock: startClock(preset)};
+  tickAt = performance.now();
+  selected = undefined;
+  save();
+  render();
+}
 for (const mode of ['local', 'computer']) {
-  document.getElementById(mode).onclick = () => {
-    if (online?.active) return;
-    if (state.game.history().length && !outcome(state.game) && !confirm('Replace this match?')) return;
-    worker?.terminate();
-    worker = undefined;
-    state = {...restoreGame(), mode, difficulty: document.querySelector('#difficulty').value, clock: startClock(document.querySelector('#preset').value)};
-    tickAt = performance.now();
-    selected = undefined;
-    save();
-    render();
-  };
+  document.getElementById(mode).onclick = () => startLocalMatch(
+    mode, document.querySelector('#preset').value, document.querySelector('#difficulty').value,
+  );
 }
 let offlineState;
 online = bindOnline({

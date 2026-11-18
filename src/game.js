@@ -1,4 +1,4 @@
-import { validClock } from './clock.js';
+import { presets, validClock } from './clock.js';
 import { Chess } from 'chess.js';
 
 export function restoreGame(raw) {
@@ -8,6 +8,7 @@ export function restoreGame(raw) {
   let claimMove;
   let clock = null;
   let difficulty = 'standard';
+  let preset;
   if (raw) {
     const save = JSON.parse(raw);
     if (save.version !== 1 || !Array.isArray(save.moves) || !['local', 'computer'].includes(save.mode)) {
@@ -18,6 +19,14 @@ export function restoreGame(raw) {
     if (save.clock !== undefined) {
       if (!validClock(save.clock)) throw new Error('Invalid saved clock');
       clock = save.clock;
+    }
+    if (save.preset !== undefined) {
+      if (!Object.hasOwn(presets, save.preset) ||
+          ((save.preset === 'untimed') !== (clock === null)) ||
+          (clock && Math.max(clock.w, clock.b) > presets[save.preset])) {
+        throw new Error('Invalid saved time control');
+      }
+      preset = save.preset;
     }
     for (const move of save.moves) {
       if (result(game)) throw new Error('Move after match ended');
@@ -30,12 +39,12 @@ export function restoreGame(raw) {
       drawClaim = save.drawClaim;
     }
   }
-  return { game, mode, drawClaim, clock, difficulty, claimMove };
+  return { game, mode, drawClaim, clock, difficulty, claimMove, preset };
 }
 
-export function serializeGame(game, mode, drawClaim, clock, difficulty, claimMove) {
+export function serializeGame(game, mode, drawClaim, clock, difficulty, claimMove, preset) {
   const moves = game.history({ verbose: true }).map(({from, to, promotion}) => ({from, to, promotion}));
-  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty, claimMove });
+  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty, claimMove, preset });
 }
 
 export function result(game) {
