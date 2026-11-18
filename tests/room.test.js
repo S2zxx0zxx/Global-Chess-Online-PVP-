@@ -7,6 +7,9 @@ test('invite is single-use and both seats recover the persisted match', async ()
   const storage = {transaction: fn => fn({
     get: key => structuredClone(records.get(key)),
     put: (key, value) => records.set(key, structuredClone(value)),
+    setAlarm: time => records.set('alarm',time),
+    getAlarm: () => records.get('alarm') ?? null,
+    delete: key => records.delete(key),
   })};
   let room = new Room({storage});
   const call = (action, body, credential) => room.fetch(new Request('https://room/' + action, {
@@ -65,4 +68,37 @@ test('rejected room creation does not allocate a Durable Object', async () => {
     ROOMS:{getByName() { throw new Error('Rate-limited request allocated a room'); }},
   });
   assert.equal(response.status,429);
+});
+
+
+test('room alarms preserve active matches and purge expired room data', async t => {
+  const now = 1_800_000_000_000;
+  t.mock.method(Date,'now',() => now);
+  const records = new Map();
+  const room = new Room({storage:{transaction: fn => fn({
+    get: key => records.get(key),
+    put: (key,value) => records.set(key,value),
+    delete: key => records.delete(key),
+    getAlarm: () => records.get('alarm') ?? null,
+    setAlarm: time => records.set('alarm',time),
+  })}});
+  const day = 86_400_000;
+  const created = await room.fetch(new Request('https://room/create',{
+    method:'POST',body:JSON.stringify({id:crypto.randomUUID()}),
+  }));
+  assert.equal(created.status,201);
+  assert.equal(records.get('alarm'),now+day);
+  await room.alarm();
+  assert.ok(records.has('room'));
+
+  records.delete('alarm');
+  const legacy = await room.fetch(new Request('https://room/state'));
+  assert.equal(legacy.status,401);
+  assert.equal(records.get('alarm'),now+day);
+
+  records.get('room').created = now-day;
+  await room.alarm();
+  assert.equal(records.has('room'),false);
+  await room.alarm();
+  assert.equal((await room.fetch(new Request('https://room/state'))).status,404);
 });

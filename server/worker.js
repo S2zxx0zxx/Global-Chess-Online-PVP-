@@ -7,6 +7,7 @@ const token = () => crypto.randomUUID();
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
 
 const maxJsonBytes = 2048;
+const roomLifetimeMs = 86_400_000;
 
 async function readRoomInput(request) {
   if (Number(request.headers.get('Content-Length')) > maxJsonBytes) return null;
@@ -62,6 +63,16 @@ export class Room {
     this.storage = ctx.storage;
   }
 
+  async alarm() {
+    await this.storage.transaction(async transaction => {
+      const room = await transaction.get('room');
+      if (!room) return;
+      const expiresAt = room.created + roomLifetimeMs;
+      if (Date.now() < expiresAt) await transaction.setAlarm(expiresAt);
+      else await transaction.delete('room');
+    });
+  }
+
   async fetch(request) {
     const action = new URL(request.url).pathname.slice(1);
     let input;
@@ -78,9 +89,16 @@ export class Room {
         if (room) return json({error:'Room already exists'}, 409);
         const state = {id:input.id, invite:token(), w:token(), b:null, match:createMatch(), created:now};
         await transaction.put('room', state);
+        await transaction.setAlarm(now + roomLifetimeMs);
         return json({id:state.id, invite:state.invite, seat:'w', credential:state.w, match:state.match, serverNow:now}, 201);
       }
-      if (!room || now - room.created >= 86_400_000) return json({error:'Room unavailable'}, 404);
+      if (!room) return json({error:'Room unavailable'}, 404);
+      const expiresAt = room.created + roomLifetimeMs;
+      if (now >= expiresAt) {
+        await transaction.delete('room');
+        return json({error:'Room unavailable'}, 404);
+      }
+      if (await transaction.getAlarm() === null) await transaction.setAlarm(expiresAt);
       if (action === 'join') {
         if (!room.invite || input.invite !== room.invite) return json({error:'Invalid invite'}, 403);
         if (room.b) return json({error:'Room full'}, 409);
