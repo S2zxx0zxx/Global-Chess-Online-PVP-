@@ -1,3 +1,4 @@
+import { navigate } from './navigation.js';
 const key = 'global-chess.preferences.v1';
 const avatars = ['♞','♜','♛'];
 
@@ -58,8 +59,7 @@ export function bindLobby({startMatch, historyCount}) {
     element('online-status').scrollIntoView({block:'nearest'});
   };
   element('lobby-resume').onclick = () => {
-    element('match-exit').hidden = false;
-    document.documentElement.dataset.view = 'match';
+    navigate('match');
     focusBoard();
   };
   const openProfile = () => {
@@ -103,6 +103,9 @@ export function bindLobby({startMatch, historyCount}) {
 
   return {
     render({outcome, turn, mode, online, started}) {
+      const completedCount = historyCount();
+      element('profile-hub-stats').textContent = completedCount === null ? 'Match history unavailable.'
+        : completedCount + (completedCount === 1 ? ' completed game saved locally.' : ' completed games saved locally.');
       element('lobby-resume').hidden = !started || Boolean(outcome);
       element('result-open').hidden = !outcome;
       element('result-copy').textContent = outcome ?? '';
