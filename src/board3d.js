@@ -1,6 +1,6 @@
 import {
-  ArcRotateCamera, Color3, DirectionalLight, DynamicTexture, Engine, HemisphericLight, MeshBuilder, PhysicsAggregate,
-  PhysicsMotionType, PhysicsShapeType, Scene, StandardMaterial, Vector3,
+  ArcRotateCamera, Color3, DirectionalLight, Engine, HemisphericLight, MeshBuilder, PhysicsAggregate,
+  PhysicsMotionType, PhysicsShapeType, Scene, StandardMaterial, Texture, Vector3, VertexBuffer,
 } from '@babylonjs/core';
 import { HavokPlugin } from '@babylonjs/core/Physics/v2/Plugins/havokPlugin.js';
 import HavokPhysics from '@babylonjs/havok';
@@ -53,37 +53,18 @@ export async function mountBoard(canvas, selectSquare) {
       m.diffuseColor = Color3.FromHexString(hex);
       return m;
     }
-    const maple = material('maple', color('board-light'));
-    const walnut = material('walnut', color('board-dark'));
-    function addWoodGrain(surface, base, grain) {
-      const texture = new DynamicTexture(surface.name + ' grain', {width:256,height:128}, scene, true);
-      const ctx = texture.getContext();
-      ctx.fillStyle = base;
-      ctx.fillRect(0,0,256,128);
-      ctx.strokeStyle = grain;
-      for (let row = 0; row < 128; row += 2) {
-        ctx.globalAlpha = .08 + Math.abs(Math.sin(row * 2.39)) * .24;
-        ctx.beginPath();
-        ctx.moveTo(0,row);
-        for (let x = 0; x <= 256; x += 8) {
-          ctx.lineTo(x,row + Math.sin(x / 37 + row / 11)*2 + Math.sin(x / 13 + row)*.65);
-        }
-        ctx.stroke();
-      }
-      texture.update();
-      surface.diffuseColor = Color3.White();
-      surface.diffuseTexture = texture;
-      surface.specularColor = new Color3(.19,.14,.10);
-    }
-    addWoodGrain(maple,color('board-light'),color('brand-walnut'));
-    addWoodGrain(walnut,color('board-dark'),color('brand-espresso'));
+    const boardArt = material('maple and walnut', '#FFFFFF');
+    boardArt.diffuseTexture = new Texture(
+      new URL('./chess-assets/board/maple-walnut.webp',document.baseURI).href,scene,
+    );
+    boardArt.specularColor = new Color3(.19,.14,.10);
     const marked = material('selected', color('board-select'));
     const target = material('legal move', color('board-hint'));
     const previous = material('last move', color('board-last'));
     const check = material('check', color('board-check'));
     const frame = material('frame', color('brand-walnut'));
-    addWoodGrain(frame,color('brand-walnut'),color('brand-espresso'));
-    const pieces = { w: material('ivory', color('brand-cream')), b: material('ebony', color('brand-espresso')) };
+
+    const pieces = { w: material('ivory', color('brand-cream')), b: material('oxblood', '#4B171B') };
     const tiles = new Map();
     const active = new Map();
     const effects = new Map();
@@ -97,7 +78,13 @@ export async function mountBoard(canvas, selectSquare) {
         const square = squareFor(file, rank);
         const mesh = MeshBuilder.CreateGround(square, {width:1,height:1}, scene);
         mesh.position.set(file - 3.5, 0, rank - 3.5);
-        const color = (rank + file) % 2 ? maple : walnut;
+        const uv = mesh.getVerticesData(VertexBuffer.UVKind);
+        for (let index = 0; index < uv.length; index += 2) {
+          uv[index] = (24 + (file + uv[index]) * 56) / 496;
+          uv[index + 1] = (24 + (rank + uv[index + 1]) * 56) / 496;
+        }
+        mesh.setVerticesData(VertexBuffer.UVKind,uv);
+        const color = boardArt;
         mesh.metadata = {square};
         tiles.set(square, {mesh, color});
       }

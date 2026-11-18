@@ -1,3 +1,4 @@
+import { renderPieceArt } from './piece-art.js';
 import { Chess } from 'chess.js';
 import { extraLessons, extraPuzzles } from './learning-pack.js';
 
@@ -37,7 +38,7 @@ export function solveExercise(game, exercise, from, to, promotion) {
   return null;
 }
 const key = 'global-chess.learning.v1';
-export function bindLearning(glyphs,names) {
+export function bindLearning(names) {
   const get = id => document.getElementById(id);
   const dialog = get('learn-dialog');
   const picker = get('lesson-picker');
@@ -77,7 +78,7 @@ export function bindLearning(glyphs,names) {
         button.className = (rank+file)%2 ? 'dark' : 'light';
         button.setAttribute('aria-label', square + (piece ? ', ' + (piece.color === 'w' ? 'White ' : 'Black ') + names[piece.type] : ''));
         button.setAttribute('aria-pressed', String(square === selected));
-        button.textContent = piece ? glyphs[piece.color]['kqrbnp'.indexOf(piece.type)] : '';
+        renderPieceArt(button,piece,names);
         button.onclick = () => tap(square);
         board.append(button);
         if (square === focus) button.focus();

@@ -1,3 +1,4 @@
+import { renderPieceArt } from './piece-art.js';
 import { loadBrowserMateSolver } from './mate-solver.js';
 import { bindLearning } from './learning.js';
 import { bindLobby } from './lobby.js';
@@ -24,7 +25,6 @@ rematch.onclick = () => {
   }
 };
 const promotion = document.querySelector('#promotion');
-const glyphs = { w: '♔♕♖♗♘♙', b: '♚♛♜♝♞♟' };
 const names = { k:'King', q:'Queen', r:'Rook', b:'Bishop', n:'Knight', p:'Pawn' };
 let state = restoreGame();
 let notice = '';
@@ -173,6 +173,7 @@ function render(move) {
   const lastMove = move ?? game.history({verbose:true}).at(-1);
   const checkedSide = game.inCheck() ? game.turn() : null;
   renderer?.syncTurns(game, selected, targets, move, lastMove, checkedSide);
+  board.classList.toggle('flipped',flipped);
   const rows = game.board();
   if (flipped) rows.reverse().forEach(row => row.reverse());
   board.replaceChildren(...rows.flatMap((row, visibleRank) => row.map((piece, visibleFile) => {
@@ -192,7 +193,7 @@ function render(move) {
     cell.classList.toggle('in-check', piece?.type === 'k' && piece.color === checkedSide);
     cell.setAttribute('aria-pressed', String(square === selected));
     cell.setAttribute('aria-label', piece ? square + ', ' + (piece.color === 'w' ? 'White ' : 'Black ') + names[piece.type] : square);
-    cell.textContent = piece ? glyphs[piece.color]['kqrbnp'.indexOf(piece.type)] : '';
+    renderPieceArt(cell,piece,names);
     const coordinates = [
       [visibleRank === 7, 'file-label', square[0]],
       [visibleFile === 0, 'rank-label', square[1]],
@@ -414,7 +415,7 @@ function showReplayPosition() {
     const cell = document.createElement('span');
     cell.className = (Math.floor(index / 8) + index % 8) % 2 ? 'dark' : 'light';
     if (piece) {
-      cell.textContent = glyphs[piece.color]['kqrbnp'.indexOf(piece.type)];
+      renderPieceArt(cell,piece,names);
       cell.setAttribute('aria-label', piece.square + ' ' + (piece.color === 'w' ? 'White ' : 'Black ') + names[piece.type]);
     }
     return cell;
@@ -508,7 +509,7 @@ backupFile.onchange = async () => {
   }
 };
 
-bindLearning(glyphs,names);
+bindLearning(names);
 
 window.addEventListener('chess-storage-error', () => {
   notice = 'Could not write the game save.';

@@ -80,3 +80,13 @@ dialog form{margin-top:8px}
 .masthead button,.mode-cards button,.actions button,#learn,#view,#flip-board,#lobby-resume{min-height:var(--ch-touch-min)}
 .board button[aria-pressed=true]{outline:2px solid var(--ch-color-ink-dark);outline-offset:-2px}
 .board button:focus-visible{outline:3px solid var(--ch-color-a11y-focus);outline-offset:-4px}
+
+/* The supplied board has a 24 px frame around a 448 px playing area. */
+.board{position:relative;border:0;padding:4.83871%;background:none;isolation:isolate}
+.board::before{content:'';position:absolute;inset:0;background:url('/chess-assets/board/maple-walnut.webp') center/100% 100% no-repeat;z-index:-1;pointer-events:none}
+.board.flipped::before{transform:rotate(180deg)}
+.board .light,.board .dark{background:transparent}
+.board button[aria-pressed=true]{background:color-mix(in srgb,var(--ch-color-board-select) 57%,transparent)}
+.high-contrast .board .light{background:#fff1ce}
+.high-contrast .board .dark{background:#ae8969}
+.piece-art{display:block;width:94%;height:94%;object-fit:contain;margin:auto;pointer-events:none;user-select:none}

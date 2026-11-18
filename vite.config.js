@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { defineConfig } from 'vite';
 
@@ -7,9 +7,14 @@ export default defineConfig({
     name: 'offline-game-shell',
     apply: 'build',
     generateBundle(_, bundle) {
-      const files = ['index.html', 'manifest.webmanifest', 'icon.svg', 'solver/cha.wasm.gz', 'solver/LICENSE.txt', ...Object.keys(bundle).filter(file => file !== 'index.html')];
+      const assetDirectory = new URL('public/chess-assets/pieces/',import.meta.url);
+      const artwork = [
+        'chess-assets/board/maple-walnut.webp',
+        ...readdirSync(assetDirectory).filter(file => file.endsWith('.webp')).map(file => 'chess-assets/pieces/' + file),
+      ];
+      const files = [...artwork,'index.html', 'manifest.webmanifest', 'icon.svg', 'solver/cha.wasm.gz', 'solver/LICENSE.txt', ...Object.keys(bundle).filter(file => file !== 'index.html')];
       const hash = createHash('sha256').update(JSON.stringify(files));
-      for (const file of ['index.html', 'public/manifest.webmanifest', 'public/icon.svg', 'public/solver/cha.wasm.gz', 'public/solver/LICENSE.txt']) {
+      for (const file of ['index.html', 'public/manifest.webmanifest', 'public/icon.svg', 'public/solver/cha.wasm.gz', 'public/solver/LICENSE.txt', ...artwork.map(file => 'public/' + file)]) {
         hash.update(readFileSync(new URL(file, import.meta.url)));
       }
       const revision = hash.digest('hex').slice(0,16);
