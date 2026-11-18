@@ -40,14 +40,26 @@ const clocks = document.querySelector('#clocks');
 let tickAt = performance.now();
 let online;
 let lobby;
+let flipped = false;
+let wasVisible = !document.hidden;
+const flip = document.querySelector('#flip-board');
+flip.onclick = () => {
+  flipped = !flipped;
+  flip.setAttribute('aria-pressed', String(flipped));
+  renderer?.setFlipped(flipped);
+  render();
+};
 let focusSquare = 'e2';
 
 function updateClock() {
-  if (online?.active) { displayClock(); return; }
   const now = performance.now();
+  const elapsed = wasVisible ? now - tickAt : 0;
+  tickAt = now;
+  wasVisible = !document.hidden;
+  if (online?.active) { displayClock(); return; }
   const { clock, game } = state;
-  if (clock && !outcome(game) && !document.hidden) {
-    state.clock = remainingClock(clock, game.turn(), now - tickAt);
+  if (clock && !outcome(game) && elapsed > 0) {
+    state.clock = remainingClock(clock, game.turn(), elapsed);
     if (state.clock[game.turn()] === 0) {
       worker?.terminate();
       worker = undefined;
@@ -55,7 +67,6 @@ function updateClock() {
       render();
     }
   }
-  tickAt = now;
   displayClock();
 }
 
@@ -69,6 +80,7 @@ function displayClock() {
   }).join('  ·  ');
 }
 function settleClaim(reason, move) {
+  if (online?.active) { online.claim(move); return; }
   updateClock();
   if (!reason || outcome(state.game)) return;
   state.drawClaim = reason;
@@ -80,7 +92,8 @@ function settleClaim(reason, move) {
 
 claim.onclick = () => {
   const {game} = state;
-  if (outcome(game) || online?.active || (state.mode === 'computer' && game.turn() === 'b')) return;
+  if (outcome(game) || (online?.active && !online.canMove(game.turn())) ||
+      (state.mode === 'computer' && game.turn() === 'b')) return;
   const reason = claimableDraw(game);
   if (reason) return settleClaim(reason);
   const dialog = document.querySelector('#claim-dialog');
@@ -96,7 +109,7 @@ claim.onclick = () => {
     button.textContent = san + ' · ' + intended;
     button.onclick = () => {
       dialog.close();
-      if (state.game === game && !online?.active) settleClaim(intendedDraw(game, move), move);
+      if (state.game === game) settleClaim(intendedDraw(game, move), move);
     };
     options.append(button);
   }
@@ -121,6 +134,7 @@ view.onclick = async () => {
   try {
     const { mountBoard } = await import('./board3d.js');
     renderer = await mountBoard(canvas, selectSquare);
+    renderer.setFlipped(flipped);
     board.hidden = true;
     view.textContent = 'Use 2D board';
     render();
@@ -142,7 +156,11 @@ function render(move) {
   const activeSquare = document.activeElement?.dataset.square;
   const targets = selected ? game.moves({square: selected, verbose: true}).map(move => move.to) : [];
   renderer?.syncTurns(game, selected, targets, move);
-  board.replaceChildren(...game.board().flatMap((row, rank) => row.map((piece, file) => {
+  const rows = game.board();
+  if (flipped) rows.reverse().forEach(row => row.reverse());
+  board.replaceChildren(...rows.flatMap((row, visibleRank) => row.map((piece, visibleFile) => {
+    const rank = flipped ? 7 - visibleRank : visibleRank;
+    const file = flipped ? 7 - visibleFile : visibleFile;
     const square = 'abcdefgh'[file] + (8 - rank);
     const cell = document.createElement('button');
     cell.dataset.square = square;
@@ -155,8 +173,8 @@ function render(move) {
     cell.setAttribute('aria-label', piece ? square + ', ' + (piece.color === 'w' ? 'White ' : 'Black ') + names[piece.type] : square);
     cell.textContent = piece ? glyphs[piece.color]['kqrbnp'.indexOf(piece.type)] : '';
     const coordinates = [
-      [rank === 7, 'file-label', square[0]],
-      [file === 0, 'rank-label', square[1]],
+      [visibleRank === 7, 'file-label', square[0]],
+      [visibleFile === 0, 'rank-label', square[1]],
     ];
     for (const [show, className, text] of coordinates) {
       if (!show) continue;
@@ -171,7 +189,7 @@ function render(move) {
   if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus();
   status.textContent = [outcome(game) ?? (mode === 'computer' && game.turn() === 'b' ? 'Computer thinking…' :
     (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : '')), notice].filter(Boolean).join(' · ');
-  claim.hidden = Boolean(online?.active) || Boolean(outcome(game)) || (mode === 'computer' && game.turn() === 'b');
+  claim.hidden = (online?.active && !online.canMove(game.turn())) || Boolean(outcome(game)) || (mode === 'computer' && game.turn() === 'b');
   const moves = game.history();
   document.querySelector('#moves').replaceChildren(...moves.filter((_, index) => index % 2 === 0).map((move, index) => {
     const item = document.createElement('li');
@@ -268,8 +286,9 @@ board.addEventListener('keydown', event => {
   const square = event.target.dataset.square;
   if (!delta || !square) return;
   event.preventDefault();
-  const file = 'abcdefgh'.indexOf(square[0]) + delta[0];
-  const rank = Number(square[1]) + delta[1];
+  const direction = flipped ? -1 : 1;
+  const file = 'abcdefgh'.indexOf(square[0]) + delta[0] * direction;
+  const rank = Number(square[1]) + delta[1] * direction;
   if (file < 0 || file > 7 || rank < 1 || rank > 8) return;
   const next = board.querySelector('[data-square="' + 'abcdefgh'[file] + rank + '"]');
   next.focus();
@@ -334,10 +353,13 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
 
 setInterval(updateClock, 100);
 document.addEventListener('visibilitychange', () => {
-  tickAt = performance.now();
+  updateClock();
   if (document.hidden && state.clock) save();
 });
-window.addEventListener('pagehide', () => { if (state.clock) save(); });
+window.addEventListener('pagehide', () => {
+  updateClock();
+  if (state.clock) save();
+});
 
 
 const historyDialog = document.querySelector('#history-dialog');

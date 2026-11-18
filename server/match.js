@@ -1,4 +1,4 @@
-import { restoreGame, result, timeoutResult } from '../src/game.js';
+import { restoreGame, result, timeoutResult, claimableDraw, intendedDraw } from '../src/game.js';
 import { presets } from '../src/clock.js';
 
 export function createMatch(preset = 'quick') {
@@ -51,6 +51,25 @@ export function applyMove(match, seat, command, now) {
     clock:{...current.clock,[seat]:current.clock[seat]-elapsed},
     turnStartedAt:Math.max(now,current.turnStartedAt),
     outcome:result(game),
+    version:current.version+1,
+  }};
+}
+
+
+export function applyDrawClaim(match, seat, command, now) {
+  const current = advanceClock(match, now);
+  if (current.outcome) return {match:current, error:'Match ended'};
+  if (current.turnStartedAt === null) return {match:current, error:'Waiting for opponent'};
+  if (command?.expectedVersion !== current.version) return {match:current, error:'Position changed'};
+  const {game} = restoreGame(JSON.stringify({version:1,mode:'local',moves:current.moves}));
+  if (game.turn() !== seat) return {match:current, error:'Not your turn'};
+  const reason = command.move === undefined ? claimableDraw(game) : intendedDraw(game, command.move);
+  if (!reason) return {match:current, error:'This position does not qualify for a draw claim'};
+  const elapsed = Math.max(0, now - current.turnStartedAt);
+  return {match:{
+    ...current,
+    clock:{...current.clock,[seat]:current.clock[seat]-elapsed},
+    outcome:'Draw by ' + reason,
     version:current.version+1,
   }};
 }

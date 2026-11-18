@@ -21,3 +21,9 @@ Run `npm ci`, then `npm run dev`. Run `npm test` for the game-core tests and `np
 5. Package the Android shell and verify device behavior, installable PWA and public beta.
 
 Current implementation covers the 2D match screen and an optional Babylon.js board with Havok capture effects, a basic computer opponent, save/resume and a production offline shell. Draw claims apply to the current position. Automatic repetition and move-count draws are handled separately.
+
+### Match clocks and draws
+
+Local clocks pause while the page is hidden. Private room clocks run according to server time, including while players are disconnected. A move or draw claim received at or after flag fall cannot change the result. Promotion is complete when the piece is selected and the move is accepted.
+
+Threefold and 50-move draws can be claimed on the current position or by selecting a qualifying intended move. An accepted intended-move claim ends the match without changing the board. Fivefold and 75-move draws are automatic, with checkmate taking precedence. The timeout policy recognizes provably insufficient material in common positions. It does not perform a general search for whether any legal mating sequence exists in blocked or composed positions.

@@ -122,6 +122,7 @@ export async function mountBoard(canvas, selectSquare) {
     engine.runRenderLoop(() => { if (!document.hidden) scene.render(); });
     return {
       syncTurns,
+      setFlipped(flipped) { camera.alpha = flipped ? Math.PI / 2 : -Math.PI / 2; },
       dispose() {
         observer.disconnect();
         for (const [body, timer] of effects) {

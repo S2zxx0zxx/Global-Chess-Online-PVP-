@@ -1,4 +1,4 @@
-import { applyMove, advanceClock, createMatch, startMatch } from './match.js';
+import { applyDrawClaim, applyMove, advanceClock, createMatch, startMatch } from './match.js';
 
 const json = (body, status = 200) => Response.json(body, {
   status, headers: { 'Cache-Control': 'no-store' },
@@ -15,7 +15,7 @@ export default {
         method: 'POST', body: JSON.stringify({id}),
       }));
     }
-    const route = /^\/api\/rooms\/([^/]+)\/(join|state|move)$/.exec(path);
+    const route = /^\/api\/rooms\/([^/]+)\/(join|state|move|claim)$/.exec(path);
     if (!route || !uuid.test(route[1])) return json({error:'Not found'}, 404);
     const [,id,action] = route;
     if (request.method !== (action === 'state' ? 'GET' : 'POST')) {
@@ -63,7 +63,9 @@ export class Room {
       if (!seat) return json({error:'Seat authorization required'}, 401);
       const update = action === 'move'
         ? applyMove(room.match, seat, input, now)
-        : {match:advanceClock(room.match, now)};
+        : action === 'claim'
+          ? applyDrawClaim(room.match, seat, input, now)
+          : {match:advanceClock(room.match, now)};
       if (update.match !== room.match) {
         room.match = update.match;
         await transaction.put('room', room);

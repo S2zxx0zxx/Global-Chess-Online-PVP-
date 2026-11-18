@@ -74,7 +74,9 @@ export function claimableDraw(game) {
 
 export function intendedDraw(game, move) {
   if (result(game)) return null;
-  try { game.move(move); } catch { return null; }
+  if (!move || typeof move !== 'object' ||
+      typeof move.from !== 'string' || typeof move.to !== 'string') return null;
+  try { game.move({from:move.from,to:move.to,promotion:move.promotion}); } catch { return null; }
   try {
     if (game.isCheckmate()) return null;
     if (game.isThreefoldRepetition()) return 'threefold repetition';
@@ -87,8 +89,13 @@ export function intendedDraw(game, move) {
 
 export function timeoutResult(game, expiredSide) {
   const winner = expiredSide === 'w' ? 'b' : 'w';
-  const hasNonKing = game.board().some(row => row.some(piece => piece?.color === winner && piece.type !== 'k'));
-  return !hasNonKing || game.isInsufficientMaterial()
+  const material = game.board().flat().filter(piece => piece && piece.type !== 'k');
+  const attacking = material.filter(piece => piece.color === winner);
+  const bishopsOnly = attacking.length > 0 && attacking.every(piece => piece.type === 'b');
+  const squareColor = ({square}) => (square.charCodeAt(0) + Number(square[1])) % 2;
+  const sameColorBishops = bishopsOnly && material.every(piece =>
+    piece.type === 'b' && squareColor(piece) === squareColor(attacking[0]));
+  return !attacking.length || sameColorBishops || game.isInsufficientMaterial()
     ? 'Draw on time by insufficient mating material'
     : (winner === 'w' ? 'White' : 'Black') + ' wins on time';
 }

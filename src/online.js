@@ -92,6 +92,7 @@ export function bindOnline({onMatch, onLeave}) {
     generation++;
     clearTimeout(timer);
     session = snapshot = undefined;
+    submitting = false;
     byId('leave').hidden = invite.hidden = byId('copy').hidden = true;
     byId('create').hidden = false;
     byId('rejoin').hidden = false;
@@ -109,32 +110,38 @@ export function bindOnline({onMatch, onLeave}) {
   }
   try { byId('rejoin').hidden = !localStorage.getItem(storageKey); } catch { /* Storage is optional. */ }
 
+  function canMove(side) {
+    return Boolean(snapshot && !submitting && snapshot.match.turnStartedAt !== null &&
+      !snapshot.match.outcome && session.seat === side &&
+      (snapshot.match.moves.length % 2 ? 'b' : 'w') === side);
+  }
+
+  async function submit(action, command) {
+    if (!snapshot || !canMove(session.seat)) return;
+    submitting = true;
+    const current = generation;
+    try {
+      const data = await request('/' + session.id + '/' + action,
+        {...command, expectedVersion:snapshot.match.version}, session.credential);
+      if (current === generation) accept(data);
+    } catch {
+      if (current === generation) status.textContent = 'Server response lost. Checking server position…';
+    } finally {
+      if (current === generation) submitting = false;
+    }
+  }
+
   return {
     get active() {return Boolean(snapshot);},
     get match() {return snapshot?.match;},
-    canMove(side) {
-      return Boolean(snapshot && !submitting && snapshot.match.turnStartedAt !== null &&
-        !snapshot.match.outcome && session.seat === side);
-    },
+    canMove,
     remaining(side) {
       const {match, serverNow} = snapshot;
       const running = match.moves.length % 2 ? 'b' : 'w';
       if (match.outcome || running !== side || match.turnStartedAt === null) return match.clock[side];
       return Math.max(0, match.clock[side] - Math.max(0, serverNow - match.turnStartedAt) - (performance.now() - receivedAt));
     },
-    async move({from,to,promotion}) {
-      if (!snapshot || !this.canMove(snapshot.match.moves.length % 2 ? 'b' : 'w')) return;
-      submitting = true;
-      const current = generation;
-      try {
-        const data = await request('/' + session.id + '/move',
-          {from,to,promotion,expectedVersion:snapshot.match.version}, session.credential);
-        if (current === generation) accept(data);
-      } catch {
-        if (current === generation) status.textContent = 'Move response lost. Checking server position…';
-      } finally {
-        submitting = false;
-      }
-    },
+    move({from,to,promotion}) { return submit('move',{from,to,promotion}); },
+    claim(move) { return submit('claim',{move}); },
   };
 }
