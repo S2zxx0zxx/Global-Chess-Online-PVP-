@@ -1,4 +1,4 @@
-import { restoreGame, result } from '../src/game.js';
+import { restoreGame, result, timeoutResult } from '../src/game.js';
 import { presets } from '../src/clock.js';
 
 export function createMatch(preset = 'quick') {
@@ -19,7 +19,7 @@ export function advanceClock(match, now) {
   return {
     ...match,
     clock: {...match.clock, [side]:0},
-    outcome: (side === 'w' ? 'Black' : 'White') + ' wins on time',
+    outcome: timeoutResult(restoreGame(JSON.stringify({version:1,mode:'local',moves:match.moves})).game, side),
     version: match.version + 1,
   };
 }

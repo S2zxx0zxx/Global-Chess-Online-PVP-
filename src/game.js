@@ -5,6 +5,7 @@ export function restoreGame(raw) {
   const game = new Chess();
   let mode = 'local';
   let drawClaim;
+  let claimMove;
   let clock = null;
   let difficulty = 'standard';
   if (raw) {
@@ -23,16 +24,18 @@ export function restoreGame(raw) {
       game.move(move);
     }
     if (save.drawClaim !== undefined) {
-      if (!claimableDraw(game) || save.drawClaim !== claimableDraw(game)) throw new Error('Invalid saved draw claim');
+      const reason = save.claimMove ? intendedDraw(game, save.claimMove) : claimableDraw(game);
+      if (!reason || save.drawClaim !== reason) throw new Error('Invalid saved draw claim');
+      claimMove = save.claimMove;
       drawClaim = save.drawClaim;
     }
   }
-  return { game, mode, drawClaim, clock, difficulty };
+  return { game, mode, drawClaim, clock, difficulty, claimMove };
 }
 
-export function serializeGame(game, mode, drawClaim, clock, difficulty) {
+export function serializeGame(game, mode, drawClaim, clock, difficulty, claimMove) {
   const moves = game.history({ verbose: true }).map(({from, to, promotion}) => ({from, to, promotion}));
-  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty });
+  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty, claimMove });
 }
 
 export function result(game) {
@@ -57,4 +60,26 @@ export function claimableDraw(game) {
   if (game.isThreefoldRepetition()) return 'threefold repetition';
   if (game.isDrawByFiftyMoves()) return '50-move rule';
   return null;
+}
+
+
+export function intendedDraw(game, move) {
+  if (result(game)) return null;
+  try { game.move(move); } catch { return null; }
+  try {
+    if (game.isCheckmate()) return null;
+    if (game.isThreefoldRepetition()) return 'threefold repetition';
+    if (game.isDrawByFiftyMoves()) return '50-move rule';
+    return null;
+  } finally {
+    game.undo();
+  }
+}
+
+export function timeoutResult(game, expiredSide) {
+  const winner = expiredSide === 'w' ? 'b' : 'w';
+  const hasNonKing = game.board().some(row => row.some(piece => piece?.color === winner && piece.type !== 'k'));
+  return !hasNonKing || game.isInsufficientMaterial()
+    ? 'Draw on time by insufficient mating material'
+    : (winner === 'w' ? 'White' : 'Black') + ' wins on time';
 }

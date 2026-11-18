@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { restoreGame, serializeGame, result } from '../src/game.js';
+import { restoreGame, serializeGame, result, intendedDraw, timeoutResult } from '../src/game.js';
 
 test('restores moves and opponent mode', () => {
   const {game} = restoreGame();
@@ -34,4 +34,24 @@ test('threefold is claimable and fivefold automatically ends the game', () => {
   cycle();
   cycle();
   assert.equal(result(game), 'Draw by fivefold repetition');
+});
+
+test('an intended repetition claim survives reload without committing the proposed move', () => {
+  const {game} = restoreGame();
+  for (const move of ['Nf3','Nf6','Ng1','Ng8','Nf3','Nf6','Ng1']) game.move(move);
+  const proposed = {from:'f6',to:'g8'};
+  const before = game.fen();
+  const claim = intendedDraw(game, proposed);
+  assert.equal(claim,'threefold repetition');
+  assert.equal(game.fen(),before);
+  const restored = restoreGame(serializeGame(game,'local',claim,null,'standard',proposed));
+  assert.equal(restored.game.history().length,7);
+  assert.equal(restored.drawClaim,claim);
+});
+
+test('flag fall against a bare king is a draw', () => {
+  const {game} = restoreGame();
+  game.load('8/8/8/8/8/2k5/4r3/4K3 w - - 0 1');
+  assert.match(timeoutResult(game,'b'),/^Draw on time/);
+  assert.equal(timeoutResult(game,'w'),'Black wins on time');
 });

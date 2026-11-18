@@ -3,7 +3,7 @@ import { Chess } from 'chess.js';
 import { readHistory, recordMatch } from './history.js';
 import { startClock, remainingClock } from './clock.js';
 import './style.css';
-import { restoreGame, serializeGame, result, claimableDraw } from './game.js';
+import { restoreGame, serializeGame, result, claimableDraw, intendedDraw, timeoutResult } from './game.js';
 
 import { matchKey as key, exportBackup, importBackup } from './backup.js';
 const board = document.querySelector('#board');
@@ -24,7 +24,7 @@ const outcome = game => {
   if (online?.active) return online.match.outcome;
   if (state.drawClaim) return 'Draw by ' + state.drawClaim;
   return result(game) ?? (state.clock?.[game.turn()] === 0
-    ? (game.turn() === 'w' ? 'Black' : 'White') + ' wins on time' : null);
+    ? timeoutResult(game, game.turn()) : null);
 };
 const clocks = document.querySelector('#clocks');
 let tickAt = performance.now();
@@ -56,13 +56,40 @@ function displayClock() {
       Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
   }).join('  ·  ');
 }
-claim.onclick = () => {
-  const reason = claimableDraw(state.game);
-  if (!reason || outcome(state.game) || (state.mode === 'computer' && state.game.turn() === 'b')) return;
+function settleClaim(reason, move) {
+  updateClock();
+  if (!reason || outcome(state.game)) return;
   state.drawClaim = reason;
+  state.claimMove = move;
   selected = undefined;
   save();
   render();
+}
+
+claim.onclick = () => {
+  const {game} = state;
+  if (outcome(game) || online?.active || (state.mode === 'computer' && game.turn() === 'b')) return;
+  const reason = claimableDraw(game);
+  if (reason) return settleClaim(reason);
+  const dialog = document.querySelector('#claim-dialog');
+  const options = document.querySelector('#claim-options');
+  options.replaceChildren();
+  const candidates = game.moves({verbose:true});
+  for (const {from, to, promotion, san} of candidates) {
+    const move = {from,to,promotion};
+    const intended = intendedDraw(game, move);
+    if (!intended) continue;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = san + ' · ' + intended;
+    button.onclick = () => {
+      dialog.close();
+      if (state.game === game && !online?.active) settleClaim(intendedDraw(game, move), move);
+    };
+    options.append(button);
+  }
+  if (!options.children.length) options.textContent = 'No legal move currently qualifies for a draw claim.';
+  dialog.showModal();
 };
 let worker;
 let renderer;
@@ -114,7 +141,7 @@ function render(move) {
   if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus();
   status.textContent = [outcome(game) ?? (mode === 'computer' && game.turn() === 'b' ? 'Computer thinking…' :
     (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : '')), notice].filter(Boolean).join(' · ');
-  claim.hidden = Boolean(online?.active) || Boolean(outcome(game)) || !claimableDraw(game) || (mode === 'computer' && game.turn() === 'b');
+  claim.hidden = Boolean(online?.active) || Boolean(outcome(game)) || (mode === 'computer' && game.turn() === 'b');
   const moves = game.history();
   document.querySelector('#moves').replaceChildren(...moves.filter((_, index) => index % 2 === 0).map((move, index) => {
     const item = document.createElement('li');
@@ -126,7 +153,7 @@ function render(move) {
 function save() {
   if (online?.active) return;
   try {
-    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty);
+    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove);
     localStorage.setItem(key, snapshot);
     const completed = outcome(state.game);
     if (completed) recordMatch(localStorage, completed, snapshot);
