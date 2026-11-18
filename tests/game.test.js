@@ -65,3 +65,12 @@ test('saved matches retain the original clock preset and bot difficulty', () => 
   assert.deepEqual(restored.clock, {w:250000,b:240000});
   assert.throws(() => restoreGame(saved.replace('"quick"', '"untimed"')));
 });
+
+test('timeout proves a closed pawn wall cannot produce mate', () => {
+  const {game} = restoreGame();
+  game.load('4k3/8/8/p1p1p1p1/P1P1P1P1/8/8/4K3 w - - 0 1');
+  assert.match(timeoutResult(game,'w'),/^Draw on time/);
+  assert.match(timeoutResult(game,'b'),/^Draw on time/);
+  game.load('4k3/8/8/p1p1p3/P1P1P1P1/8/8/4K3 b - - 0 1');
+  assert.equal(timeoutResult(game,'b'),'White wins on time');
+});
