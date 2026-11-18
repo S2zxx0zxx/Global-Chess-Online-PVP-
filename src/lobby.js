@@ -10,7 +10,7 @@ function loadPreferences() {
   return {};
 }
 
-export function bindLobby({startMatch, historyCount}) {
+export function bindLobby({startMatch, historyCount, historySummary}) {
   const element = id => document.getElementById(id);
   const preferences = loadPreferences();
   const profile = element('profile-dialog');
@@ -18,6 +18,19 @@ export function bindLobby({startMatch, historyCount}) {
   const result = element('result-dialog');
   const welcome = element('welcome-dialog');
 
+  function refreshStats() {
+    const count = historyCount();
+    element('profile-hub-stats').textContent = count === null ? 'Local match history unavailable.'
+      : count + (count === 1 ? ' completed game saved locally.' : ' completed games saved locally.');
+    let stats = null;
+    try { stats = historySummary(); } catch { /* Do not invent missing game statistics. */ }
+    for (const [id,value] of [
+      ['profile-computer-games',stats?.computer],
+      ['profile-wins',stats?.wins],
+      ['profile-win-rate',stats ? stats.winRate + '%' : null],
+      ['profile-streak',stats?.currentWinStreak],
+    ]) element(id).textContent = value ?? '—';
+  }
   function apply() {
     const name = typeof preferences.name === 'string' ? preferences.name.trim().slice(0,24) : '';
     const avatar = avatars.includes(preferences.avatar) ? preferences.avatar : avatars[0];
@@ -25,10 +38,7 @@ export function bindLobby({startMatch, historyCount}) {
     element('profile-hub-name').textContent = name || 'Guest player';
     element('profile-hub-avatar').textContent = avatar;
     element('profile-local-id').textContent = preferences.localId ? 'Local ID · ' + preferences.localId.slice(0,8) : 'Guest on this device';
-    const count = historyCount();
-    element('profile-hub-stats').textContent = count === null
-      ? 'Local match history is unavailable.'
-      : count + (count === 1 ? ' completed game saved locally.' : ' completed games saved locally.');
+    refreshStats();
     document.documentElement.classList.toggle('show-coordinates', preferences.coordinates === true);
     document.documentElement.classList.toggle('high-contrast', preferences.contrast === true);
     return {name, avatar};
@@ -136,9 +146,7 @@ export function bindLobby({startMatch, historyCount}) {
 
   return {
     render({outcome, turn, mode, online, started, humanSide = 'w'}) {
-      const completedCount = historyCount();
-      element('profile-hub-stats').textContent = completedCount === null ? 'Match history unavailable.'
-        : completedCount + (completedCount === 1 ? ' completed game saved locally.' : ' completed games saved locally.');
+      refreshStats();
       element('lobby-resume').hidden = !started || Boolean(outcome);
       element('result-open').hidden = !outcome;
       element('result-copy').textContent = outcome ?? '';
