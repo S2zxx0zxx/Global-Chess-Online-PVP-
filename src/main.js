@@ -2,6 +2,7 @@ import { renderPieceArt } from './piece-art.js';
 import { loadBrowserMateSolver } from './mate-solver.js';
 import { bindLearning } from './learning.js';
 import { bindLobby } from './lobby.js';
+import { bindNavigation, navigate } from './navigation.js';
 import { openGameStorage } from './storage.js';
 import { bindOnline } from './online.js';
 import { Chess } from 'chess.js';
@@ -84,6 +85,7 @@ function displayClock() {
     return (side === 'w' ? 'White ' : 'Black ') +
       Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
   }).join('  ·  ');
+  document.querySelector('#match-clocks').textContent = clocks.textContent;
 }
 function settleClaim(reason, move) {
   if (online?.active) { online.claim(move); return; }
@@ -213,7 +215,13 @@ function render(move) {
   status.textContent = [outcome(game) ?? (mode === 'computer' && game.turn() === 'b' ? 'Computer thinking…' :
     (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : '')), notice].filter(Boolean).join(' · ');
   claim.hidden = (online?.active && !online.canMove(game.turn())) || Boolean(outcome(game)) || (mode === 'computer' && game.turn() === 'b');
+  document.querySelector('#match-state').textContent = status.textContent;
+  document.querySelector('#match-result-trigger').hidden = !outcome(game);
   const moves = game.history();
+  const recent = moves.slice(-4);
+  document.querySelector('#match-last-moves').textContent = recent.length
+    ? 'Last moves: ' + recent.join(' · ')
+    : 'Tap a piece to see where it can move.';
   document.querySelector('#moves').replaceChildren(...moves.filter((_, index) => index % 2 === 0).map((move, index) => {
     const item = document.createElement('li');
     item.textContent = [move, moves[index * 2 + 1]].filter(Boolean).join('  ');
@@ -339,6 +347,7 @@ function startLocalMatch(mode, preset, difficulty) {
   tickAt = performance.now();
   selected = undefined;
   save();
+  navigate('match');
   render();
   return true;
 }
@@ -357,6 +366,7 @@ online = bindOnline({
     if (match.version === 1 && match.turnStartedAt !== null && match.moves.length === 0 && !match.outcome) showVersus('White','Black');
     const previousPly = state === offlineState ? -1 : state.game.history().length;
     state = {...restoreGame(JSON.stringify({version:1, mode:'local', moves:match.moves})), clock:match.clock};
+    navigate('match');
     selected = undefined;
     const played = match.moves.length === previousPly + 1
       ? state.game.history({verbose:true}).at(-1) : undefined;
@@ -378,6 +388,7 @@ lobby = bindLobby({
     try { return readHistory(gameStorage).length; } catch { return null; }
   },
 });
+bindNavigation();
 render();
 playComputer();
 
