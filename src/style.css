@@ -22,3 +22,6 @@ dialog{border:1px solid #c59e65;border-radius:12px;background:#39212a}
 [hidden]{display:none!important}
 #scene{display:block;width:100%;aspect-ratio:1;border:1px solid #82604b;border-radius:10px;background:#29151b;touch-action:none}
 #view{margin:0 0 10px;padding:8px 12px;border:1px solid #82604b;border-radius:8px;background:#39212a;color:#f7e7ce}
+.time-control{display:grid;gap:6px;margin-bottom:12px;font-size:.87rem}
+.time-control select{font:inherit;padding:8px;border:1px solid #82604b;border-radius:8px;background:#39212a;color:#f7e7ce}
+#clocks{margin-top:12px;color:#f2ce8d;font-variant-numeric:tabular-nums;font-weight:700}

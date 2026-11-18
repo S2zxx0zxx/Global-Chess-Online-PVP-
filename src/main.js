@@ -1,3 +1,4 @@
+import { startClock, remainingClock } from './clock.js';
 import './style.css';
 import { restoreGame, serializeGame, result, claimableDraw } from './game.js';
 
@@ -16,7 +17,39 @@ try {
 }
 let selected;
 const claim = document.querySelector('#claim');
-const outcome = game => state.drawClaim ? 'Draw by ' + state.drawClaim : result(game);
+const outcome = game => {
+  if (state.drawClaim) return 'Draw by ' + state.drawClaim;
+  return result(game) ?? (state.clock?.[game.turn()] === 0
+    ? (game.turn() === 'w' ? 'Black' : 'White') + ' wins on time' : null);
+};
+const clocks = document.querySelector('#clocks');
+let tickAt = performance.now();
+
+function updateClock() {
+  const now = performance.now();
+  const { clock, game } = state;
+  if (clock && !outcome(game) && !document.hidden) {
+    state.clock = remainingClock(clock, game.turn(), now - tickAt);
+    if (state.clock[game.turn()] === 0) {
+      worker?.terminate();
+      worker = undefined;
+      save();
+      render();
+    }
+  }
+  tickAt = now;
+  displayClock();
+}
+
+function displayClock() {
+  clocks.hidden = !state.clock;
+  if (!state.clock) return;
+  clocks.textContent = ['w','b'].map(side => {
+    const seconds = Math.ceil(state.clock[side] / 1000);
+    return (side === 'w' ? 'White ' : 'Black ') +
+      Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
+  }).join('  ·  ');
+}
 claim.onclick = () => {
   const reason = claimableDraw(state.game);
   if (!reason || outcome(state.game) || (state.mode === 'computer' && state.game.turn() === 'b')) return;
@@ -56,6 +89,7 @@ view.onclick = async () => {
 };
 
 function render(move) {
+  displayClock();
   const {game, mode} = state;
   const activeSquare = document.activeElement?.dataset.square;
   const targets = selected ? game.moves({square: selected, verbose: true}).map(move => move.to) : [];
@@ -85,7 +119,7 @@ function render(move) {
 
 function save() {
   try {
-    localStorage.setItem(key, serializeGame(state.game, state.mode, state.drawClaim));
+    localStorage.setItem(key, serializeGame(state.game, state.mode, state.drawClaim, state.clock));
     notice = '';
   } catch {
     notice = 'Storage unavailable. This match may not resume after closing.';
@@ -93,6 +127,8 @@ function save() {
 }
 
 function commit(move) {
+  updateClock();
+  if (outcome(state.game)) return;
   const played = state.game.move(move);
   selected = undefined;
   save();
@@ -143,7 +179,8 @@ for (const mode of ['local', 'computer']) {
     if (state.game.history().length && !outcome(state.game) && !confirm('Replace this match?')) return;
     worker?.terminate();
     worker = undefined;
-    state = {...restoreGame(), mode};
+    state = {...restoreGame(), mode, clock: startClock(document.querySelector('#preset').value)};
+    tickAt = performance.now();
     selected = undefined;
     save();
     render();
@@ -158,3 +195,10 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
     render();
   });
 }
+
+setInterval(updateClock, 100);
+document.addEventListener('visibilitychange', () => {
+  tickAt = performance.now();
+  if (document.hidden && state.clock) save();
+});
+window.addEventListener('pagehide', () => { if (state.clock) save(); });

@@ -1,15 +1,21 @@
+import { validClock } from './clock.js';
 import { Chess } from 'chess.js';
 
 export function restoreGame(raw) {
   const game = new Chess();
   let mode = 'local';
   let drawClaim;
+  let clock = null;
   if (raw) {
     const save = JSON.parse(raw);
     if (save.version !== 1 || !Array.isArray(save.moves) || !['local', 'computer'].includes(save.mode)) {
       throw new Error('Unsupported match save');
     }
     mode = save.mode;
+    if (save.clock !== undefined) {
+      if (!validClock(save.clock)) throw new Error('Invalid saved clock');
+      clock = save.clock;
+    }
     for (const move of save.moves) {
       if (result(game)) throw new Error('Move after match ended');
       game.move(move);
@@ -19,12 +25,12 @@ export function restoreGame(raw) {
       drawClaim = save.drawClaim;
     }
   }
-  return { game, mode, drawClaim };
+  return { game, mode, drawClaim, clock };
 }
 
-export function serializeGame(game, mode, drawClaim) {
+export function serializeGame(game, mode, drawClaim, clock) {
   const moves = game.history({ verbose: true }).map(({from, to, promotion}) => ({from, to, promotion}));
-  return JSON.stringify({ version: 1, mode, moves, drawClaim });
+  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock });
 }
 
 export function result(game) {
