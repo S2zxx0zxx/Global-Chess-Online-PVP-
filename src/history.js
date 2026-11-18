@@ -1,4 +1,4 @@
-const key = 'global-chess.history.v1';
+import { historyKey as key } from './backup.js';
 
 export function readHistory(storage) {
   const entries = JSON.parse(storage.getItem(key) ?? '[]');

@@ -4,7 +4,7 @@ import { startClock, remainingClock } from './clock.js';
 import './style.css';
 import { restoreGame, serializeGame, result, claimableDraw } from './game.js';
 
-const key = 'global-chess.match.v1';
+import { matchKey as key, exportBackup, importBackup } from './backup.js';
 const board = document.querySelector('#board');
 const status = document.querySelector('#status');
 const promotion = document.querySelector('#promotion');
@@ -268,11 +268,47 @@ document.querySelector('#history-button').onclick = () => {
   historyDialog.showModal();
 };
 
-document.querySelector('#export-pgn').onclick = () => {
-  const url = URL.createObjectURL(new Blob([replayPgn], {type:'application/x-chess-pgn'}));
+function downloadFile(content, name, type) {
+  const url = URL.createObjectURL(new Blob([content], {type}));
   const download = document.createElement('a');
   download.href = url;
-  download.download = 'global-chess-match.pgn';
+  download.download = name;
   download.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+document.querySelector('#export-pgn').onclick = () =>
+  downloadFile(replayPgn, 'global-chess-match.pgn', 'application/x-chess-pgn');
+
+const backupFile = document.querySelector('#backup-file');
+const backupStatus = document.querySelector('#backup-status');
+document.querySelector('#export-backup').onclick = () => {
+  try {
+    if (state.clock) updateClock();
+    save();
+    downloadFile(exportBackup(localStorage), 'global-chess-backup.json', 'application/json');
+  } catch {
+    backupStatus.textContent = 'Backup could not be exported.';
+  }
+};
+document.querySelector('#import-backup').onclick = () => backupFile.click();
+backupFile.onchange = async () => {
+  const file = backupFile.files[0];
+  backupFile.value = '';
+  if (!file || !confirm('Replace the active match and local match history with this backup?')) return;
+  try {
+    if (file.size > 2_000_000) throw new Error('Backup too large');
+    const restored = importBackup(localStorage, await file.text());
+    worker?.terminate();
+    worker = undefined;
+    state = restored;
+    selected = undefined;
+    tickAt = performance.now();
+    notice = 'Backup restored.';
+    historyDialog.close();
+    render();
+    playComputer();
+  } catch {
+    backupStatus.textContent = 'Could not restore this backup.';
+  }
 };
