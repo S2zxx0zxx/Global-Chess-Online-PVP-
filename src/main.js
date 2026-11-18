@@ -7,7 +7,7 @@ import { openGameStorage } from './storage.js';
 import { bindOnline } from './online.js';
 import { Chess } from 'chess.js';
 import { readHistory, recordMatch } from './history.js';
-import { startClock, remainingClock } from './clock.js';
+import { startClock, remainingClock, localClockIsRunning } from './clock.js';
 import './style.css';
 import { restoreGame, serializeGame, result, claimableDraw, intendedDraw, timeoutResult } from './game.js';
 
@@ -49,7 +49,8 @@ let tickAt = performance.now();
 let online;
 let lobby;
 let flipped = state.mode === 'computer' && state.humanSide === 'b';
-let wasVisible = !document.hidden;
+let wasVisible = localClockIsRunning({documentHidden:document.hidden,
+  screen:document.documentElement.dataset.view,menuOpen:false});
 const flip = document.querySelector('#flip-board');
 flip.onclick = () => {
   flipped = !flipped;
@@ -63,7 +64,9 @@ function updateClock() {
   const now = performance.now();
   const elapsed = wasVisible ? now - tickAt : 0;
   tickAt = now;
-  wasVisible = !document.hidden;
+  wasVisible = localClockIsRunning({documentHidden:document.hidden,
+    screen:document.documentElement.dataset.view,
+    menuOpen:document.documentElement.classList.contains('tools-open')});
   if (online?.active) { displayClock(); return; }
   const { clock, game } = state;
   if (clock && !outcome(game) && elapsed > 0) {
