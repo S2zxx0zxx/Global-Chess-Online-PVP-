@@ -5,9 +5,9 @@ This is a faithful implementation reconciliation of the 30 IDs in `design/screen
 and `docs/03_SCREEN_BY_SCREEN_UX_SPEC.md`. **Not** a complete release certificate.
 
 Related change: PR #2 `feat/chess-v3-m0-mobile-shell`, based on the still-draft PR #1.
-Verified narrow GitHub Actions run: [#44386568115](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/44386568115), with 32/32 Node tests, a clean PWA build, 3D bundle budget,
+Verified narrow GitHub Actions run: [#44388238391](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/44388238391), with 34/34 Node tests, a clean PWA build, 3D bundle budget,
 and Chromium smoke covering legal move, 3D mount, responsive 320/360/412, local resume, computer playing White,
-mobile navigation, profile/learning, menu/resignation and result. Source changes made after this pinned run must be rechecked.
+mobile navigation, real profile win-rate aggregation, menu/resignation and result. Source changes made after this pinned run must be rechecked.
 
 Statuses here mean:
 - **IMPLEMENTED_PARTIAL**: source includes a working subset; design/acceptance incomplete.
@@ -37,8 +37,8 @@ None means user-facing mobile App Store production ready.
 | SCR-17 Puzzle Player | interactive board and legal solution | IMPLEMENTED_PARTIAL: alternate correct lines, graded hints, offline pack version |
 | SCR-18 Puzzle Result | text feedback after legal answer | IMPLEMENTED_PARTIAL: dedicated result/next/XP idempotence |
 | SCR-19 Daily Challenge | deterministic existing daily exercise | IMPLEMENTED_PARTIAL: stable local-day reward journal and history |
-| SCR-20 Profile | local name/avatar, visible Local profile and stored local ID, history count | IMPLEMENTED_PARTIAL: richer stats, settings state and device tests |
-| SCR-21 Progress | limited exercise completion display | IMPLEMENTED_PARTIAL: durable XP journal and genuine game statistics |
+| SCR-20 Profile | local name/avatar, visible Local profile and stored local ID, truthful 50-game-limited VS Computer wins/rate/streak | IMPLEMENTED_PARTIAL: wider historical archive, settings and device tests |
+| SCR-21 Progress | limited exercise progress and genuine stored VS Computer match record | IMPLEMENTED_PARTIAL: durable XP event journal, independent achievements and lifetime stats |
 | SCR-22 Achievements | basic exercise badges | IMPLEMENTED_PARTIAL: event-derived achievement journal and screens |
 | SCR-23 Appearance/Equipment | initial art/board only, no selection screen | NOT_IMPLEMENTED |
 | SCR-24 Settings | coordinates and high contrast dialog | IMPLEMENTED_PARTIAL: audio/haptics, a11y, reset policy, data/help |
