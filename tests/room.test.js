@@ -102,3 +102,14 @@ test('room alarms preserve active matches and purge expired room data', async t 
   await room.alarm();
   assert.equal((await room.fetch(new Request('https://room/state'))).status,404);
 });
+
+test('room creation fails closed if its rate limiter is unavailable', async () => {
+  const guard = {getByName() {throw new Error('A missing limiter allocated a room');}};
+  const req = () => new Request('https://chess.test/api/rooms',{method:'POST'});
+  assert.equal((await worker.fetch(req(),{ROOMS:guard})).status,503);
+  assert.equal((await worker.fetch(req(),{
+    ROOMS:guard,
+    ROOM_CREATION_LIMIT:{limit:async () => {throw new Error('Quota service unavailable');}},
+  })).status,503);
+});
+
