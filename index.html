@@ -1,19 +1,67 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#231310"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg"><title>Global Chess Online PvP</title></head><body><div id="launch" role="status"><img src="./icon.svg" alt="" width="74" height="74"><strong>Global Chess</strong><span>Opening your game</span></div><main><div id="versus" hidden role="status"><span id="versus-white"></span><strong>VS</strong><span id="versus-black"></span></div><header class="masthead">
-  <a class="brand" href="./"><img src="./icon.svg" alt="" width="40" height="40"><span><strong>GLOBAL CHESS</strong><small>Online PvP</small></span></a>
+<!doctype html><html lang="en" data-view="home"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#231310"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg"><title>Global Chess Online PvP</title></head><body><div id="launch" role="status"><img src="./icon.svg" alt="" width="74" height="74"><strong>Global Chess</strong><span>Opening your game</span></div><main><div id="versus" hidden role="status"><span id="versus-white"></span><strong>VS</strong><span id="versus-black"></span></div><header class="masthead">
+  <a class="brand" href="./"><img src="./icon.svg" alt="" width="40" height="40"><span><strong>GLOBAL CHESS</strong><small>Play · Learn · Improve</small></span></a>
   <nav aria-label="Game navigation"><button id="profile-open" type="button">Profile</button><button id="settings-open" type="button">Settings</button></nav>
 </header>
-<section id="lobby" class="lobby" aria-labelledby="lobby-title">
-  <div><h1 id="lobby-title">Take your seat</h1><p id="guest-greeting"></p></div>
-  <div class="mode-cards"><button id="lobby-classic" type="button"><strong>Classic</strong><small>15 min · Local friend</small></button>
-  <button id="lobby-quick" type="button"><strong>Quick</strong><small>5 min · Local friend</small></button>
-  <button id="lobby-computer" type="button"><strong>Computer</strong><small>Practice on your own</small></button>
-  <button id="lobby-online" type="button"><strong>Private PvP</strong><small>Invite a friend</small></button></div>
-  <button id="lobby-resume" type="button" hidden>Resume match</button>
-</section><section class="layout"><aside><h2>Match setup</h2><button id="learn" type="button">Learn chess</button><label class="time-control">Time control <select id="preset"><option value="untimed">Untimed</option><option value="quick">Quick · 5 min</option><option value="classic">Classic · 15 min</option></select></label><details><summary>Clock and draw rules</summary><p>Local clocks pause when the app is hidden. Private room clocks keep running. Choose a promotion piece before your clock reaches zero. At zero, the opponent wins unless the game recognizes that they have no mating material.</p><p>Claim a draw after threefold repetition or 50 moves per side without a pawn move or capture. A qualifying intended move can be selected without playing it. Fivefold repetition and 75 moves per side end the game automatically unless the final move delivers checkmate.</p></details><label class="time-control">Computer difficulty <select id="difficulty"><option value="standard">Standard</option><option value="easy">Easy</option><option value="hard">Hard</option></select></label><div class="actions"><button id="local">Local friend</button><button id="computer">Vs computer</button></div><div id="clocks" hidden></div><button id="history-button" type="button">Match history</button><section class="actions"><button id="online-create">Create private room</button><button id="online-rejoin" hidden>Reconnect to room</button><button id="online-leave" hidden>Return to offline game</button><a id="online-invite" hidden>Open invite link</a><button id="online-copy" hidden>Copy invite link</button><p id="online-status" role="status"></p></section><p id="status" role="status"></p><button id="result-open" type="button" hidden>View result</button><button id="rematch" type="button" hidden>Play rematch</button><button id="claim" hidden>Claim draw</button><ol id="moves"></ol></aside><section id="match-area" tabindex="-1" aria-label="Match">
+
+<section id="lobby" class="lobby view-screen" aria-labelledby="lobby-title">
+  <div class="lobby-head">
+    <div class="player-identity"><span class="identity-avatar" aria-hidden="true">♞</span><div><span class="eyebrow">LOCAL PLAYER</span><p id="guest-greeting">Guest player</p></div></div>
+    <button id="profile-from-home" class="round-access" type="button" aria-label="Open local profile">Profile</button>
+  </div>
+  <div class="lobby-hero">
+    <span class="hero-ornament" aria-hidden="true">♛</span>
+    <p class="eyebrow">THE ROYAL BOARD AWAITS</p>
+    <h1 id="lobby-title" tabindex="-1">Global Chess</h1>
+    <p class="lobby-intro">Your next great move starts here.</p>
+  </div>
+  <button id="lobby-resume" class="resume-banner" type="button" hidden>↪ Continue your match</button>
+  <div class="mode-cards" aria-label="Start playing">
+    <button id="lobby-classic" class="mode-hero mode-classic" type="button"><span class="mode-copy"><span class="eyebrow">TIMELESS STRATEGY</span><strong>Classic Chess</strong><small>Two players · 15 min</small></span><span class="mode-art" aria-hidden="true">♚</span></button>
+    <button id="lobby-quick" class="mode-hero mode-quick" type="button"><span class="mode-copy"><span class="eyebrow">A FASTER CHALLENGE</span><strong>Quick Chess</strong><small>Two players · 5 min</small></span><span class="mode-art" aria-hidden="true">♞</span></button>
+    <button id="lobby-computer" class="mode-mini mode-computer" type="button"><strong>VS Computer</strong><small>Offline opponent</small><span aria-hidden="true">♜</span></button>
+    <button id="open-play-hub" class="mode-mini mode-local" type="button"><strong>Local Friend</strong><small>Choose your setup</small><span aria-hidden="true">♙</span></button>
+  </div>
+  <section class="lobby-discover" aria-label="Improve your chess">
+    <h2>Play. Understand. Improve.</h2>
+    <div class="discover-actions"><button id="learn-from-home" type="button">✦ Lessons & Puzzles</button><button id="play-from-home" type="button">♟ Play hub</button></div>
+  </section>
+</section>
+<section id="play-hub" class="hub-screen view-screen" aria-labelledby="play-hub-title">
+  <p class="eyebrow">CHOOSE YOUR CHALLENGE</p><h1 id="play-hub-title" tabindex="-1">Play Chess</h1>
+  <p>Select a format, then choose an opponent. You can play without an account.</p>
+  <div class="hub-grid">
+    <button id="play-classic" class="hub-card hub-gold" type="button"><strong>Classic</strong><small>15 minutes per side</small></button>
+    <button id="play-quick" class="hub-card hub-teal" type="button"><strong>Quick</strong><small>5 minutes per side</small></button>
+    <button id="play-computer" class="hub-card" type="button"><strong>VS Computer</strong><small>Three local difficulty levels</small></button>
+    <button id="play-local" class="hub-card" type="button"><strong>Local 2 Players</strong><small>Pass-and-play on one device</small></button>
+  </div>
+  <div class="play-options"><label for="preset">Time control</label><p>Change time and difficulty in Match Setup, or start straight away from Home.</p></div>
+  <button id="lobby-online" class="optional-online" type="button">Private PvP <span>Experimental · Internet required</span></button>
+</section>
+<section id="learn-hub" class="hub-screen view-screen" aria-labelledby="learn-hub-title">
+  <p class="eyebrow">EVERY MOVE TEACHES</p><h1 id="learn-hub-title" tabindex="-1">Learn Chess</h1><p>Practice with built-in lessons and offline puzzles. Your exercise progress stays on this device.</p>
+  <div class="hub-grid">
+    <button id="learn-open" class="hub-card hub-gold" type="button"><strong>Interactive lessons</strong><small>Understand each piece and special move</small></button>
+    <button id="puzzles-open" class="hub-card" type="button"><strong>Chess puzzles</strong><small>Play a legal solution and see why it works</small></button>
+    <button id="daily-open" class="hub-card hub-teal" type="button"><strong>Daily challenge</strong><small>An offline puzzle for today</small></button>
+  </div>
+</section>
+<section id="profile-hub" class="hub-screen view-screen" aria-labelledby="profile-hub-title">
+  <p class="eyebrow">YOUR CHESS JOURNEY</p><h1 id="profile-hub-title" tabindex="-1">Local profile</h1>
+  <div class="profile-feature"><span id="profile-hub-avatar" aria-hidden="true">♞</span><div><strong id="profile-hub-name">Guest player</strong><small>No sign-in needed. Saved on this device only.</small><span id="profile-local-id" class="eyebrow"></span></div></div>
+  <div class="profile-stats-card"><h2>Match history</h2><p id="profile-hub-stats">Loading local stats…</p></div>
+  <div class="profile-actions">
+    <button id="profile-edit" type="button">Edit name & avatar</button>
+    <button id="profile-history" type="button">View match history</button>
+    <button id="profile-settings" type="button">Settings</button>
+  </div>
+</section>
+<section class="layout view-screen" id="match-layout"><aside id="match-tools"><div class="tools-head"><h2>Match setup</h2><button id="match-menu-close" type="button" aria-label="Close match options">×</button></div><button id="learn" type="button">Learn chess</button><label class="time-control">Time control <select id="preset"><option value="untimed">Untimed</option><option value="quick">Quick · 5 min</option><option value="classic">Classic · 15 min</option></select></label><details><summary>Clock and draw rules</summary><p>Local clocks pause when the app is hidden. Private room clocks keep running. Choose a promotion piece before your clock reaches zero. At zero, the opponent wins unless the game recognizes that they have no mating material.</p><p>Claim a draw after threefold repetition or 50 moves per side without a pawn move or capture. A qualifying intended move can be selected without playing it. Fivefold repetition and 75 moves per side end the game automatically unless the final move delivers checkmate.</p></details><label class="time-control">Computer difficulty <select id="difficulty"><option value="standard">Standard</option><option value="easy">Easy</option><option value="hard">Hard</option></select></label><div class="actions"><button id="local">Local friend</button><button id="computer">Vs computer</button></div><div id="clocks" hidden></div><button id="history-button" type="button">Match history</button><section class="actions"><button id="online-create">Create private room</button><button id="online-rejoin" hidden>Reconnect to room</button><button id="online-leave" hidden>Return to offline game</button><a id="online-invite" hidden>Open invite link</a><button id="online-copy" hidden>Copy invite link</button><p id="online-status" role="status"></p></section><p id="status" role="status"></p><button id="result-open" type="button" hidden>View result</button><button id="rematch" type="button" hidden>Play rematch</button><button id="claim" hidden>Claim draw</button><ol id="moves"></ol></aside><section id="match-area" tabindex="-1" aria-label="Match"><div class="match-toolbar"><button id="match-exit" type="button" aria-label="Return to home">‹ Home</button><span class="match-wordmark">GLOBAL CHESS</span><button id="match-menu" type="button" aria-label="Open match options">☷ Options</button></div><p class="match-status" id="match-state" role="status" aria-live="polite"></p><div class="match-clock-strip" id="match-clocks" aria-live="off"></div>
 <div class="player-panel" id="black-panel"><span aria-hidden="true">♚</span><strong id="black-player">Black</strong><small id="black-turn"></small></div>
 <button id="flip-board" type="button" aria-pressed="false">Flip board</button><button id="view" type="button">Use 3D board</button><canvas id="scene" hidden aria-label="3D chessboard"></canvas><div id="board" class="board" aria-label="Chessboard"></div>
-<div class="player-panel" id="white-panel"><span aria-hidden="true">♔</span><strong id="white-player">White</strong><small id="white-turn"></small></div>
-</section></section><dialog id="welcome-dialog" aria-labelledby="welcome-title"><img src="./icon.svg" alt="" width="64" height="64"><h2 id="welcome-title">Welcome to Global Chess</h2><form method="dialog"><button>Play as guest</button></form></dialog>
+<div class="player-panel" id="white-panel"><span aria-hidden="true">♔</span><strong id="white-player">White</strong><small id="white-turn"></small></div><div class="match-footer"><div class="match-last-moves" id="match-last-moves" aria-label="Recent moves">Tap a piece to see where it can move.</div><button id="match-result-trigger" type="button" hidden>View result</button></div>
+</section></section><nav id="bottom-nav" aria-label="Main navigation"><button type="button" data-nav="home" aria-current="page"><span aria-hidden="true">⌂</span><strong>Home</strong></button><button type="button" data-nav="play"><span aria-hidden="true">♟</span><strong>Play</strong></button><button type="button" data-nav="learn"><span aria-hidden="true">✦</span><strong>Learn</strong></button><button type="button" data-nav="profile"><span aria-hidden="true">♙</span><strong>Profile</strong></button></nav>
+<dialog id="welcome-dialog" class="welcome-screen" aria-labelledby="welcome-title"><img src="./icon.svg" alt="" width="96" height="96"><span class="eyebrow">WELCOME TO GLOBAL CHESS</span><h2 id="welcome-title">Play chess. Learn every game.</h2><p>No account needed. Progress is saved on this device.</p><form method="dialog"><button id="guest-start" type="submit">Play as Guest</button></form><p id="guest-storage-warning" role="status" hidden>Local storage is unavailable. You can play now, but progress might not be saved.</p></dialog>
 <dialog id="profile-dialog" aria-labelledby="profile-title"><h2 id="profile-title">Your profile</h2>
 <form id="profile-form"><label>Display name <input id="guest-name" maxlength="24" autocomplete="off"></label>
 <label>Avatar <select id="guest-avatar"><option value="♞">Knight</option><option value="♜">Rook</option><option value="♛">Queen</option></select></label>
@@ -22,7 +70,7 @@
 <label><input id="coordinate-setting" type="checkbox"> Show 2D board coordinates</label>
 <label><input id="contrast-setting" type="checkbox"> High contrast 2D board</label>
 <form method="dialog"><button>Done</button></form></dialog>
-<dialog id="result-dialog" aria-labelledby="result-title"><h2 id="result-title">Match result</h2><p id="result-copy"></p><button id="result-rematch" type="button">Rematch</button><button id="result-history" type="button">Match history</button><form method="dialog"><button>Close</button></form></dialog>
+<dialog id="result-dialog" aria-labelledby="result-title"><h2 id="result-title">Match result</h2><p id="result-copy"></p><button id="result-rematch" type="button">Rematch</button><button id="result-history" type="button">Match history</button><button id="result-home" type="button">Home</button><form method="dialog"><button>Close</button></form></dialog>
 <dialog id="history-dialog"><form method="dialog"><button>Close</button></form><h2>Match history</h2><div class="backup-actions"><button id="export-backup" type="button">Export backup</button><button id="import-backup" type="button">Import backup</button><input id="backup-file" type="file" accept=".json,application/json" hidden><p id="backup-status" role="status"></p></div><div id="history-list"></div><section id="replay" hidden><h3>Replay</h3><p id="replay-position"></p><div id="replay-board" class="board"></div><button id="previous" type="button">Previous</button><button id="export-pgn" type="button">Export PGN</button><button id="next" type="button">Next</button></section></dialog><dialog id="learn-dialog" aria-labelledby="learn-title"><h2 id="learn-title">Learn chess</h2>
 <label>Exercise <select id="lesson-picker"></select></label><p id="lesson-progress"></p>
 <h3 id="lesson-title"></h3><p id="lesson-prompt"></p>
