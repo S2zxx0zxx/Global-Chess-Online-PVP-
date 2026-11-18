@@ -213,6 +213,18 @@ try {
   console.log('Mobile game menu, confirmed resignation and result presentation: passed');
   const resultShot = await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/chess-match-result-mobile.png',Buffer.from(resultShot.data,'base64'));
+  await evaluate('document.getElementById("result-home").click(); true');
+  await evaluate('document.querySelector("#bottom-nav [data-nav=profile]").click(); true');
+  const realStats = await evaluate(`JSON.stringify({
+    games: document.getElementById('profile-computer-games').textContent,
+    wins: document.getElementById('profile-wins').textContent,
+    rate: document.getElementById('profile-win-rate').textContent
+  })`);
+  const score = JSON.parse(realStats);
+  if (score.games !== '1' || score.wins !== '0' || score.rate !== '0%') {
+    throw new Error('Profile did not show a genuine loss after resignation: ' + realStats);
+  }
+  console.log('Profile statistics from real completed match: passed');
   if (errors.length) throw new Error('Browser exceptions: ' + errors.join(' | '));
   console.log('v3 mobile navigation, preserved match, learning/profile and three responsive widths: passed');
 } catch (error) {
