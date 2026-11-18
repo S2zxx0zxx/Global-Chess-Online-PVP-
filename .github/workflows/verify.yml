@@ -40,6 +40,15 @@ jobs:
         run: npm run build
       - name: Enforce 3D bundle performance budget
         run: node scripts/check-bundle-budget.js
+      - name: Smoke-test playable 2D and mounted 3D in Chromium
+        run: node scripts/smoke-browser.mjs
+      - name: Upload Chromium evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chess-browser-smoke
+          path: artifacts/chess-3d-browser-smoke.png
+          if-no-files-found: ignore
       - name: Prepare Cloudflare WASM asset
         run: |
           node scripts/prepare-worker-solver.js
