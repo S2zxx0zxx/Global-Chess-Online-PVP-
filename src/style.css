@@ -32,3 +32,28 @@ dialog{border:1px solid #c59e65;border-radius:12px;background:#39212a}
 #history-button,#claim{margin-top:8px;padding:7px;border:1px solid #82604b;border-radius:8px;background:#39212a;color:#f7e7ce}
 #learn{margin-bottom:12px;padding:7px 12px;border:1px solid #82604b;border-radius:8px;background:#39212a;color:#f7e7ce}
 #learn-dialog{max-width:min(440px,94vw)}
+.masthead{justify-content:space-between;gap:10px;letter-spacing:normal}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#f2ce8d}
+.brand strong{letter-spacing:.09em;color:#f2ce8d}
+.brand small,.mode-cards small{display:block;margin-top:3px}
+.masthead nav{display:flex;gap:6px}
+.masthead button,#lobby-resume,#result-open,#rematch{border:1px solid #9e7359;border-radius:8px;padding:8px 10px;background:#39212a;color:#f7e7ce}
+.lobby{margin-top:18px;padding:clamp(14px,3vw,28px);border:1px solid #9e7359;border-radius:16px;background:radial-gradient(ellipse at 90% 0,#6a3842,#33202a 65%);box-shadow:0 12px 24px #170b13}
+.lobby h1{margin:0;font:clamp(1.7rem,5vw,3rem) Georgia,serif}
+.lobby p{margin:8px 0 16px;color:#eed5b7}
+.mode-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mode-cards button{text-align:left;padding:12px;border:1px solid #c59e65;border-radius:9px;color:#29151b;background:linear-gradient(#f1cd90,#c6955e)}
+.mode-cards small{font-size:.75rem}
+#lobby-resume{margin-top:10px}
+.player-panel{display:flex;gap:10px;align-items:center;border:1px solid #82604b;border-radius:9px;padding:8px 12px;margin:8px 0;background:#2d1821}
+.player-panel span{font-size:1.35rem}.player-panel small{margin-left:auto;color:#f2ce8d}.active-player{border-color:#e3ba76}
+#match-area:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid #f5c977;outline-offset:3px}
+#profile-form,#settings-dialog[open]{display:grid;gap:10px}
+#profile-form label{display:grid;gap:5px}
+#profile-form input,#profile-form select{font:inherit;padding:7px}
+dialog form{margin-top:8px}
+.show-coordinates .board button.file-label:before,.show-coordinates .board button.rank-label:after{position:absolute;font:700 .57rem system-ui;color:#17100c;pointer-events:none}
+.show-coordinates .board button.file-label:before{content:attr(data-file);right:2px;bottom:2px}
+.show-coordinates .board button.rank-label:after{content:attr(data-rank);left:2px;top:2px;background:none;inset:auto auto auto 2px;top:2px}
+.high-contrast .board .light{background:#fff1ce}.high-contrast .board .dark{background:#ae8969}
+@media(max-width:650px){.mode-cards{grid-template-columns:repeat(2,1fr)}.masthead button{padding:7px}.masthead strong{font-size:.82rem}}

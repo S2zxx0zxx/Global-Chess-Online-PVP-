@@ -1,3 +1,4 @@
+import { bindLobby } from './lobby.js';
 import { openGameStorage } from './storage.js';
 import { bindOnline } from './online.js';
 import { Chess } from 'chess.js';
@@ -34,6 +35,8 @@ const outcome = game => {
 const clocks = document.querySelector('#clocks');
 let tickAt = performance.now();
 let online;
+let lobby;
+let focusSquare = 'e2';
 
 function updateClock() {
   if (online?.active) { displayClock(); return; }
@@ -130,6 +133,8 @@ function render(move) {
   rematch.hidden = Boolean(online?.active) || !outcome(state.game);
   displayClock();
   const {game, mode} = state;
+  lobby?.render({outcome:outcome(game),turn:game.turn(),mode,online:Boolean(online?.active),
+    started:online?.active ? online.match.turnStartedAt !== null : game.history().length > 0 || Boolean(state.clock)});
   const activeSquare = document.activeElement?.dataset.square;
   const targets = selected ? game.moves({square: selected, verbose: true}).map(move => move.to) : [];
   renderer?.syncTurns(game, selected, targets, move);
@@ -137,6 +142,11 @@ function render(move) {
     const square = 'abcdefgh'[file] + (8 - rank);
     const cell = document.createElement('button');
     cell.dataset.square = square;
+    cell.dataset.file = square[0];
+    cell.dataset.rank = square[1];
+    cell.tabIndex = square === focusSquare ? 0 : -1;
+    cell.classList.toggle('file-label', rank === 7);
+    cell.classList.toggle('rank-label', file === 0);
     cell.className = (rank + file) % 2 ? 'dark' : 'light';
     cell.classList.toggle('target', targets.includes(square));
     cell.setAttribute('aria-pressed', String(square === selected));
@@ -227,7 +237,25 @@ async function selectSquare(square) {
   const chosen = options.find(move => move.promotion === promotion.returnValue);
   if (chosen && state.game === game) commit(chosen);
 }
-board.addEventListener('click', ({target}) => selectSquare(target.closest('[data-square]')?.dataset.square));
+board.addEventListener('click', ({target}) => {
+  const square = target.closest('[data-square]')?.dataset.square;
+  if (square) focusSquare = square;
+  selectSquare(square);
+});
+board.addEventListener('keydown', event => {
+  const delta = {ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,1],ArrowDown:[0,-1]}[event.key];
+  const square = event.target.dataset.square;
+  if (!delta || !square) return;
+  event.preventDefault();
+  const file = 'abcdefgh'.indexOf(square[0]) + delta[0];
+  const rank = Number(square[1]) + delta[1];
+  if (file < 0 || file > 7 || rank < 1 || rank > 8) return;
+  const next = board.querySelector('[data-square="' + 'abcdefgh'[file] + rank + '"]');
+  event.target.tabIndex = -1;
+  next.tabIndex = 0;
+  focusSquare = next.dataset.square;
+  next.focus();
+});
 function startLocalMatch(mode, preset, difficulty) {
   if (online?.active) return;
   if (state.game.history().length && !outcome(state.game) && !confirm('Replace this match?')) return;
@@ -238,6 +266,7 @@ function startLocalMatch(mode, preset, difficulty) {
   selected = undefined;
   save();
   render();
+  return true;
 }
 for (const mode of ['local', 'computer']) {
   document.getElementById(mode).onclick = () => startLocalMatch(
@@ -267,6 +296,12 @@ online = bindOnline({
     selected = undefined;
     render();
     playComputer();
+  },
+});
+lobby = bindLobby({
+  startMatch:startLocalMatch,
+  historyCount() {
+    try { return readHistory(gameStorage).length; } catch { return null; }
   },
 });
 render();
