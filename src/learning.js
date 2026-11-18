@@ -45,12 +45,21 @@ export function bindLearning(glyphs,names) {
     if (Array.isArray(saved)) completed = new Set(saved.filter(id => typeof id === 'string'));
   } catch { /* Learning still works for this session. */ }
   let exercises, exercise, game, selected, solved;
+  let focusSquare;
+  function mergeProgress() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(key) ?? '[]');
+      if (Array.isArray(saved)) {
+        for (const id of saved) if (typeof id === 'string') completed.add(id);
+      }
+    } catch { /* Keep progress available in this tab. */ }
+  }
   function updateProgress() {
     const count = [...lessons,...puzzles].filter(item => completed.has(item.id)).length;
     const daily = [...completed].filter(id => /^daily-\d{4}-\d{2}-\d{2}$/.test(id)).length;
     const achievements = [count >= 1 && 'First solve', lessons.every(item => completed.has(item.id)) && 'Opening basics',
       puzzles.every(item => completed.has(item.id)) && 'Tactics starter', daily >= 3 && 'Daily regular'].filter(Boolean);
-    get('lesson-progress').textContent = count + ' / 7 exercises · ' + (count*10+daily*15) + ' XP' +
+    get('lesson-progress').textContent = count + ' / ' + (lessons.length+puzzles.length) + ' exercises · ' + (count*10+daily*15) + ' XP' +
       (achievements.length ? ' · ' + achievements.join(', ') : '');
   }
   function render(focus) {
@@ -60,6 +69,8 @@ export function bindLearning(glyphs,names) {
         const square = 'abcdefgh'[file] + (8-rank);
         const button = document.createElement('button');
         button.type = 'button';
+        button.dataset.square = square;
+        button.tabIndex = square === focusSquare ? 0 : -1;
         button.className = (rank+file)%2 ? 'dark' : 'light';
         button.setAttribute('aria-label', square + (piece ? ', ' + (piece.color === 'w' ? 'White ' : 'Black ') + names[piece.type] : ''));
         button.setAttribute('aria-pressed', String(square === selected));
@@ -80,6 +91,7 @@ export function bindLearning(glyphs,names) {
     game.move(move);
     solved = true;
     selected = undefined;
+    mergeProgress();
     completed.add(exercise.id);
     let message = 'Correct. ' + exercise.explanation;
     try { localStorage.setItem(key,JSON.stringify([...completed])); }
@@ -93,14 +105,32 @@ export function bindLearning(glyphs,names) {
     game = exerciseGame(exercise);
     selected = undefined;
     solved = false;
+    focusSquare = game.turn() === 'w' ? 'e2' : 'e7';
     get('lesson-title').textContent = exercise.title;
     get('lesson-prompt').textContent = exercise.prompt;
     get('lesson-feedback').textContent = completed.has(exercise.id) ? 'Previously solved.' : '';
     render();
   }
+  board.addEventListener('focusin', event => {
+    if (!event.target.dataset.square) return;
+    focusSquare = event.target.dataset.square;
+    for (const button of board.children) button.tabIndex = button === event.target ? 0 : -1;
+  });
+  board.addEventListener('keydown', event => {
+    const delta = {ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,1],ArrowDown:[0,-1]}[event.key];
+    if (!delta || !event.target.dataset.square) return;
+    event.preventDefault();
+    const [file,rank] = event.target.dataset.square;
+    const nextFile = 'abcdefgh'['abcdefgh'.indexOf(file)+delta[0]];
+    const nextRank = Number(rank)+delta[1];
+    if (nextFile && nextRank >= 1 && nextRank <= 8) {
+      board.querySelector(`[data-square="${nextFile}${nextRank}"]`)?.focus();
+    }
+  });
   picker.onchange = () => load(Number(picker.value));
   get('lesson-reset').onclick = () => load(Number(picker.value));
   get('learn').onclick = () => {
+    mergeProgress();
     exercises = [...lessons,...puzzles,dailyExercise()];
     picker.replaceChildren(...exercises.map((item,index) => new Option(item.title,index)));
     load(0);

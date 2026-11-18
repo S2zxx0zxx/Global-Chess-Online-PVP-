@@ -29,7 +29,7 @@ export function chooseComputerMove(fen, difficulty, {budgetMs = 1200} = {}) {
     if (performance.now() >= deadline) throw exhausted;
     const moves = game.moves({verbose:true});
     if (!moves.length) return game.inCheck() ? -100000 + ply : 0;
-    if (game.isInsufficientMaterial()) return 0;
+    if (game.isInsufficientMaterial() || Number(game.fen().split(' ')[4]) >= 150) return 0;
     if (!depth) return evaluate(game, game.turn());
     let best = -Infinity;
     for (const move of moves.sort((a,b) => priority(b) - priority(a))) {

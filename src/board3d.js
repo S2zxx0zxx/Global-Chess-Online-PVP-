@@ -226,7 +226,9 @@ export async function mountBoard(canvas, selectSquare) {
       needsFrame = true;
     });
     observer.observe(canvas);
-    engine.onContextRestoredObservable.add(() => { needsFrame = true; });
+    const refresh = () => { needsFrame = true; };
+    document.addEventListener('visibilitychange',refresh);
+    engine.onContextRestoredObservable.add(refresh);
     engine.runRenderLoop(() => {
       if (document.hidden || !(needsFrame || moving.size || effects.size)) return;
       needsFrame = false;
@@ -239,6 +241,7 @@ export async function mountBoard(canvas, selectSquare) {
         needsFrame = true;
       },
       dispose() {
+        document.removeEventListener('visibilitychange',refresh);
         observer.disconnect();
         for (const [body, {timer}] of effects) {
           clearTimeout(timer);
