@@ -248,3 +248,25 @@ dialog button{min-height:44px}
  #match-area .board,#match-area #scene{width:min(100%,calc(100svh - 250px))}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}button{transition:none}}
+
+/* CH-01 v3 match setup, player orientation and responsive game-screen ordering. */
+.hub-card.is-selected{outline:3px solid var(--ch-color-a11y-focus);outline-offset:1px;box-shadow:0 6px 0 #130e0c,0 0 0 5px #1e1f2382}
+#play-setup{margin-top:28px;padding:20px;background:#2e1b19}
+#play-setup h2{font:700 1.25rem var(--ch-font-display);margin:0 0 16px}
+.setup-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.setup-fields label{display:grid;gap:6px;color:var(--ch-color-brand-sand);font-size:.79rem;font-weight:700}
+.setup-fields select{width:100%;min-height:48px;border:1px solid #a57d5b;border-radius:12px;padding:8px;color:var(--ch-color-brand-cream);background:#452d28;font:inherit;font-weight:650}
+.setup-fields select:disabled{opacity:.6}
+#setup-start{display:block;width:100%;min-height:56px;margin:18px 0 0;border:1px solid #ffe6a1;border-radius:14px;color:#28160b;background:linear-gradient(#f7d48c,#d5a052);font-weight:850;font-size:1.05rem;box-shadow:0 5px 0 #160d0a6b}
+#play-setup>p{color:var(--ch-color-brand-sand);font-size:.77rem;line-height:1.5}
+#match-area .match-toolbar{order:1}
+#match-area .match-status{order:2}
+#match-area .match-clock-strip{order:3}
+#match-area #black-panel{order:4}
+#match-area .board-tools{order:5}
+#match-area .board,#match-area #scene{order:6}
+#match-area #white-panel{order:7}
+#match-area .match-footer{order:8}
+#match-area.black-bottom #white-panel{order:4}
+#match-area.black-bottom #black-panel{order:7}
+@media(max-width:359px){.setup-fields{grid-template-columns:1fr}}
