@@ -1,3 +1,4 @@
+import { bindOnline } from './online.js';
 import { Chess } from 'chess.js';
 import { readHistory, recordMatch } from './history.js';
 import { startClock, remainingClock } from './clock.js';
@@ -20,14 +21,17 @@ try {
 let selected;
 const claim = document.querySelector('#claim');
 const outcome = game => {
+  if (online?.active) return online.match.outcome;
   if (state.drawClaim) return 'Draw by ' + state.drawClaim;
   return result(game) ?? (state.clock?.[game.turn()] === 0
     ? (game.turn() === 'w' ? 'Black' : 'White') + ' wins on time' : null);
 };
 const clocks = document.querySelector('#clocks');
 let tickAt = performance.now();
+let online;
 
 function updateClock() {
+  if (online?.active) { displayClock(); return; }
   const now = performance.now();
   const { clock, game } = state;
   if (clock && !outcome(game) && !document.hidden) {
@@ -47,7 +51,7 @@ function displayClock() {
   clocks.hidden = !state.clock;
   if (!state.clock) return;
   clocks.textContent = ['w','b'].map(side => {
-    const seconds = Math.ceil(state.clock[side] / 1000);
+    const seconds = Math.ceil((online?.active ? online.remaining(side) : state.clock[side]) / 1000);
     return (side === 'w' ? 'White ' : 'Black ') +
       Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
   }).join('  ·  ');
@@ -110,7 +114,7 @@ function render(move) {
   if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus();
   status.textContent = [outcome(game) ?? (mode === 'computer' && game.turn() === 'b' ? 'Computer thinking…' :
     (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : '')), notice].filter(Boolean).join(' · ');
-  claim.hidden = Boolean(outcome(game)) || !claimableDraw(game) || (mode === 'computer' && game.turn() === 'b');
+  claim.hidden = Boolean(online?.active) || Boolean(outcome(game)) || !claimableDraw(game) || (mode === 'computer' && game.turn() === 'b');
   const moves = game.history();
   document.querySelector('#moves').replaceChildren(...moves.filter((_, index) => index % 2 === 0).map((move, index) => {
     const item = document.createElement('li');
@@ -120,6 +124,7 @@ function render(move) {
 }
 
 function save() {
+  if (online?.active) return;
   try {
     const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty);
     localStorage.setItem(key, snapshot);
@@ -132,6 +137,7 @@ function save() {
 }
 
 function commit(move) {
+  if (online?.active) { online.move(move); return; }
   updateClock();
   if (outcome(state.game)) return;
   const played = state.game.move(move);
@@ -161,6 +167,7 @@ function playComputer() {
 
 async function selectSquare(square) {
   const {game, mode} = state;
+  if (online?.active && !online.canMove(game.turn())) return;
   if (!square || outcome(game) || (mode === 'computer' && game.turn() === 'b')) return;
   const piece = game.get(square);
   if (piece?.color === game.turn()) {
@@ -181,6 +188,7 @@ async function selectSquare(square) {
 board.addEventListener('click', ({target}) => selectSquare(target.closest('[data-square]')?.dataset.square));
 for (const mode of ['local', 'computer']) {
   document.getElementById(mode).onclick = () => {
+    if (online?.active) return;
     if (state.game.history().length && !outcome(state.game) && !confirm('Replace this match?')) return;
     worker?.terminate();
     worker = undefined;
@@ -191,6 +199,28 @@ for (const mode of ['local', 'computer']) {
     render();
   };
 }
+let offlineState;
+online = bindOnline({
+  onMatch(match) {
+    if (!offlineState) {
+      offlineState = state;
+      worker?.terminate();
+      worker = undefined;
+    }
+    state = {...restoreGame(JSON.stringify({version:1, mode:'local', moves:match.moves})), clock:match.clock};
+    selected = undefined;
+    render();
+  },
+  onLeave() {
+    if (!offlineState) return;
+    state = offlineState;
+    offlineState = undefined;
+    tickAt = performance.now();
+    selected = undefined;
+    render();
+    playComputer();
+  },
+});
 render();
 playComputer();
 
