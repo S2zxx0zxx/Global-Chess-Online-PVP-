@@ -16,11 +16,40 @@ try {
 }
 let selected;
 let worker;
+let renderer;
+const canvas = document.querySelector('#scene');
+const view = document.querySelector('#view');
+view.onclick = async () => {
+  if (renderer) {
+    renderer.dispose();
+    renderer = undefined;
+    canvas.hidden = true;
+    board.hidden = false;
+    view.textContent = 'Use 3D board';
+    return;
+  }
+  view.disabled = true;
+  canvas.hidden = false;
+  try {
+    const { mountBoard } = await import('./board3d.js');
+    renderer = await mountBoard(canvas, selectSquare);
+    board.hidden = true;
+    view.textContent = 'Use 2D board';
+    render();
+  } catch {
+    canvas.hidden = true;
+    notice = '3D unavailable on this device. The 2D match is still available.';
+    render();
+  } finally {
+    view.disabled = false;
+  }
+};
 
-function render() {
+function render(move) {
   const {game, mode} = state;
   const activeSquare = document.activeElement?.dataset.square;
   const targets = selected ? game.moves({square: selected, verbose: true}).map(move => move.to) : [];
+  renderer?.syncTurns(game, selected, targets, move);
   board.replaceChildren(...game.board().flatMap((row, rank) => row.map((piece, file) => {
     const square = 'abcdefgh'[file] + (8 - rank);
     const cell = document.createElement('button');
@@ -53,10 +82,10 @@ function save() {
 }
 
 function commit(move) {
-  state.game.move(move);
+  const played = state.game.move(move);
   selected = undefined;
   save();
-  render();
+  render(played);
   playComputer();
 }
 
@@ -78,8 +107,7 @@ function playComputer() {
   job.postMessage({fen:game.fen()});
 }
 
-board.addEventListener('click', async ({target}) => {
-  const square = target.closest('[data-square]')?.dataset.square;
+async function selectSquare(square) {
   const {game, mode} = state;
   if (!square || result(game) || (mode === 'computer' && game.turn() === 'b')) return;
   const piece = game.get(square);
@@ -97,7 +125,8 @@ board.addEventListener('click', async ({target}) => {
   await new Promise(resolve => promotion.addEventListener('close', resolve, {once:true}));
   const chosen = options.find(move => move.promotion === promotion.returnValue);
   if (chosen && state.game === game) commit(chosen);
-});
+}
+board.addEventListener('click', ({target}) => selectSquare(target.closest('[data-square]')?.dataset.square));
 for (const mode of ['local', 'computer']) {
   document.getElementById(mode).onclick = () => {
     if (state.game.history().length && !result(state.game) && !confirm('Replace this match?')) return;

@@ -19,3 +19,6 @@ button{font:inherit;cursor:pointer}
 #moves{max-height:220px;overflow:auto;padding-left:24px}
 dialog{border:1px solid #c59e65;border-radius:12px;background:#39212a}
 @media(max-width:650px){main{padding:12px}.layout{grid-template-columns:1fr;gap:12px;margin-top:12px}aside{padding:12px}.actions{grid-template-columns:1fr 1fr}#moves:empty{display:none}#moves{max-height:72px}}
+[hidden]{display:none!important}
+#scene{display:block;width:100%;aspect-ratio:1;border:1px solid #82604b;border-radius:10px;background:#29151b;touch-action:none}
+#view{margin:0 0 10px;padding:8px 12px;border:1px solid #82604b;border-radius:8px;background:#39212a;color:#f7e7ce}
