@@ -106,8 +106,17 @@ try {
   if (!(await evaluate('getComputedStyle(document.getElementById("lobby")).display === "none"'))) {
     throw new Error('Home remained visible during a match');
   }
+  if (!(await evaluate('document.getElementById("coach-tip").hidden === false'))) {
+    throw new Error('First-match coach did not appear');
+  }
   await evaluate('document.querySelector("#board [data-square=e2]").click(); true');
+  if (!(await evaluate('document.getElementById("coach-text").textContent.includes("highlighted")'))) {
+    throw new Error('First-match coach did not advance after selecting a piece');
+  }
   await evaluate('document.querySelector("#board [data-square=e4]").click(); true');
+  if (!(await evaluate('document.getElementById("coach-tip").hidden === true'))) {
+    throw new Error('First-match coach did not clear after a legal move');
+  }
   await waitUntil(() => evaluate('document.querySelector("#moves li")?.textContent?.includes("e4") === true'));
   console.log('Browser local chess move: passed');
 
