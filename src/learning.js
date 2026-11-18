@@ -1,15 +1,18 @@
 import { Chess } from 'chess.js';
+import { extraLessons, extraPuzzles } from './learning-pack.js';
 
 export const lessons = [
   {id:'center',title:'Control the center',prompt:'As White, move the king’s pawn two squares to claim the center.',answer:'e4',explanation:'The pawn controls d5 and opens lines for the queen and bishop.'},
   {id:'development',title:'Develop a knight',setup:['e4','e5'],prompt:'Develop the kingside knight and attack Black’s e5 pawn.',answer:'Nf3',explanation:'The knight develops toward the center and attacks e5.'},
   {id:'castle',title:'Castle kingside',setup:['e4','e5','Nf3','Nc6','Be2','Nf6'],prompt:'Move the white king to g1 to castle.',answer:'O-O',explanation:'The king moves to g1 and the rook moves to f1 in the same turn.'},
+  ...extraLessons,
 ];
 export const puzzles = [
   {id:'fools-mate',title:'Diagonal mate',setup:['f3','e5','g4'],prompt:'Find checkmate in one for Black.',mate:true,explanation:'The queen uses the open diagonal to checkmate White.'},
   {id:'back-rank',title:'Back-rank mate',fen:'6k1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1',prompt:'Find checkmate in one for White.',mate:true,explanation:'The rook seals the back rank and Black’s pawns block the king’s escape.'},
   {id:'win-queen',title:'Find the winning capture',fen:'4k3/8/8/3q4/4P3/8/8/4K3 w - - 0 1',prompt:'Win Black’s queen with a pawn.',answer:'exd5',explanation:'The white pawn captures diagonally on d5.'},
   {id:'en-passant',title:'En passant',setup:['e4','a6','e5','d5'],prompt:'Capture the pawn that just advanced two squares.',answer:'exd6',explanation:'The capture must happen immediately. The white pawn lands on d6.'},
+  ...extraPuzzles,
 ];
 export function exerciseGame(exercise) {
   const game = new Chess(exercise.fen);
@@ -21,8 +24,8 @@ export function dailyExercise(date = new Date()) {
   const index = Math.floor(Date.parse(day)/86400000) % puzzles.length;
   return {...puzzles[index], id:'daily-'+day, title:'Daily · '+puzzles[index].title};
 }
-export function solveExercise(game, exercise, from, to) {
-  const candidates = game.moves({square:from,verbose:true}).filter(move => move.to === to);
+export function solveExercise(game, exercise, from, to, promotion) {
+  const candidates = game.moves({square:from,verbose:true}).filter(move => move.to === to && (promotion === undefined || move.promotion === promotion));
   for (const move of candidates) {
     if (exercise.mate) {
       game.move(move);
@@ -81,12 +84,22 @@ export function bindLearning(glyphs,names) {
       }
     }
   }
-  function tap(square) {
+  function tap(square, promotion) {
     if (solved) return;
     const piece = game.get(square);
-    if (piece?.color === game.turn()) { selected = square; render(square); return; }
+    if (piece?.color === game.turn()) { get('lesson-promotion').hidden = true; selected = square; render(square); return; }
     if (!selected) return;
-    const move = solveExercise(game,exercise,selected,square);
+    const choices = get('lesson-promotion');
+    if (promotion === undefined && game.moves({square:selected,verbose:true}).some(move => move.to === square && move.promotion)) {
+      choices.hidden = false;
+      for (const button of choices.querySelectorAll('button')) {
+        button.onclick = () => tap(square,button.value);
+      }
+      choices.querySelector('button').focus();
+      return;
+    }
+    choices.hidden = true;
+    const move = solveExercise(game,exercise,selected,square,promotion);
     if (!move) { get('lesson-feedback').textContent = 'Try a different move.'; return; }
     game.move(move);
     solved = true;
@@ -105,6 +118,7 @@ export function bindLearning(glyphs,names) {
     game = exerciseGame(exercise);
     selected = undefined;
     solved = false;
+    get('lesson-promotion').hidden = true;
     focusSquare = game.turn() === 'w' ? 'e2' : 'e7';
     get('lesson-title').textContent = exercise.title;
     get('lesson-prompt').textContent = exercise.prompt;
