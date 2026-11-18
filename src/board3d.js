@@ -7,7 +7,7 @@ import HavokPhysics from '@babylonjs/havok';
 import havokWasm from '@babylonjs/havok/lib/esm/HavokPhysics.wasm?url';
 
 const profiles = {
-  p: [[.27,0],[.29,.09],[.17,.17],[.12,.36],[.19,.43],[.16,.55],[0,.61]],
+  p: [[.27,0],[.29,.09],[.17,.17],[.12,.36],[.16,.39],[.17,.43],[.10,.46],[0,.46]],
   r: [[.34,0],[.34,.12],[.23,.22],[.23,.55],[.34,.59],[.34,.75],[0,.75]],
   n: [[.33,0],[.33,.1],[.2,.2],[.18,.75],[0,.8]],
   b: [[.31,0],[.32,.1],[.18,.23],[.13,.55],[.25,.69],[.16,.83],[0,.91]],
@@ -107,6 +107,18 @@ export async function mountBoard(canvas, selectSquare) {
         mesh.isPickable = false;
         return mesh;
       };
+      if (piece.type === 'p') {
+        const head = MeshBuilder.CreateSphere('pawn head',{diameter:.34,segments:12},scene);
+        head.parent = root;
+        head.position.y = .56;
+        head.material = root.material;
+        head.isPickable = false;
+      }
+      if (piece.type === 'b') {
+        const seam = detail('bishop mitre seam',.025,.13,.025,0,.79,-.19);
+        seam.rotation.z = -.55;
+        seam.material = pieces[piece.color === 'w' ? 'b' : 'w'];
+      }
       if (piece.type === 'k') {
         detail('cross stem', .09,.26,.09,0,1.01,0);
         detail('cross bar', .25,.07,.09,0,1.07,0);
@@ -141,7 +153,7 @@ export async function mountBoard(canvas, selectSquare) {
         mesh.dispose();
         effects.delete(body);
       }, 1100);
-      effects.set(body, timer);
+      effects.set(body, {timer,mesh});
     }
     function animateMove(from,to) {
       const mesh = active.get(from);
@@ -154,7 +166,20 @@ export async function mountBoard(canvas, selectSquare) {
       else moving.set(mesh,{start:mesh.position.clone(),end,since:performance.now()});
     }
 
+    let previousGame;
     const syncTurns = (game, selected, targets, move) => {
+      if (previousGame && game !== previousGame && !move) {
+        moving.clear();
+        for (const mesh of active.values()) mesh.dispose();
+        active.clear();
+        for (const [body, {timer,mesh}] of effects) {
+          clearTimeout(timer);
+          body.dispose();
+          mesh.dispose();
+        }
+        effects.clear();
+      }
+      previousGame = game;
       if (move?.captured) {
         const square = move.flags.includes('e') ? move.to[0] + move.from[1] : move.to;
         const mesh = active.get(square);
@@ -199,7 +224,7 @@ export async function mountBoard(canvas, selectSquare) {
       setFlipped(flipped) { camera.alpha = flipped ? Math.PI / 2 : -Math.PI / 2; },
       dispose() {
         observer.disconnect();
-        for (const [body, timer] of effects) {
+        for (const [body, {timer}] of effects) {
           clearTimeout(timer);
           body.dispose();
         }

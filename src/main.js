@@ -336,7 +336,7 @@ online = bindOnline({
       offlineState = state;
       stopComputer();
     }
-    if (match.turnStartedAt !== null && match.moves.length === 0 && !match.outcome) showVersus('White','Black');
+    if (match.version === 1 && match.turnStartedAt !== null && match.moves.length === 0 && !match.outcome) showVersus('White','Black');
     const previousPly = state === offlineState ? -1 : state.game.history().length;
     state = {...restoreGame(JSON.stringify({version:1, mode:'local', moves:match.moves})), clock:match.clock};
     selected = undefined;
