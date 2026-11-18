@@ -270,3 +270,17 @@ dialog button{min-height:44px}
 #match-area.black-bottom #white-panel{order:4}
 #match-area.black-bottom #black-panel{order:7}
 @media(max-width:359px){.setup-fields{grid-template-columns:1fr}}
+
+/* CH-01 SCR-02: first-move micro-tutorial never obstructs the board. */
+.coach-tip{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:42px;border:1px solid #ce9a60a0;border-radius:10px;background:#57402c;color:var(--ch-color-brand-cream);padding:6px 10px;font-size:.77rem;line-height:1.4}
+.coach-tip span{flex:1}
+.coach-tip button{border:1px solid #f5d6a6;border-radius:8px;background:#3f291f;color:var(--ch-color-brand-cream);min-height:36px;padding:6px 10px;font-weight:700}
+#coach-replay{min-height:44px;padding:8px 10px;border:1px solid #ac8657;border-radius:9px;background:#4d3127;color:var(--ch-color-brand-cream);margin:0 0 10px}
+#match-area .coach-tip{order:4}
+#match-area #black-panel{order:5}
+#match-area .board-tools{order:6}
+#match-area .board,#match-area #scene{order:7}
+#match-area #white-panel{order:8}
+#match-area .match-footer{order:9}
+#match-area:has(.coach-tip:not([hidden])) .board,
+#match-area:has(.coach-tip:not([hidden])) #scene{width:min(100%,calc(100svh - 340px),600px)}
