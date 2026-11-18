@@ -1,0 +1,66 @@
+/* CH-01 design token export: PROPOSED; JSON is canonical source */
+:root {
+  --ch-color-brand-espresso: #231310;
+  --ch-color-brand-wine: #351A17;
+  --ch-color-brand-mahogany: #552D25;
+  --ch-color-brand-walnut: #7B5038;
+  --ch-color-brand-gold: #E2B46B;
+  --ch-color-brand-goldStrong: #DCA657;
+  --ch-color-brand-cream: #FFF0D5;
+  --ch-color-brand-sand: #CDB7A3;
+  --ch-color-brand-teal: #28635C;
+  --ch-color-brand-error: #B83B32;
+  --ch-color-neutral-50: #FFF7EC;
+  --ch-color-neutral-100: #F7E9D7;
+  --ch-color-neutral-200: #E7D3BD;
+  --ch-color-neutral-300: #CDB7A3;
+  --ch-color-neutral-400: #B19481;
+  --ch-color-neutral-500: #8B6F62;
+  --ch-color-neutral-600: #6C4B42;
+  --ch-color-neutral-700: #552D25;
+  --ch-color-neutral-800: #351A17;
+  --ch-color-neutral-900: #231310;
+  --ch-color-gold-50: #FFF7E7;
+  --ch-color-gold-100: #FCE9C5;
+  --ch-color-gold-200: #F3D497;
+  --ch-color-gold-300: #E2B46B;
+  --ch-color-gold-400: #DCA657;
+  --ch-color-gold-500: #BB8035;
+  --ch-color-gold-600: #956020;
+  --ch-color-gold-700: #724817;
+  --ch-color-gold-800: #523414;
+  --ch-color-gold-900: #362009;
+  --ch-color-teal-50: #EAF8F4;
+  --ch-color-teal-100: #C3E6DD;
+  --ch-color-teal-200: #94D1C7;
+  --ch-color-teal-300: #65B9AE;
+  --ch-color-teal-400: #439187;
+  --ch-color-teal-500: #28635C;
+  --ch-color-teal-600: #20514C;
+  --ch-color-teal-700: #18423E;
+  --ch-color-teal-800: #123331;
+  --ch-color-teal-900: #0B2423;
+  --ch-color-board-light: #EFD9BD;
+  --ch-color-board-dark: #976242;
+  --ch-color-board-select: #F1C46F;
+  --ch-color-board-last: #F5D8A0;
+  --ch-color-board-check: #B83B32;
+  --ch-color-board-hint: #8DE1FF;
+  --ch-color-ink-dark: #29180F;
+  --ch-color-ink-light: #FFFFFF;
+  --ch-color-a11y-focus: #8DE1FF;
+  --ch-space-1: 4px;
+  --ch-space-2: 8px;
+  --ch-space-3: 12px;
+  --ch-space-4: 16px;
+  --ch-space-6: 24px;
+  --ch-touch-min: 48px;
+  --ch-motion-tap: 100ms;
+  --ch-motion-piece: 160ms;
+  --ch-motion-vs-max: 900ms;
+  --ch-font-ui: Inter, system-ui, sans-serif;
+  --ch-font-display: Cinzel, Georgia, serif;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --ch-motion-tap: 0ms; --ch-motion-piece: 0ms; --ch-motion-vs-max: 0ms; }
+}

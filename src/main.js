@@ -170,7 +170,9 @@ function render(move) {
     started:online?.active ? online.match.turnStartedAt !== null : state.preset !== undefined || game.history().length > 0 || Boolean(state.clock)});
   const activeSquare = document.activeElement?.dataset.square;
   const targets = selected ? game.moves({square: selected, verbose: true}).map(move => move.to) : [];
-  renderer?.syncTurns(game, selected, targets, move);
+  const lastMove = move ?? game.history({verbose:true}).at(-1);
+  const checkedSide = game.inCheck() ? game.turn() : null;
+  renderer?.syncTurns(game, selected, targets, move, lastMove, checkedSide);
   const rows = game.board();
   if (flipped) rows.reverse().forEach(row => row.reverse());
   board.replaceChildren(...rows.flatMap((row, visibleRank) => row.map((piece, visibleFile) => {
@@ -183,7 +185,11 @@ function render(move) {
     cell.tabIndex = square === focusSquare ? 0 : -1;
 
     cell.className = (rank + file) % 2 ? 'dark' : 'light';
-    cell.classList.toggle('target', targets.includes(square));
+    const isTarget = targets.includes(square);
+    cell.classList.toggle('target', isTarget);
+    cell.classList.toggle('capture-target', isTarget && Boolean(piece));
+    cell.classList.toggle('last-move', square === lastMove?.from || square === lastMove?.to);
+    cell.classList.toggle('in-check', piece?.type === 'k' && piece.color === checkedSide);
     cell.setAttribute('aria-pressed', String(square === selected));
     cell.setAttribute('aria-label', piece ? square + ', ' + (piece.color === 'w' ? 'White ' : 'Black ') + names[piece.type] : square);
     cell.textContent = piece ? glyphs[piece.color]['kqrbnp'.indexOf(piece.type)] : '';
@@ -318,7 +324,8 @@ function showVersus(white,black) {
   document.querySelector('#versus-black').textContent = black;
   clearTimeout(versusTimer);
   card.hidden = false;
-  versusTimer = setTimeout(() => { card.hidden = true; }, 950);
+  const duration = Number.parseFloat(getComputedStyle(card).getPropertyValue('--ch-motion-vs-max'));
+  versusTimer = setTimeout(() => { card.hidden = true; }, duration);
 }
 
 function startLocalMatch(mode, preset, difficulty) {

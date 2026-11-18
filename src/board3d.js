@@ -32,13 +32,16 @@ export async function mountBoard(canvas, selectSquare) {
     light.intensity = .78;
     const keyLight = new DirectionalLight('key', new Vector3(-.5,-1,.4), scene);
     keyLight.intensity = .92;
+    const theme = getComputedStyle(canvas);
+    const color = name => theme.getPropertyValue('--ch-color-' + name).trim();
+    const moveDuration = Number.parseFloat(theme.getPropertyValue('--ch-motion-piece')) || 160;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
     const moving = new Map();
     let needsFrame = true;
     scene.onBeforeRenderObservable.add(() => {
       const now = performance.now();
       for (const [mesh, {start,end,since}] of moving) {
-        const progress = Math.min(1, (now-since)/210);
+        const progress = Math.min(1, (now-since)/moveDuration);
         Vector3.LerpToRef(start,end,1-(1-progress)**3,mesh.position);
         mesh.position.y += Math.sin(Math.PI*progress)*.12;
         if (progress === 1) moving.delete(mesh);
@@ -50,8 +53,8 @@ export async function mountBoard(canvas, selectSquare) {
       m.diffuseColor = Color3.FromHexString(hex);
       return m;
     }
-    const maple = material('maple', '#DEB782');
-    const walnut = material('walnut', '#75412B');
+    const maple = material('maple', color('board-light'));
+    const walnut = material('walnut', color('board-dark'));
     function addWoodGrain(surface, base, grain) {
       const texture = new DynamicTexture(surface.name + ' grain', {width:256,height:128}, scene, true);
       const ctx = texture.getContext();
@@ -72,16 +75,20 @@ export async function mountBoard(canvas, selectSquare) {
       surface.diffuseTexture = texture;
       surface.specularColor = new Color3(.19,.14,.10);
     }
-    addWoodGrain(maple,'#dcb681','#81533b');
-    addWoodGrain(walnut,'#73412e','#351b13');
-    const marked = material('selected', '#CDA14D');
-    const target = material('legal move', '#8D854D');
-    const pieces = { w: material('ivory', '#F8E0BB'), b: material('ebony', '#332432') };
+    addWoodGrain(maple,color('board-light'),color('brand-walnut'));
+    addWoodGrain(walnut,color('board-dark'),color('brand-espresso'));
+    const marked = material('selected', color('board-select'));
+    const target = material('legal move', color('board-hint'));
+    const previous = material('last move', color('board-last'));
+    const check = material('check', color('board-check'));
+    const frame = material('frame', color('brand-walnut'));
+    addWoodGrain(frame,color('brand-walnut'),color('brand-espresso'));
+    const pieces = { w: material('ivory', color('brand-cream')), b: material('ebony', color('brand-espresso')) };
     const tiles = new Map();
     const active = new Map();
     const effects = new Map();
     const base = MeshBuilder.CreateBox('frame', {width:8.4,depth:8.4,height:.32}, scene);
-    base.material = walnut;
+    base.material = frame;
     base.position.y = -.16;
     new PhysicsAggregate(base, PhysicsShapeType.BOX, {mass:0, friction:.65}, scene);
 
@@ -169,7 +176,7 @@ export async function mountBoard(canvas, selectSquare) {
     }
 
     let previousGame;
-    const syncTurns = (game, selected, targets, move) => {
+    const syncTurns = (game, selected, targets, move, lastMove, checkedSide) => {
       needsFrame = true;
       if (previousGame && game !== previousGame && !move) {
         moving.clear();
@@ -198,8 +205,12 @@ export async function mountBoard(canvas, selectSquare) {
         if (move.flags.includes('q')) animateMove('a'+move.to[1],'d'+move.to[1]);
       }
       for (const [square, {mesh, color}] of tiles) {
-        mesh.material = square === selected ? marked : targets.includes(square) ? target : color;
         const piece = game.get(square);
+        if (square === selected) mesh.material = marked;
+        else if (piece?.type === 'k' && piece.color === checkedSide) mesh.material = check;
+        else if (targets.includes(square)) mesh.material = target;
+        else if (lastMove?.from === square || lastMove?.to === square) mesh.material = previous;
+        else mesh.material = color;
         const old = active.get(square);
         if (old && old.name === piece?.type && old.material === pieces[piece.color]) continue;
         if (old) { moving.delete(old); old.dispose(); }
