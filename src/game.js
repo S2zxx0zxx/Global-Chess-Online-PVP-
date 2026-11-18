@@ -11,6 +11,7 @@ export function restoreGame(raw) {
   let clock = null;
   let difficulty = 'standard';
   let humanSide = 'w';
+  let resignedSide;
   let preset;
   if (raw) {
     const save = JSON.parse(raw);
@@ -22,6 +23,10 @@ export function restoreGame(raw) {
     if (save.humanSide !== undefined) {
       if (!['w','b'].includes(save.humanSide)) throw new Error('Invalid human side in save');
       humanSide = save.humanSide;
+    }
+    if (save.resignedSide !== undefined) {
+      if (!['w','b'].includes(save.resignedSide)) throw new Error('Invalid resignation in save');
+      resignedSide = save.resignedSide;
     }
     if (save.clock !== undefined) {
       if (!validClock(save.clock)) throw new Error('Invalid saved clock');
@@ -48,13 +53,15 @@ export function restoreGame(raw) {
       drawClaim = save.drawClaim;
     }
   }
-  return { game, mode, drawClaim, clock, difficulty, claimMove, preset, humanSide };
+  return { game, mode, drawClaim, clock, difficulty, claimMove, preset, humanSide, resignedSide };
 }
 
-export function serializeGame(game, mode, drawClaim, clock, difficulty, claimMove, preset, humanSide = 'w') {
+export function serializeGame(game, mode, drawClaim, clock, difficulty, claimMove, preset, humanSide = 'w', resignedSide) {
   const moves = game.history({ verbose: true }).map(({from, to, promotion}) => ({from, to, promotion}));
   if (!['w','b'].includes(humanSide)) throw new Error('Invalid human side');
-  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty, claimMove, preset, humanSide });
+  if (resignedSide !== undefined && !['w','b'].includes(resignedSide)) throw new Error('Invalid resignation');
+  if (resignedSide !== undefined && drawClaim !== undefined) throw new Error('Conflicting terminal results');
+  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty, claimMove, preset, humanSide, resignedSide });
 }
 
 export function result(game) {
