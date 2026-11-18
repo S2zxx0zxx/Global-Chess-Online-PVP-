@@ -1,5 +1,5 @@
 import './style.css';
-import { restoreGame, serializeGame, result } from './game.js';
+import { restoreGame, serializeGame, result, claimableDraw } from './game.js';
 
 const key = 'global-chess.match.v1';
 const board = document.querySelector('#board');
@@ -15,6 +15,16 @@ try {
   notice = 'Saved game could not be restored.';
 }
 let selected;
+const claim = document.querySelector('#claim');
+const outcome = game => state.drawClaim ? 'Draw by ' + state.drawClaim : result(game);
+claim.onclick = () => {
+  const reason = claimableDraw(state.game);
+  if (!reason || outcome(state.game) || (state.mode === 'computer' && state.game.turn() === 'b')) return;
+  state.drawClaim = reason;
+  selected = undefined;
+  save();
+  render();
+};
 let worker;
 let renderer;
 const canvas = document.querySelector('#scene');
@@ -62,8 +72,9 @@ function render(move) {
     return cell;
   })));
   if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus();
-  status.textContent = [result(game) ?? (mode === 'computer' && game.turn() === 'b' ? 'Computer thinking…' :
+  status.textContent = [outcome(game) ?? (mode === 'computer' && game.turn() === 'b' ? 'Computer thinking…' :
     (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : '')), notice].filter(Boolean).join(' · ');
+  claim.hidden = Boolean(outcome(game)) || !claimableDraw(game) || (mode === 'computer' && game.turn() === 'b');
   const moves = game.history();
   document.querySelector('#moves').replaceChildren(...moves.filter((_, index) => index % 2 === 0).map((move, index) => {
     const item = document.createElement('li');
@@ -74,7 +85,7 @@ function render(move) {
 
 function save() {
   try {
-    localStorage.setItem(key, serializeGame(state.game, state.mode));
+    localStorage.setItem(key, serializeGame(state.game, state.mode, state.drawClaim));
     notice = '';
   } catch {
     notice = 'Storage unavailable. This match may not resume after closing.';
@@ -91,7 +102,7 @@ function commit(move) {
 
 function playComputer() {
   const {game, mode} = state;
-  if (mode !== 'computer' || game.turn() !== 'b' || result(game)) return;
+  if (mode !== 'computer' || game.turn() !== 'b' || outcome(game)) return;
   const job = new Worker(new URL('./bot.js', import.meta.url), {type:'module'});
   worker = job;
   const finish = (move) => {
@@ -109,7 +120,7 @@ function playComputer() {
 
 async function selectSquare(square) {
   const {game, mode} = state;
-  if (!square || result(game) || (mode === 'computer' && game.turn() === 'b')) return;
+  if (!square || outcome(game) || (mode === 'computer' && game.turn() === 'b')) return;
   const piece = game.get(square);
   if (piece?.color === game.turn()) {
     selected = selected === square ? undefined : square;
@@ -129,7 +140,7 @@ async function selectSquare(square) {
 board.addEventListener('click', ({target}) => selectSquare(target.closest('[data-square]')?.dataset.square));
 for (const mode of ['local', 'computer']) {
   document.getElementById(mode).onclick = () => {
-    if (state.game.history().length && !result(state.game) && !confirm('Replace this match?')) return;
+    if (state.game.history().length && !outcome(state.game) && !confirm('Replace this match?')) return;
     worker?.terminate();
     worker = undefined;
     state = {...restoreGame(), mode};

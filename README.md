@@ -20,4 +20,4 @@ Run `npm ci`, then `npm run dev`. Run `npm test` for the game-core tests and `np
 4. Add authoritative invite-only matches, clocks and reconnect. Test 25 concurrent rooms and 50 clients on the free-tier deployment.
 5. Package the Android shell and verify device behavior, installable PWA and public beta.
 
-Current implementation covers the 2D match screen and an optional Babylon.js board with Havok capture effects, a basic computer opponent, save/resume and a production offline shell. Draw handling currently uses chess.js defaults.
+Current implementation covers the 2D match screen and an optional Babylon.js board with Havok capture effects, a basic computer opponent, save/resume and a production offline shell. Draw claims apply to the current position. Automatic repetition and move-count draws are handled separately.

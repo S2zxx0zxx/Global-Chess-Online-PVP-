@@ -22,3 +22,16 @@ test('detects and restores checkmate', () => {
   for (const move of ['f3','e5','g4','Qh4#']) game.move(move);
   assert.equal(result(restoreGame(serializeGame(game, 'local')).game), 'Black wins by checkmate');
 });
+
+test('threefold is claimable and fivefold automatically ends the game', () => {
+  const {game} = restoreGame();
+  const cycle = () => ['Nf3','Nf6','Ng1','Ng8'].forEach(move => game.move(move));
+  cycle();
+  cycle();
+  assert.equal(result(game), null);
+  const claimed = restoreGame(serializeGame(game, 'local', 'threefold repetition'));
+  assert.equal(claimed.drawClaim, 'threefold repetition');
+  cycle();
+  cycle();
+  assert.equal(result(game), 'Draw by fivefold repetition');
+});
