@@ -1,0 +1,120 @@
+import './style.css';
+import { restoreGame, serializeGame, result } from './game.js';
+
+const key = 'global-chess.match.v1';
+const board = document.querySelector('#board');
+const status = document.querySelector('#status');
+const promotion = document.querySelector('#promotion');
+const glyphs = { w: '♔♕♖♗♘♙', b: '♚♛♜♝♞♟' };
+const names = { k:'King', q:'Queen', r:'Rook', b:'Bishop', n:'Knight', p:'Pawn' };
+let state = restoreGame();
+let notice = '';
+try {
+  state = restoreGame(localStorage.getItem(key));
+} catch {
+  notice = 'Saved game could not be restored.';
+}
+let selected;
+let worker;
+
+function render() {
+  const {game, mode} = state;
+  const activeSquare = document.activeElement?.dataset.square;
+  const targets = selected ? game.moves({square: selected, verbose: true}).map(move => move.to) : [];
+  board.replaceChildren(...game.board().flatMap((row, rank) => row.map((piece, file) => {
+    const square = 'abcdefgh'[file] + (8 - rank);
+    const cell = document.createElement('button');
+    cell.dataset.square = square;
+    cell.className = (rank + file) % 2 ? 'dark' : 'light';
+    cell.classList.toggle('target', targets.includes(square));
+    cell.setAttribute('aria-pressed', String(square === selected));
+    cell.setAttribute('aria-label', piece ? square + ', ' + (piece.color === 'w' ? 'White ' : 'Black ') + names[piece.type] : square);
+    cell.textContent = piece ? glyphs[piece.color]['kqrbnp'.indexOf(piece.type)] : '';
+    return cell;
+  })));
+  if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus();
+  status.textContent = [result(game) ?? (mode === 'computer' && game.turn() === 'b' ? 'Computer thinking…' :
+    (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : '')), notice].filter(Boolean).join(' · ');
+  const moves = game.history();
+  document.querySelector('#moves').replaceChildren(...moves.filter((_, index) => index % 2 === 0).map((move, index) => {
+    const item = document.createElement('li');
+    item.textContent = [move, moves[index * 2 + 1]].filter(Boolean).join('  ');
+    return item;
+  }));
+}
+
+function save() {
+  try {
+    localStorage.setItem(key, serializeGame(state.game, state.mode));
+    notice = '';
+  } catch {
+    notice = 'Storage unavailable. This match may not resume after closing.';
+  }
+}
+
+function commit(move) {
+  state.game.move(move);
+  selected = undefined;
+  save();
+  render();
+  playComputer();
+}
+
+function playComputer() {
+  const {game, mode} = state;
+  if (mode !== 'computer' || game.turn() !== 'b' || result(game)) return;
+  const job = new Worker(new URL('./bot.js', import.meta.url), {type:'module'});
+  worker = job;
+  const finish = (move) => {
+    if (worker !== job) return;
+    job.terminate();
+    worker = undefined;
+    const legal = game.moves({verbose:true});
+    const candidate = legal.find(option => option.from === move?.from && option.to === move?.to && option.promotion === move?.promotion);
+    if (legal.length) commit(candidate ?? legal[0]);
+  };
+  job.onmessage = ({data}) => finish(data);
+  job.onerror = () => finish();
+  job.postMessage({fen:game.fen()});
+}
+
+board.addEventListener('click', async ({target}) => {
+  const square = target.closest('[data-square]')?.dataset.square;
+  const {game, mode} = state;
+  if (!square || result(game) || (mode === 'computer' && game.turn() === 'b')) return;
+  const piece = game.get(square);
+  if (piece?.color === game.turn()) {
+    selected = selected === square ? undefined : square;
+    render();
+    return;
+  }
+  if (!selected) return;
+  const options = game.moves({square:selected, verbose:true}).filter(move => move.to === square);
+  if (!options.length) return;
+  if (!options[0].promotion) return commit(options[0]);
+  promotion.returnValue = '';
+  promotion.showModal();
+  await new Promise(resolve => promotion.addEventListener('close', resolve, {once:true}));
+  const chosen = options.find(move => move.promotion === promotion.returnValue);
+  if (chosen && state.game === game) commit(chosen);
+});
+for (const mode of ['local', 'computer']) {
+  document.getElementById(mode).onclick = () => {
+    if (state.game.history().length && !result(state.game) && !confirm('Replace this match?')) return;
+    worker?.terminate();
+    worker = undefined;
+    state = {...restoreGame(), mode};
+    selected = undefined;
+    save();
+    render();
+  };
+}
+render();
+playComputer();
+
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {
+    notice = 'Offline cache unavailable. Keep this tab open to continue playing.';
+    render();
+  });
+}
