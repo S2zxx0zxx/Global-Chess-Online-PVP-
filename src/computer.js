@@ -42,8 +42,9 @@ export function chooseComputerMove(fen, difficulty, {budgetMs = 1200} = {}) {
     }
     return best;
   }
+  const maxDepth = Object.hasOwn(levels,difficulty) ? levels[difficulty] : levels.standard;
   let best = root[0];
-  for (let depth = 1; depth <= (levels[difficulty] ?? levels.standard); depth++) {
+  for (let depth = 1; depth <= maxDepth; depth++) {
     try {
       let alpha = -Infinity;
       let candidate = best;

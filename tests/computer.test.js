@@ -22,3 +22,11 @@ test('hard recognizes mate and survives save and reload', () => {
   assert.equal(game.isCheckmate(),true);
   assert.equal(restoreGame(serializeGame(game,'computer',undefined,null,'hard')).difficulty,'hard');
 });
+
+test('standard and hard see a recapture missed by easy', () => {
+  const fen = '3q2k1/8/8/3p4/4P3/8/8/4K3 w - - 0 1';
+  assert.equal(chooseComputerMove(fen,'easy').to,'d5');
+  for (const level of ['standard','hard','constructor']) {
+    assert.notEqual(chooseComputerMove(fen,level).to,'d5');
+  }
+});

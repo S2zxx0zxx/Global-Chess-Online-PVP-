@@ -28,6 +28,7 @@ try {
 } catch {
   notice = 'Saved game could not be restored.';
 }
+if (state.mode === 'computer') document.querySelector('#difficulty').value = state.difficulty;
 let selected;
 const claim = document.querySelector('#claim');
 const outcome = game => {
@@ -61,8 +62,7 @@ function updateClock() {
   if (clock && !outcome(game) && elapsed > 0) {
     state.clock = remainingClock(clock, game.turn(), elapsed);
     if (state.clock[game.turn()] === 0) {
-      worker?.terminate();
-      worker = undefined;
+      stopComputer();
       save();
       render();
     }
@@ -117,6 +117,12 @@ claim.onclick = () => {
   dialog.showModal();
 };
 let worker;
+let workerDeadline;
+function stopComputer() {
+  clearTimeout(workerDeadline);
+  worker?.terminate();
+  worker = undefined;
+}
 let renderer;
 const canvas = document.querySelector('#scene');
 const view = document.querySelector('#view');
@@ -236,17 +242,20 @@ function playComputer() {
   worker = job;
   const finish = (move) => {
     if (worker !== job) return;
-    clearTimeout(deadline);
-    job.terminate();
-    worker = undefined;
+    stopComputer();
     const legal = game.moves({verbose:true});
     const candidate = legal.find(option => option.from === move?.from && option.to === move?.to && option.promotion === move?.promotion);
     if (legal.length) commit(candidate ?? legal[0]);
   };
-  const deadline = setTimeout(finish, 5000);
+  workerDeadline = setTimeout(finish, 5000);
   job.onmessage = ({data}) => finish(data);
   job.onerror = () => finish();
-  job.postMessage({fen:game.fen(), difficulty:state.difficulty});
+  job.onmessageerror = () => finish();
+  try {
+    job.postMessage({fen:game.fen(), difficulty:state.difficulty});
+  } catch {
+    finish();
+  }
 }
 
 async function selectSquare(square) {
@@ -296,8 +305,7 @@ board.addEventListener('keydown', event => {
 function startLocalMatch(mode, preset, difficulty) {
   if (online?.active) return;
   if (state.game.history().length && !outcome(state.game) && !confirm('Replace this match?')) return;
-  worker?.terminate();
-  worker = undefined;
+  stopComputer();
   state = {...restoreGame(), mode, preset, difficulty, clock: startClock(preset)};
   tickAt = performance.now();
   selected = undefined;
@@ -315,8 +323,7 @@ online = bindOnline({
   onMatch(match) {
     if (!offlineState) {
       offlineState = state;
-      worker?.terminate();
-      worker = undefined;
+      stopComputer();
     }
     const previousPly = state === offlineState ? -1 : state.game.history().length;
     state = {...restoreGame(JSON.stringify({version:1, mode:'local', moves:match.moves})), clock:match.clock};
@@ -460,8 +467,7 @@ backupFile.onchange = async () => {
     const contents = await file.text();
     if (online?.active) throw new Error('Online match in progress');
     const restored = importBackup(gameStorage, contents);
-    worker?.terminate();
-    worker = undefined;
+    stopComputer();
     state = restored;
     selected = undefined;
     tickAt = performance.now();
