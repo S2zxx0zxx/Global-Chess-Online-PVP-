@@ -302,11 +302,22 @@ board.addEventListener('keydown', event => {
   const next = board.querySelector('[data-square="' + 'abcdefgh'[file] + rank + '"]');
   next.focus();
 });
+let versusTimer;
+function showVersus(white,black) {
+  const card = document.querySelector('#versus');
+  document.querySelector('#versus-white').textContent = white;
+  document.querySelector('#versus-black').textContent = black;
+  clearTimeout(versusTimer);
+  card.hidden = false;
+  versusTimer = setTimeout(() => { card.hidden = true; }, 950);
+}
+
 function startLocalMatch(mode, preset, difficulty) {
   if (online?.active) return;
   if (state.game.history().length && !outcome(state.game) && !confirm('Replace this match?')) return;
   stopComputer();
   state = {...restoreGame(), mode, preset, difficulty, clock: startClock(preset)};
+  showVersus('White',mode === 'computer' ? 'Computer' : 'Black');
   tickAt = performance.now();
   selected = undefined;
   save();
@@ -325,6 +336,7 @@ online = bindOnline({
       offlineState = state;
       stopComputer();
     }
+    if (match.turnStartedAt !== null && match.moves.length === 0 && !match.outcome) showVersus('White','Black');
     const previousPly = state === offlineState ? -1 : state.game.history().length;
     state = {...restoreGame(JSON.stringify({version:1, mode:'local', moves:match.moves})), clock:match.clock};
     selected = undefined;
@@ -506,4 +518,4 @@ window.addEventListener('chess-storage-error', () => {
 }
 initialize().catch(() => {
   document.querySelector('#status').textContent = 'The game could not start.';
-});
+}).finally(() => { document.querySelector('#launch').hidden = true; });

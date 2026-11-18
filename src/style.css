@@ -60,3 +60,10 @@ dialog form{margin-top:8px}
 @media(max-width:650px){.mode-cards{grid-template-columns:repeat(2,1fr)}.masthead button{padding:7px}.masthead strong{font-size:.82rem}}
 #flip-board{margin:0 8px 10px 0;padding:8px 12px;border:1px solid #82604b;border-radius:8px;background:#39212a;color:#f7e7ce}
 .layout details{margin-bottom:12px;font-size:.85rem}
+#launch{position:fixed;inset:0;z-index:20;display:grid;place-content:center;justify-items:center;gap:12px;background:radial-gradient(ellipse at center,#602735,#220f17 70%);color:#f2ce8d}
+#launch strong{font:700 2rem Georgia,serif}
+#launch span{font-size:.85rem;color:#eed5b7}
+#versus{position:fixed;z-index:10;left:50%;top:18%;transform:translateX(-50%);width:min(360px,90vw);display:flex;align-items:center;justify-content:space-around;gap:16px;padding:18px;border:1px solid #c59e65;border-radius:14px;background:#39212a;box-shadow:0 12px 30px #1b0a13b0;color:#f7e7ce;pointer-events:none;animation:versus-appear .2s ease-out}
+#versus strong{color:#f2ce8d;font:700 1.4rem Georgia,serif}
+@keyframes versus-appear{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+@media(prefers-reduced-motion:reduce){#versus{animation:none}}
