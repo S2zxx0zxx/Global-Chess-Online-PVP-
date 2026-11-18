@@ -37,6 +37,36 @@ try {
 }
 if (state.mode === 'computer') document.querySelector('#difficulty').value = state.difficulty;
 let selected;
+const coachTip = document.getElementById('coach-tip');
+const coachText = document.getElementById('coach-text');
+const coachKey = 'global-chess.first-move-coach.v1';
+let coachActive = false;
+let coachStep = 0;
+function syncCoach() {
+  coachTip.hidden = !coachActive;
+  if (coachActive) coachText.textContent = coachStep
+    ? 'Great. Tap a highlighted square to make the legal move.'
+    : 'Tap one of your pieces to reveal its legal moves.';
+}
+function finishCoach() {
+  coachActive = false;
+  syncCoach();
+  try { localStorage.setItem(coachKey, 'complete'); } catch { /* Optional tutorial stays skippable. */ }
+}
+function activateCoach(force = false) {
+  if (!force) {
+    try { if (localStorage.getItem(coachKey) === 'complete') return; }
+    catch { /* Play without persistent tutorial state. */ }
+  }
+  coachActive = true;
+  coachStep = 0;
+  syncCoach();
+}
+document.getElementById('coach-skip').onclick = finishCoach;
+document.getElementById('coach-replay').onclick = () => {
+  document.documentElement.classList.remove('tools-open');
+  if (!outcome(state.game)) { activateCoach(true); navigate('match'); }
+};
 const claim = document.querySelector('#claim');
 const outcome = game => {
   if (online?.active) return online.match.outcome;
@@ -224,6 +254,8 @@ function render(move) {
     (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : '')), notice].filter(Boolean).join(' · ');
   claim.hidden = (online?.active && !online.canMove(game.turn())) || Boolean(outcome(game)) || (mode === 'computer' && game.turn() !== state.humanSide);
   document.querySelector('#match-state').textContent = status.textContent;
+  if (outcome(game) && coachActive) finishCoach();
+  else syncCoach();
   document.querySelector('#match-result-trigger').hidden = !outcome(game);
   const moves = game.history();
   const recent = moves.slice(-4);
@@ -254,7 +286,9 @@ function commit(move) {
   if (online?.active) { online.move(move); return; }
   updateClock();
   if (outcome(state.game)) return;
+  const mover = state.game.turn();
   const played = state.game.move(move);
+  if (coachActive && (state.mode !== 'computer' || mover === state.humanSide)) finishCoach();
   selected = undefined;
   save();
   render(played);
@@ -298,6 +332,7 @@ async function selectSquare(square) {
   const piece = game.get(square);
   if (piece?.color === game.turn()) {
     selected = selected === square ? undefined : square;
+    if (coachActive) coachStep = selected ? 1 : 0;
     render();
     return;
   }
@@ -359,6 +394,7 @@ function startLocalMatch(mode, preset, difficulty, humanSide = 'w') {
     mode === 'computer' && humanSide === 'w' ? 'Computer' : 'Black');
   tickAt = performance.now();
   selected = undefined;
+  activateCoach();
   save();
   navigate('match');
   render();
