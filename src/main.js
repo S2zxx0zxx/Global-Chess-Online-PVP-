@@ -12,10 +12,11 @@ import { restoreGame, serializeGame, result, claimableDraw, intendedDraw, timeou
 
 import { matchKey as key, exportBackup, importBackup } from './backup.js';
 async function initialize() {
-const [gameStorage] = await Promise.all([
-  openGameStorage(),
-  loadBrowserMateSolver().catch(() => {}),
-]);
+// The optional WASM mating solver must not delay guest-first gameplay.
+const gameStorage = await openGameStorage();
+loadBrowserMateSolver().catch(() => {
+  // The simpler validated timeout policy remains available.
+});
 const board = document.querySelector('#board');
 const status = document.querySelector('#status');
 const rematch = document.querySelector('#rematch');
