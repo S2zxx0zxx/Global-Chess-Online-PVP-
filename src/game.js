@@ -52,6 +52,7 @@ export function result(game) {
   if (game.isCheckmate()) return game.turn() === 'w' ? 'Black wins by checkmate' : 'White wins by checkmate';
   if (game.isStalemate()) return 'Draw by stalemate';
   if (game.isInsufficientMaterial()) return 'Draw by insufficient material';
+  if (closedPawnPositionCannotMate(game)) return 'Draw by dead position';
   if (Number(game.fen().split(' ')[4]) >= 150) return 'Draw by 75-move rule';
   if (game.isThreefoldRepetition() && repetitionCount(game) >= 5) return 'Draw by fivefold repetition';
   return null;

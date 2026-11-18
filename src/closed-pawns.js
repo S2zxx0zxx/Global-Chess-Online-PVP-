@@ -8,7 +8,8 @@ export function closedPawnPositionCannotMate(game, winner) {
   const attacks = [new Uint8Array(64), new Uint8Array(64)];
   for (let square = 0; square < 64; square++) {
     const pawn = board[square];
-    if (pawn?.type !== 'p') continue;
+    if (!pawn || pawn.type === 'k') continue;
+    if (pawn.type !== 'p') return false;
     const side = pawn.color === 'w' ? 0 : 1;
     const ahead = square + (side === 0 ? -8 : 8);
     if (board[ahead]?.type !== 'p') return false;
@@ -56,7 +57,7 @@ export function closedPawnPositionCannotMate(game, winner) {
         else enqueue(white, to, 0);
       }
     }
-    if (!hasMove && enemyAttacks[from] && turn !== winningSide) return false;
+    if (!hasMove && enemyAttacks[from] && (winner === undefined || turn !== winningSide)) return false;
   }
   return true;
 }

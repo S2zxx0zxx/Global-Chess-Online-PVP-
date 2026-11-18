@@ -74,3 +74,9 @@ test('timeout proves a closed pawn wall cannot produce mate', () => {
   game.load('4k3/8/8/p1p1p3/P1P1P1P1/8/8/4K3 b - - 0 1');
   assert.equal(timeoutResult(game,'b'),'White wins on time');
 });
+
+test('a proven dead pawn position ends immediately', () => {
+  const {game} = restoreGame();
+  game.load('4k3/8/8/p1p1p1p1/P1P1P1P1/8/8/4K3 w - - 0 1');
+  assert.equal(result(game),'Draw by dead position');
+});
