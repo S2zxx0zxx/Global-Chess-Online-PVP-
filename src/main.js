@@ -1,3 +1,4 @@
+import { loadBrowserMateSolver } from './mate-solver.js';
 import { bindLearning } from './learning.js';
 import { bindLobby } from './lobby.js';
 import { openGameStorage } from './storage.js';
@@ -10,7 +11,10 @@ import { restoreGame, serializeGame, result, claimableDraw, intendedDraw, timeou
 
 import { matchKey as key, exportBackup, importBackup } from './backup.js';
 async function initialize() {
-const gameStorage = await openGameStorage();
+const [gameStorage] = await Promise.all([
+  openGameStorage(),
+  loadBrowserMateSolver().catch(() => {}),
+]);
 const board = document.querySelector('#board');
 const status = document.querySelector('#status');
 const rematch = document.querySelector('#rematch');

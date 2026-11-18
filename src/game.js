@@ -1,3 +1,4 @@
+import { matingPossibility } from './mate-solver.js';
 import { closedPawnPositionCannotMate } from './closed-pawns.js';
 import { presets, validClock } from './clock.js';
 import { Chess } from 'chess.js';
@@ -101,7 +102,9 @@ export function timeoutResult(game, expiredSide) {
     piece.type === 'b' && squareColor(piece) === squareColor(attacking[0]));
   const closedPawnDraw = material.length > 0 && material.every(piece => piece.type === 'p') &&
     closedPawnPositionCannotMate(game, winner);
-  return !attacking.length || sameColorBishops || game.isInsufficientMaterial() || closedPawnDraw
-    ? 'Draw on time by insufficient mating material'
-    : (winner === 'w' ? 'White' : 'Black') + ' wins on time';
+  if (!attacking.length || sameColorBishops || game.isInsufficientMaterial() || closedPawnDraw) {
+    return 'Draw on time by insufficient mating material';
+  }
+  if (matingPossibility(game,winner) === false) return 'Draw on time by impossible checkmate';
+  return (winner === 'w' ? 'White' : 'Black') + ' wins on time';
 }

@@ -1,6 +1,7 @@
 {
   "name": "global-chess-online-pvp",
-  "main": "server/worker.js",
+  "main": "server/cloudflare-worker.js",
+  "build": { "command": "node scripts/prepare-worker-solver.js" },
   "compatibility_date": "2026-11-18",
   "assets": {
     "directory": "./dist",

@@ -7,9 +7,9 @@ export default defineConfig({
     name: 'offline-game-shell',
     apply: 'build',
     generateBundle(_, bundle) {
-      const files = ['index.html', 'manifest.webmanifest', 'icon.svg', ...Object.keys(bundle).filter(file => file !== 'index.html')];
+      const files = ['index.html', 'manifest.webmanifest', 'icon.svg', 'solver/cha.wasm.gz', 'solver/LICENSE.txt', ...Object.keys(bundle).filter(file => file !== 'index.html')];
       const hash = createHash('sha256').update(JSON.stringify(files));
-      for (const file of ['index.html', 'public/manifest.webmanifest', 'public/icon.svg']) {
+      for (const file of ['index.html', 'public/manifest.webmanifest', 'public/icon.svg', 'public/solver/cha.wasm.gz', 'public/solver/LICENSE.txt']) {
         hash.update(readFileSync(new URL(file, import.meta.url)));
       }
       const revision = hash.digest('hex').slice(0,16);
