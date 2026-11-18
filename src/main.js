@@ -79,7 +79,10 @@ function updateClock() {
 
 function displayClock() {
   clocks.hidden = !state.clock;
-  if (!state.clock) return;
+  if (!state.clock) {
+    document.querySelector('#match-clocks').textContent = 'Untimed match';
+    return;
+  }
   clocks.textContent = ['w','b'].map(side => {
     const seconds = Math.ceil((online?.active ? online.remaining(side) : state.clock[side]) / 1000);
     return (side === 'w' ? 'White ' : 'Black ') +
