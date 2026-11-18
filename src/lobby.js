@@ -4,7 +4,7 @@ const avatars = ['♞','♜','♛'];
 function loadPreferences() {
   try {
     const data = JSON.parse(localStorage.getItem(key));
-    if (data && typeof data === 'object') return data;
+    if (data && typeof data === 'object' && !Array.isArray(data)) return data;
   } catch { /* Guest play remains available. */ }
   return {};
 }
@@ -51,7 +51,7 @@ export function bindLobby({startMatch, historyCount}) {
     element('guest-name').value = name;
     element('guest-avatar').value = avatar;
     const count = historyCount();
-    element('profile-stats').textContent = count === null ? 'Match history unavailable' : 'Completed matches on this device: ' + count;
+    element('profile-stats').textContent = count === null ? 'Match history unavailable' : 'Saved completed matches: ' + count;
     profile.showModal();
   };
   element('profile-form').onsubmit = event => {

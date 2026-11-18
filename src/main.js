@@ -13,7 +13,11 @@ const gameStorage = await openGameStorage();
 const board = document.querySelector('#board');
 const status = document.querySelector('#status');
 const rematch = document.querySelector('#rematch');
-rematch.onclick = () => startLocalMatch(state.mode, state.preset ?? document.querySelector('#preset').value, state.difficulty);
+rematch.onclick = () => {
+  if (startLocalMatch(state.mode, state.preset ?? document.querySelector('#preset').value, state.difficulty)) {
+    document.querySelector('#match-area').focus();
+  }
+};
 const promotion = document.querySelector('#promotion');
 const glyphs = { w: '♔♕♖♗♘♙', b: '♚♛♜♝♞♟' };
 const names = { k:'King', q:'Queen', r:'Rook', b:'Bishop', n:'Knight', p:'Pawn' };
@@ -134,7 +138,7 @@ function render(move) {
   displayClock();
   const {game, mode} = state;
   lobby?.render({outcome:outcome(game),turn:game.turn(),mode,online:Boolean(online?.active),
-    started:online?.active ? online.match.turnStartedAt !== null : game.history().length > 0 || Boolean(state.clock)});
+    started:online?.active ? online.match.turnStartedAt !== null : state.preset !== undefined || game.history().length > 0 || Boolean(state.clock)});
   const activeSquare = document.activeElement?.dataset.square;
   const targets = selected ? game.moves({square: selected, verbose: true}).map(move => move.to) : [];
   renderer?.syncTurns(game, selected, targets, move);
@@ -142,16 +146,26 @@ function render(move) {
     const square = 'abcdefgh'[file] + (8 - rank);
     const cell = document.createElement('button');
     cell.dataset.square = square;
-    cell.dataset.file = square[0];
-    cell.dataset.rank = square[1];
+
     cell.tabIndex = square === focusSquare ? 0 : -1;
-    cell.classList.toggle('file-label', rank === 7);
-    cell.classList.toggle('rank-label', file === 0);
+
     cell.className = (rank + file) % 2 ? 'dark' : 'light';
     cell.classList.toggle('target', targets.includes(square));
     cell.setAttribute('aria-pressed', String(square === selected));
     cell.setAttribute('aria-label', piece ? square + ', ' + (piece.color === 'w' ? 'White ' : 'Black ') + names[piece.type] : square);
     cell.textContent = piece ? glyphs[piece.color]['kqrbnp'.indexOf(piece.type)] : '';
+    const coordinates = [
+      [rank === 7, 'file-label', square[0]],
+      [file === 0, 'rank-label', square[1]],
+    ];
+    for (const [show, className, text] of coordinates) {
+      if (!show) continue;
+      const label = document.createElement('span');
+      label.className = className;
+      label.setAttribute('aria-hidden', 'true');
+      label.textContent = text;
+      cell.append(label);
+    }
     return cell;
   })));
   if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus();
@@ -239,8 +253,15 @@ async function selectSquare(square) {
 }
 board.addEventListener('click', ({target}) => {
   const square = target.closest('[data-square]')?.dataset.square;
-  if (square) focusSquare = square;
   selectSquare(square);
+});
+board.addEventListener('focusin', ({target}) => {
+  const square = target.dataset.square;
+  if (!square || square === focusSquare) return;
+  const previous = board.querySelector('[data-square="' + focusSquare + '"]');
+  if (previous) previous.tabIndex = -1;
+  focusSquare = square;
+  target.tabIndex = 0;
 });
 board.addEventListener('keydown', event => {
   const delta = {ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,1],ArrowDown:[0,-1]}[event.key];
@@ -251,9 +272,6 @@ board.addEventListener('keydown', event => {
   const rank = Number(square[1]) + delta[1];
   if (file < 0 || file > 7 || rank < 1 || rank > 8) return;
   const next = board.querySelector('[data-square="' + 'abcdefgh'[file] + rank + '"]');
-  event.target.tabIndex = -1;
-  next.tabIndex = 0;
-  focusSquare = next.dataset.square;
   next.focus();
 });
 function startLocalMatch(mode, preset, difficulty) {

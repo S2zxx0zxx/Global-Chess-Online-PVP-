@@ -52,8 +52,9 @@ dialog{border:1px solid #c59e65;border-radius:12px;background:#39212a}
 #profile-form label{display:grid;gap:5px}
 #profile-form input,#profile-form select{font:inherit;padding:7px}
 dialog form{margin-top:8px}
-.show-coordinates .board button.file-label:before,.show-coordinates .board button.rank-label:after{position:absolute;font:700 .57rem system-ui;color:#17100c;pointer-events:none}
-.show-coordinates .board button.file-label:before{content:attr(data-file);right:2px;bottom:2px}
-.show-coordinates .board button.rank-label:after{content:attr(data-rank);left:2px;top:2px;background:none;inset:auto auto auto 2px;top:2px}
+.board .file-label,.board .rank-label{display:none;position:absolute;font:700 .57rem system-ui;color:#17100c;pointer-events:none;text-shadow:0 0 2px #fff9}
+.show-coordinates .board .file-label,.show-coordinates .board .rank-label{display:block}
+.board .file-label{right:2px;bottom:2px}
+.board .rank-label{left:2px;top:2px}
 .high-contrast .board .light{background:#fff1ce}.high-contrast .board .dark{background:#ae8969}
 @media(max-width:650px){.mode-cards{grid-template-columns:repeat(2,1fr)}.masthead button{padding:7px}.masthead strong{font-size:.82rem}}
