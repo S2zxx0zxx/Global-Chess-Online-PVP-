@@ -1,7 +1,8 @@
 import { matchKey, historyKey } from './backup.js';
+import { progressKey } from './progression.js';
 
 export async function openGameStorage() {
-  const keys = [matchKey, historyKey];
+  const keys = [matchKey, historyKey, progressKey];
   const values = new Map();
   let db;
   let needsMigration = false;

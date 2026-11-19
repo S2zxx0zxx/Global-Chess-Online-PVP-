@@ -1,6 +1,7 @@
 import { renderPieceArt } from './piece-art.js';
 import { loadBrowserMateSolver } from './mate-solver.js';
-import { bindLearning } from './learning.js';
+import { bindLearning, lessons, puzzles } from './learning.js';
+import {progressKey, readProgress, progressSummary as summarizePracticeProgress} from './progression.js';
 import { bindLobby } from './lobby.js';
 import { bindNavigation, navigate } from './navigation.js';
 import { openGameStorage } from './storage.js';
@@ -494,6 +495,7 @@ lobby = bindLobby({
     try { return localHistorySummary().saved; } catch { return null; }
   },
   historySummary:localHistorySummary,
+  practiceSummary() { return summarizePracticeProgress(readProgress(gameStorage.getItem(progressKey)),lessons,puzzles); },
 });
 bindNavigation();
 render();
@@ -628,7 +630,7 @@ backupFile.onchange = async () => {
   }
 };
 
-bindLearning(names);
+bindLearning(names,gameStorage);
 
 window.addEventListener('chess-storage-error', () => {
   notice = 'Could not write the game save.';

@@ -10,7 +10,7 @@ function loadPreferences() {
   return {};
 }
 
-export function bindLobby({startMatch, historyCount, historySummary}) {
+export function bindLobby({startMatch, historyCount, historySummary, practiceSummary}) {
   const element = id => document.getElementById(id);
   const preferences = loadPreferences();
   const profile = element('profile-dialog');
@@ -30,6 +30,14 @@ export function bindLobby({startMatch, historyCount, historySummary}) {
       ['profile-win-rate',stats ? stats.winRate + '%' : null],
       ['profile-streak',stats?.currentWinStreak],
     ]) element(id).textContent = value ?? '—';
+    try {
+      const progress=practiceSummary();
+      for(const [id,value] of [['profile-xp',progress.xp],['profile-lessons',progress.lessonsSolved],['profile-puzzles',progress.puzzlesSolved],['profile-daily',progress.dailySolved]]) element(id).textContent=String(value);
+      element('profile-achievements').textContent = progress.achievements.length ? 'Unlocked: '+progress.achievements.join(' · ') : 'Solve your first exercise to earn your first achievement.';
+    } catch {
+      element('profile-progress-summary').textContent='Progress needs recovery; existing match history is unaffected.';
+      for (const id of ['profile-xp','profile-lessons','profile-puzzles','profile-daily']) element(id).textContent='—';
+    }
   }
   function apply() {
     const name = typeof preferences.name === 'string' ? preferences.name.trim().slice(0,24) : '';
@@ -133,6 +141,9 @@ export function bindLobby({startMatch, historyCount, historySummary}) {
       persist();
     };
   }
+  document.addEventListener('chess-screen-changed',event => {
+    if(event.detail?.view === 'profile') refreshStats();
+  });
   element('result-open').onclick = () => result.showModal();
   element('result-rematch').onclick = () => {result.close();element('rematch').click();};
   element('result-history').onclick = () => {result.close();element('history-button').click();};
