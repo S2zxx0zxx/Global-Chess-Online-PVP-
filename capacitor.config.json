@@ -1,0 +1,9 @@
+{
+  "appId": "dev.globalchess.preview",
+  "appName": "Global Chess Preview",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "android": {
+    "allowMixedContent": false
+  }
+}
