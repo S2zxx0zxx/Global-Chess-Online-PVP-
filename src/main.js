@@ -438,7 +438,9 @@ document.getElementById('match-restart').onclick = () => {
 document.getElementById('match-resign').onclick = () => {
   const feedback = document.getElementById('match-menu-feedback');
   if (online?.active) {
-    feedback.textContent = 'Private PvP resignation is not available in this preview.';
+    if (!confirm('Resign this private match? Your opponent will be declared the winner.')) return;
+    online.resign();
+    document.documentElement.classList.remove('tools-open');
     return;
   }
   updateClock();
