@@ -8,6 +8,7 @@ on:
       - feat/playable-chess-foundation
       - feat/chess-v3-m0-mobile-shell
       - fix/chess-v3-offline-save-recovery
+      - fix/chess-v3-bot-content-correctness
   workflow_dispatch:
 
 permissions:
@@ -35,6 +36,8 @@ jobs:
           find src server scripts tests -type f -name '*.js' -print0 | xargs -0 -n1 node --check
       - name: Run automated tests
         run: npm test
+      - name: Verify starter learning content and versioned audit manifest
+        run: node scripts/validate-learning-pack.mjs
       - name: Build production PWA
         run: npm run build
       - name: Enforce 3D bundle performance budget
@@ -46,7 +49,9 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: chess-browser-smoke
-          path: artifacts/*.png
+          path: |
+            artifacts/*.png
+            artifacts/learning-audit.json
           if-no-files-found: ignore
       - name: Prepare Cloudflare WASM asset
         run: |
