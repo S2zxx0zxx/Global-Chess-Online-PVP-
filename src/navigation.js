@@ -7,6 +7,7 @@ export function navigate(view, {historyMode = 'push', focus = true} = {}) {
   if (view === current && document.documentElement.dataset.view === view) return;
   current = view;
   document.documentElement.dataset.view = view;
+  document.dispatchEvent(new CustomEvent('chess-screen-changed',{detail:{view}}));
   document.documentElement.classList.remove('tools-open');
   for (const button of document.querySelectorAll('#bottom-nav [data-nav]')) {
     if (button.dataset.nav === view) button.setAttribute('aria-current','page');
