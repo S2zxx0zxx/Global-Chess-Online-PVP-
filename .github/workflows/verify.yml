@@ -56,6 +56,8 @@ jobs:
         run: |
           test -s dist/index.html
           test -s dist/sw.js
+          test -s dist/_headers
+          node -e "const fs=require('node:fs');const sw=fs.readFileSync('dist/sw.js','utf8');if(!sw.includes('SKIP_WAITING')||!sw.includes('clients.claim'))process.exit(1)"
           test -s dist/manifest.webmanifest
           test -s dist/solver/cha.wasm.gz
           test -s public/solver/LICENSE.txt
