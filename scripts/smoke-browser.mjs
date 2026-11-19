@@ -147,6 +147,21 @@ try {
     throw new Error('Resumed match lost its move history');
   }
 
+  // Real landscape game orientation must retain a readable board, not a 60px thumbnail.
+  await send('Emulation.setDeviceMetricsOverride',{width:800,height:360,deviceScaleFactor:2,mobile:true});
+  const landscape=JSON.parse(await evaluate(`JSON.stringify({
+    board:document.getElementById('board').getBoundingClientRect().width,
+    viewport:innerWidth,
+    horizontal:document.documentElement.scrollWidth
+  })`));
+  if(landscape.board<180 || landscape.horizontal>landscape.viewport+2) {
+    throw new Error('Landscape game viewport is not playable: '+JSON.stringify(landscape));
+  }
+  const landscapeShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await mkdir('artifacts',{recursive:true});
+  await writeFile('artifacts/chess-match-landscape-800.png',Buffer.from(landscapeShot.data,'base64'));
+  await send('Emulation.clearDeviceMetricsOverride');
+
   await evaluate('document.getElementById("view").click(); true');
   await waitUntil(() => evaluate(
     'document.getElementById("view").textContent === "Use 2D board" && !document.getElementById("scene").hidden'
@@ -179,6 +194,28 @@ try {
     const shot = await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
     await writeFile('artifacts/chess-home-' + width + '.png',Buffer.from(shot.data,'base64'));
   }
+  for (const [width,height] of [[393,852],[768,1024],[1366,768]]) {
+    await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:2,mobile:width<900});
+    await waitUntil(()=>evaluate('window.innerWidth === '+width));
+    const metrics=JSON.parse(await evaluate(`JSON.stringify({
+      width: innerWidth,
+      htmlWidth: document.documentElement.scrollWidth,
+      bodyWidth: document.body.scrollWidth,
+      visible: getComputedStyle(document.getElementById('lobby')).display!=='none'
+    })`));
+    if(metrics.htmlWidth>width+2 || metrics.bodyWidth>width+2 || !metrics.visible) {
+      throw new Error('Unusable Home viewport at '+width+'px: '+JSON.stringify(metrics));
+    }
+    const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+    await writeFile('artifacts/chess-home-'+width+'.png',Buffer.from(shot.data,'base64'));
+  }
+  await send('Emulation.setDeviceMetricsOverride',{width:360,height:800,deviceScaleFactor:2,mobile:true});
+  await evaluate('document.documentElement.style.fontSize="200%"; true');
+  const zoom=JSON.parse(await evaluate(`JSON.stringify({w:innerWidth,documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth})`));
+  if(zoom.documentWidth>zoom.w+2 || zoom.bodyWidth>zoom.w+2) throw new Error('200% text caused horizontal overflow: '+JSON.stringify(zoom));
+  await evaluate('document.documentElement.style.fontSize=""; true');
+  console.log('Phone, tablet, desktop and 200%-text horizontal overflow checks: passed');
+
   await evaluate('document.querySelector("#bottom-nav [data-nav=learn]").click(); true');
   if (!(await evaluate('document.documentElement.dataset.view === "learn"'))) throw new Error('Learn tab did not open');
   await evaluate('document.getElementById("learn-open").click(); true');
