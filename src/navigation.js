@@ -1,5 +1,5 @@
 // CH-01 v3 screen navigation: offline-only, no router or network dependency.
-const views = new Set(['home','play','learn','profile','match']);
+const views = new Set(['home','play','learn','profile','match','data','about']);
 let current = 'home';
 
 export function navigate(view, {historyMode = 'push', focus = true} = {}) {
@@ -16,7 +16,7 @@ export function navigate(view, {historyMode = 'push', focus = true} = {}) {
   if (historyMode === 'push') history.pushState({globalChessView:view}, '', location.pathname + location.search);
   if (historyMode === 'replace') history.replaceState({globalChessView:view}, '', location.pathname + location.search);
   if (focus) {
-    const id = {home:'lobby-title',play:'play-hub-title',learn:'learn-hub-title',profile:'profile-hub-title',match:'match-area'}[view];
+    const id = {home:'lobby-title',play:'play-hub-title',learn:'learn-hub-title',profile:'profile-hub-title',match:'match-area',data:'data-hub-title',about:'about-hub-title'}[view];
     requestAnimationFrame(() => document.getElementById(id)?.focus({preventScroll:true}));
   }
 }
@@ -29,6 +29,7 @@ export function bindNavigation() {
   for (const [id,screen] of [
     ['match-exit','home'],['play-from-home','play'],['learn-from-home','learn'],
     ['profile-from-home','profile'],['open-play-hub','play'],
+    ['profile-data','data'],['profile-about','about'],['data-back','profile'],['about-back','profile'],
   ]) {
     const button = get(id);
     if (button) button.addEventListener('click', () => navigate(screen));
@@ -67,6 +68,11 @@ export function bindNavigation() {
       event.preventDefault(); first.focus();
     }
   });
+  get('welcome-data').addEventListener('click',()=>{
+    get('welcome-dialog').close();
+    navigate('data');
+  });
+  get('data-history').addEventListener('click',()=>get('history-button').click());
   get('match-result-trigger').addEventListener('click', () => get('result-open').click());
   get('learn-open').addEventListener('click', () => get('learn').click());
   get('puzzles-open').addEventListener('click', () => {
