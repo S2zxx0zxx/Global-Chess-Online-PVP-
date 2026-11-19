@@ -120,6 +120,23 @@ try {
   await waitUntil(() => evaluate('document.querySelector("#moves li")?.textContent?.includes("e4") === true'));
   console.log('Browser local chess move: passed');
 
+  // Real IndexedDB durability: explicitly save, exit, reload the page and
+  // recover the previous move from a brand-new application initialization.
+  await evaluate('document.getElementById("match-save-exit").click(); true');
+  await waitUntil(() => evaluate('document.documentElement.dataset.view === "home"'));
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/'});
+  await waitUntil(() => evaluate('document.getElementById("launch")?.hidden === true'));
+  await waitUntil(() => evaluate('document.documentElement.dataset.view === "home"'));
+  if (!(await evaluate('document.getElementById("lobby-resume").hidden === false'))) {
+    throw new Error('Save & Return Home did not persist a resumable game across page reload');
+  }
+  await evaluate('document.getElementById("lobby-resume").click(); true');
+  await waitUntil(() => evaluate('document.documentElement.dataset.view === "match"'));
+  if (!(await evaluate('document.querySelector("#moves li")?.textContent?.includes("e4") === true'))) {
+    throw new Error('IndexedDB reload lost the last legal chess move');
+  }
+  console.log('IndexedDB Save & Return Home survived full browser reload: passed');
+
   // Returning Home must not destroy an active saved match.
   await evaluate('document.getElementById("match-exit").click(); true');
   await waitUntil(() => evaluate('document.documentElement.dataset.view === "home"'));
