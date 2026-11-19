@@ -2,13 +2,12 @@ name: Global Chess verification
 
 on:
   pull_request:
-    branches:
-      - main
-      - feat/playable-chess-foundation
   push:
     branches:
       - main
       - feat/playable-chess-foundation
+      - feat/chess-v3-m0-mobile-shell
+      - fix/chess-v3-offline-save-recovery
   workflow_dispatch:
 
 permissions:

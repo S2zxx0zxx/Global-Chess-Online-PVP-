@@ -281,8 +281,10 @@ function save() {
     const completed = outcome(state.game);
     if (completed) recordMatch(gameStorage, completed, snapshot);
     notice = '';
+    return true;
   } catch {
     notice = 'Storage unavailable. This match may not resume after closing.';
+    return false;
   }
 }
 
@@ -405,10 +407,20 @@ function startLocalMatch(mode, preset, difficulty, humanSide = 'w') {
   playComputer();
   return true;
 }
-document.getElementById('match-save-exit').onclick = () => {
+document.getElementById('match-save-exit').onclick = async () => {
   updateClock();
-  save();
-  navigate('home');
+  if (online?.active) { navigate('home'); return; }
+  const feedback = document.getElementById('match-menu-feedback');
+  if (!save()) {
+    feedback.textContent = 'Your match could not be saved. Stay here and retry.';
+    return;
+  }
+  try {
+    await gameStorage.flush?.();
+    navigate('home');
+  } catch {
+    feedback.textContent = 'The save was interrupted. Retry Save & Return Home.';
+  }
 };
 document.getElementById('match-restart').onclick = () => {
   if (online?.active) {
