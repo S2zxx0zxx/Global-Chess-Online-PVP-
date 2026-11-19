@@ -96,11 +96,39 @@ try {
   await send('Page.navigate', {url:'http://127.0.0.1:4173/'});
   await waitUntil(() => evaluate('document.readyState === "complete" && !!document.getElementById("local")'));
   await waitUntil(() => evaluate('document.getElementById("launch").hidden === true'));
-  await evaluate('document.getElementById("local").click(); true');
+  if (await evaluate('document.getElementById("welcome-dialog").open')) {
+    await evaluate('document.getElementById("guest-start").click(); true');
+    await waitUntil(() => evaluate('document.getElementById("welcome-dialog").open === false'));
+  }
+  await waitUntil(() => evaluate('document.documentElement.dataset.view === "home"'));
+  await evaluate('document.getElementById("lobby-classic").click(); true');
+  await waitUntil(() => evaluate('document.documentElement.dataset.view === "match"'));
+  if (!(await evaluate('getComputedStyle(document.getElementById("lobby")).display === "none"'))) {
+    throw new Error('Home remained visible during a match');
+  }
+  if (!(await evaluate('document.getElementById("coach-tip").hidden === false'))) {
+    throw new Error('First-match coach did not appear');
+  }
   await evaluate('document.querySelector("#board [data-square=e2]").click(); true');
+  if (!(await evaluate('document.getElementById("coach-text").textContent.includes("highlighted")'))) {
+    throw new Error('First-match coach did not advance after selecting a piece');
+  }
   await evaluate('document.querySelector("#board [data-square=e4]").click(); true');
+  if (!(await evaluate('document.getElementById("coach-tip").hidden === true'))) {
+    throw new Error('First-match coach did not clear after a legal move');
+  }
   await waitUntil(() => evaluate('document.querySelector("#moves li")?.textContent?.includes("e4") === true'));
   console.log('Browser local chess move: passed');
+
+  // Returning Home must not destroy an active saved match.
+  await evaluate('document.getElementById("match-exit").click(); true');
+  await waitUntil(() => evaluate('document.documentElement.dataset.view === "home"'));
+  await waitUntil(() => evaluate('document.getElementById("lobby-resume").hidden === false'));
+  await evaluate('document.getElementById("lobby-resume").click(); true');
+  await waitUntil(() => evaluate('document.documentElement.dataset.view === "match"'));
+  if (!(await evaluate('document.querySelector("#moves li")?.textContent?.includes("e4") === true'))) {
+    throw new Error('Resumed match lost its move history');
+  }
 
   await evaluate('document.getElementById("view").click(); true');
   await waitUntil(() => evaluate(
@@ -112,6 +140,93 @@ try {
   await mkdir('artifacts', {recursive:true});
   const screenshot = await send('Page.captureScreenshot', {format:'png', captureBeyondViewport:false});
   await writeFile('artifacts/chess-3d-browser-smoke.png', Buffer.from(screenshot.data,'base64'));
+
+  await evaluate('document.getElementById("match-exit").click(); true');
+  for (const [width,height] of [[320,568],[360,800],[412,915]]) {
+    await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:2,mobile:true});
+    await waitUntil(() => evaluate('window.innerWidth === ' + width));
+    await waitUntil(() => evaluate('document.documentElement.dataset.view === "home"'));
+    const metrics = await evaluate(JSON.stringify({
+      width:0,
+    }).replace('{"width":0}',`JSON.stringify({
+      width: innerWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      visible: getComputedStyle(document.getElementById('lobby')).display !== 'none',
+      otherHidden: getComputedStyle(document.getElementById('match-layout')).display === 'none',
+      navVisible: getComputedStyle(document.getElementById('bottom-nav')).display !== 'none'
+    })`));
+    const state = JSON.parse(metrics);
+    if (state.scrollWidth > state.width + 2 || !state.visible || !state.otherHidden || !state.navVisible) {
+      throw new Error('Invalid responsive Home layout at ' + width + 'px: ' + metrics);
+    }
+    const shot = await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+    await writeFile('artifacts/chess-home-' + width + '.png',Buffer.from(shot.data,'base64'));
+  }
+  await evaluate('document.querySelector("#bottom-nav [data-nav=learn]").click(); true');
+  if (!(await evaluate('document.documentElement.dataset.view === "learn"'))) throw new Error('Learn tab did not open');
+  await evaluate('document.getElementById("learn-open").click(); true');
+  if (!(await evaluate('document.getElementById("learn-dialog").open'))) throw new Error('Lessons did not open');
+  await evaluate('document.querySelector("#learn-dialog form[method=dialog] button").click(); true');
+  await evaluate('document.querySelector("#bottom-nav [data-nav=profile]").click(); true');
+  if (!(await evaluate('document.documentElement.dataset.view === "profile"'))) throw new Error('Profile tab did not open');
+  await evaluate('document.getElementById("profile-edit").click(); true');
+  if (!(await evaluate('document.getElementById("profile-dialog").open'))) throw new Error('Edit profile did not open');
+  await evaluate('document.querySelector("#profile-dialog form[method=dialog] button").click(); true');
+  await evaluate('document.querySelector("#bottom-nav [data-nav=play]").click(); true');
+  if (!(await evaluate('document.documentElement.dataset.view === "play"'))) throw new Error('Play tab did not open');
+  await evaluate(`window.confirm = () => true;
+    document.getElementById('setup-format').value = 'untimed';
+    document.getElementById('setup-opponent').value = 'computer';
+    document.getElementById('setup-opponent').dispatchEvent(new Event('change'));
+    document.getElementById('setup-side').value = 'b';
+    document.getElementById('setup-difficulty').value = 'easy';
+    document.getElementById('setup-start').click();
+    true`);
+  await waitUntil(() => evaluate('document.documentElement.dataset.view === "match"'));
+  await waitUntil(() => evaluate('document.querySelector("#moves li")?.textContent?.length > 0'), 30000);
+  const blackGame = await evaluate(`JSON.stringify({
+    blackBottom: document.getElementById('match-area').classList.contains('black-bottom'),
+    opponent: document.getElementById('white-player').textContent,
+    human: document.getElementById('black-player').textContent,
+    current: document.getElementById('match-state').textContent
+  })`);
+  const black = JSON.parse(blackGame);
+  if (!black.blackBottom || !black.opponent.includes('Computer') || !black.human.includes('You')) {
+    throw new Error('Human Black match orientation invalid: ' + blackGame);
+  }
+  console.log('Computer as White and human as Black: passed');
+  const blackShot = await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/chess-black-player-mobile.png',Buffer.from(blackShot.data,'base64'));
+
+  await evaluate('document.getElementById("match-menu").click(); true');
+  if (!(await evaluate('document.documentElement.classList.contains("tools-open")'))) {
+    throw new Error('Mobile match options did not open');
+  }
+  await evaluate('document.getElementById("match-resign").click(); true');
+  await waitUntil(() => evaluate('document.getElementById("result-dialog").open'));
+  if (!(await evaluate('document.getElementById("result-copy").textContent.includes("White wins by resignation")'))) {
+    throw new Error('Resignation result did not match human Black side');
+  }
+  if (!(await evaluate('document.getElementById("match-result-trigger").hidden === false'))) {
+    throw new Error('Completed resignation did not expose result action');
+  }
+  console.log('Mobile game menu, confirmed resignation and result presentation: passed');
+  const resultShot = await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/chess-match-result-mobile.png',Buffer.from(resultShot.data,'base64'));
+  await evaluate('document.getElementById("result-home").click(); true');
+  await evaluate('document.querySelector("#bottom-nav [data-nav=profile]").click(); true');
+  const realStats = await evaluate(`JSON.stringify({
+    games: document.getElementById('profile-computer-games').textContent,
+    wins: document.getElementById('profile-wins').textContent,
+    rate: document.getElementById('profile-win-rate').textContent
+  })`);
+  const score = JSON.parse(realStats);
+  if (score.games !== '1' || score.wins !== '0' || score.rate !== '0%') {
+    throw new Error('Profile did not show a genuine loss after resignation: ' + realStats);
+  }
+  console.log('Profile statistics from real completed match: passed');
+  if (errors.length) throw new Error('Browser exceptions: ' + errors.join(' | '));
+  console.log('v3 mobile navigation, preserved match, learning/profile and three responsive widths: passed');
 } catch (error) {
   throw new Error(error.message + (previewLog ? '\nPreview logs:\n' + previewLog.slice(-3000) : ''));
 } finally {

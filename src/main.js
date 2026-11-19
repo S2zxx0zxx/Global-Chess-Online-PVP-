@@ -2,15 +2,17 @@ import { renderPieceArt } from './piece-art.js';
 import { loadBrowserMateSolver } from './mate-solver.js';
 import { bindLearning } from './learning.js';
 import { bindLobby } from './lobby.js';
+import { bindNavigation, navigate } from './navigation.js';
 import { openGameStorage } from './storage.js';
 import { bindOnline } from './online.js';
 import { Chess } from 'chess.js';
 import { readHistory, recordMatch } from './history.js';
-import { startClock, remainingClock } from './clock.js';
+import { summarizeLocalHistory } from './profile-stats.js';
+import { startClock, remainingClock, localClockIsRunning } from './clock.js';
 import './style.css';
 import { restoreGame, serializeGame, result, claimableDraw, intendedDraw, timeoutResult } from './game.js';
 
-import { matchKey as key, exportBackup, importBackup } from './backup.js';
+import { matchKey as key, historyKey, exportBackup, importBackup } from './backup.js';
 async function initialize() {
 // The optional WASM mating solver must not delay guest-first gameplay.
 const gameStorage = await openGameStorage();
@@ -21,7 +23,7 @@ const board = document.querySelector('#board');
 const status = document.querySelector('#status');
 const rematch = document.querySelector('#rematch');
 rematch.onclick = () => {
-  if (startLocalMatch(state.mode, state.preset ?? document.querySelector('#preset').value, state.difficulty)) {
+  if (startLocalMatch(state.mode, state.preset ?? document.querySelector('#preset').value, state.difficulty, state.humanSide)) {
     document.querySelector('#match-area').focus();
   }
 };
@@ -36,9 +38,41 @@ try {
 }
 if (state.mode === 'computer') document.querySelector('#difficulty').value = state.difficulty;
 let selected;
+const coachTip = document.getElementById('coach-tip');
+const coachText = document.getElementById('coach-text');
+const coachKey = 'global-chess.first-move-coach.v1';
+let coachActive = false;
+let coachStep = 0;
+function syncCoach() {
+  coachTip.hidden = !coachActive;
+  if (coachActive) coachText.textContent = coachStep
+    ? 'Great. Tap a highlighted square to make the legal move.'
+    : 'Tap one of your pieces to reveal its legal moves.';
+}
+function finishCoach() {
+  coachActive = false;
+  syncCoach();
+  try { localStorage.setItem(coachKey, 'complete'); } catch { /* Optional tutorial stays skippable. */ }
+}
+function activateCoach(force = false) {
+  if (!force) {
+    try { if (localStorage.getItem(coachKey) === 'complete') return; }
+    catch { /* Play without persistent tutorial state. */ }
+  }
+  coachActive = true;
+  coachStep = 0;
+  syncCoach();
+}
+document.getElementById('coach-skip').onclick = finishCoach;
+document.getElementById('coach-replay').onclick = () => {
+  document.documentElement.classList.remove('tools-open');
+  if (!outcome(state.game)) { activateCoach(true); navigate('match'); }
+};
 const claim = document.querySelector('#claim');
 const outcome = game => {
   if (online?.active) return online.match.outcome;
+  if (state.resignedSide) return state.resignedSide === 'w'
+    ? 'Black wins by resignation' : 'White wins by resignation';
   if (state.drawClaim) return 'Draw by ' + state.drawClaim;
   return result(game) ?? (state.clock?.[game.turn()] === 0
     ? timeoutResult(game, game.turn()) : null);
@@ -47,8 +81,9 @@ const clocks = document.querySelector('#clocks');
 let tickAt = performance.now();
 let online;
 let lobby;
-let flipped = false;
-let wasVisible = !document.hidden;
+let flipped = state.mode === 'computer' && state.humanSide === 'b';
+let wasVisible = localClockIsRunning({documentHidden:document.hidden,
+  screen:document.documentElement.dataset.view,menuOpen:false});
 const flip = document.querySelector('#flip-board');
 flip.onclick = () => {
   flipped = !flipped;
@@ -62,7 +97,9 @@ function updateClock() {
   const now = performance.now();
   const elapsed = wasVisible ? now - tickAt : 0;
   tickAt = now;
-  wasVisible = !document.hidden;
+  wasVisible = localClockIsRunning({documentHidden:document.hidden,
+    screen:document.documentElement.dataset.view,
+    menuOpen:document.documentElement.classList.contains('tools-open')});
   if (online?.active) { displayClock(); return; }
   const { clock, game } = state;
   if (clock && !outcome(game) && elapsed > 0) {
@@ -78,12 +115,16 @@ function updateClock() {
 
 function displayClock() {
   clocks.hidden = !state.clock;
-  if (!state.clock) return;
+  if (!state.clock) {
+    document.querySelector('#match-clocks').textContent = 'Untimed match';
+    return;
+  }
   clocks.textContent = ['w','b'].map(side => {
     const seconds = Math.ceil((online?.active ? online.remaining(side) : state.clock[side]) / 1000);
     return (side === 'w' ? 'White ' : 'Black ') +
       Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
   }).join('  ·  ');
+  document.querySelector('#match-clocks').textContent = clocks.textContent;
 }
 function settleClaim(reason, move) {
   if (online?.active) { online.claim(move); return; }
@@ -99,7 +140,7 @@ function settleClaim(reason, move) {
 claim.onclick = () => {
   const {game} = state;
   if (outcome(game) || (online?.active && !online.canMove(game.turn())) ||
-      (state.mode === 'computer' && game.turn() === 'b')) return;
+      (state.mode === 'computer' && game.turn() !== state.humanSide)) return;
   const reason = claimableDraw(game);
   if (reason) return settleClaim(reason);
   const dialog = document.querySelector('#claim-dialog');
@@ -168,6 +209,7 @@ function render(move) {
   displayClock();
   const {game, mode} = state;
   lobby?.render({outcome:outcome(game),turn:game.turn(),mode,online:Boolean(online?.active),
+    humanSide:state.humanSide,
     started:online?.active ? online.match.turnStartedAt !== null : state.preset !== undefined || game.history().length > 0 || Boolean(state.clock)});
   const activeSquare = document.activeElement?.dataset.square;
   const targets = selected ? game.moves({square: selected, verbose: true}).map(move => move.to) : [];
@@ -175,6 +217,7 @@ function render(move) {
   const checkedSide = game.inCheck() ? game.turn() : null;
   renderer?.syncTurns(game, selected, targets, move, lastMove, checkedSide);
   board.classList.toggle('flipped',flipped);
+  document.querySelector('#match-area').classList.toggle('black-bottom',flipped);
   const rows = game.board();
   if (flipped) rows.reverse().forEach(row => row.reverse());
   board.replaceChildren(...rows.flatMap((row, visibleRank) => row.map((piece, visibleFile) => {
@@ -210,10 +253,19 @@ function render(move) {
     return cell;
   })));
   if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus();
-  status.textContent = [outcome(game) ?? (mode === 'computer' && game.turn() === 'b' ? 'Computer thinking…' :
+  status.textContent = [outcome(game) ?? (mode === 'computer' && game.turn() !== state.humanSide ? 'Computer thinking…' :
     (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : '')), notice].filter(Boolean).join(' · ');
-  claim.hidden = (online?.active && !online.canMove(game.turn())) || Boolean(outcome(game)) || (mode === 'computer' && game.turn() === 'b');
+  claim.hidden = (online?.active && !online.canMove(game.turn())) || Boolean(outcome(game)) || (mode === 'computer' && game.turn() !== state.humanSide);
+  document.querySelector('#match-state').textContent = status.textContent;
+  if (outcome(game) && coachActive) finishCoach();
+  else syncCoach();
+  document.querySelector('#match-result-trigger').hidden = !outcome(game);
+  document.querySelector('#match-resign').disabled = Boolean(outcome(game));
   const moves = game.history();
+  const recent = moves.slice(-4);
+  document.querySelector('#match-last-moves').textContent = recent.length
+    ? 'Last moves: ' + recent.join(' · ')
+    : 'Tap a piece to see where it can move.';
   document.querySelector('#moves').replaceChildren(...moves.filter((_, index) => index % 2 === 0).map((move, index) => {
     const item = document.createElement('li');
     item.textContent = [move, moves[index * 2 + 1]].filter(Boolean).join('  ');
@@ -224,7 +276,7 @@ function render(move) {
 function save() {
   if (online?.active) return;
   try {
-    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove, state.preset);
+    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove, state.preset, state.humanSide, state.resignedSide);
     gameStorage.setItem(key, snapshot);
     const completed = outcome(state.game);
     if (completed) recordMatch(gameStorage, completed, snapshot);
@@ -238,7 +290,9 @@ function commit(move) {
   if (online?.active) { online.move(move); return; }
   updateClock();
   if (outcome(state.game)) return;
+  const mover = state.game.turn();
   const played = state.game.move(move);
+  if (coachActive && (state.mode !== 'computer' || mover === state.humanSide)) finishCoach();
   selected = undefined;
   save();
   render(played);
@@ -247,7 +301,7 @@ function commit(move) {
 
 function playComputer() {
   const {game, mode} = state;
-  if (worker || mode !== 'computer' || game.turn() !== 'b' || outcome(game)) return;
+  if (worker || mode !== 'computer' || game.turn() === state.humanSide || outcome(game)) return;
   let job;
   try {
     job = new Worker(new URL('./bot.js', import.meta.url), {type:'module'});
@@ -278,10 +332,11 @@ function playComputer() {
 async function selectSquare(square) {
   const {game, mode} = state;
   if (online?.active && !online.canMove(game.turn())) return;
-  if (!square || outcome(game) || (mode === 'computer' && game.turn() === 'b')) return;
+  if (!square || outcome(game) || (mode === 'computer' && game.turn() !== state.humanSide)) return;
   const piece = game.get(square);
   if (piece?.color === game.turn()) {
     selected = selected === square ? undefined : square;
+    if (coachActive) coachStep = selected ? 1 : 0;
     render();
     return;
   }
@@ -330,18 +385,56 @@ function showVersus(white,black) {
   versusTimer = setTimeout(() => { card.hidden = true; }, duration);
 }
 
-function startLocalMatch(mode, preset, difficulty) {
+function startLocalMatch(mode, preset, difficulty, humanSide = 'w') {
   if (online?.active) return;
+  if (!['w','b'].includes(humanSide)) throw new Error('Invalid human side');
   if (state.game.history().length && !outcome(state.game) && !confirm('Replace this match?')) return;
   stopComputer();
-  state = {...restoreGame(), mode, preset, difficulty, clock: startClock(preset)};
-  showVersus('White',mode === 'computer' ? 'Computer' : 'Black');
+  state = {...restoreGame(), mode, preset, difficulty, clock: startClock(preset), humanSide};
+  flipped = mode === 'computer' && humanSide === 'b';
+  flip.setAttribute('aria-pressed', String(flipped));
+  renderer?.setFlipped(flipped);
+  showVersus(mode === 'computer' && humanSide === 'b' ? 'Computer' : 'White',
+    mode === 'computer' && humanSide === 'w' ? 'Computer' : 'Black');
   tickAt = performance.now();
   selected = undefined;
+  activateCoach();
   save();
+  navigate('match');
   render();
+  playComputer();
   return true;
 }
+document.getElementById('match-save-exit').onclick = () => {
+  updateClock();
+  save();
+  navigate('home');
+};
+document.getElementById('match-restart').onclick = () => {
+  if (online?.active) {
+    document.getElementById('match-menu-feedback').textContent = 'Return to an offline match before restarting.';
+    return;
+  }
+  if (startLocalMatch(state.mode,state.preset ?? 'untimed',state.difficulty,state.humanSide)) {
+    document.documentElement.classList.remove('tools-open');
+  }
+};
+document.getElementById('match-resign').onclick = () => {
+  const feedback = document.getElementById('match-menu-feedback');
+  if (online?.active) {
+    feedback.textContent = 'Private PvP resignation is not available in this preview.';
+    return;
+  }
+  updateClock();
+  if (outcome(state.game)) { feedback.textContent = 'This match has already ended.'; return; }
+  if (!confirm('Resign this match? The opposing side will be declared the winner.')) return;
+  state.resignedSide = state.mode === 'computer' ? state.humanSide : state.game.turn();
+  stopComputer();
+  save();
+  document.documentElement.classList.remove('tools-open');
+  render();
+  document.getElementById('result-open').click();
+};
 for (const mode of ['local', 'computer']) {
   document.getElementById(mode).onclick = () => startLocalMatch(
     mode, document.querySelector('#preset').value, document.querySelector('#difficulty').value,
@@ -357,6 +450,7 @@ online = bindOnline({
     if (match.version === 1 && match.turnStartedAt !== null && match.moves.length === 0 && !match.outcome) showVersus('White','Black');
     const previousPly = state === offlineState ? -1 : state.game.history().length;
     state = {...restoreGame(JSON.stringify({version:1, mode:'local', moves:match.moves})), clock:match.clock};
+    navigate('match');
     selected = undefined;
     const played = match.moves.length === previousPly + 1
       ? state.game.history({verbose:true}).at(-1) : undefined;
@@ -372,12 +466,24 @@ online = bindOnline({
     playComputer();
   },
 });
+let cachedHistoryRaw;
+let cachedHistorySummary;
+function localHistorySummary() {
+  const raw = gameStorage.getItem(historyKey) ?? '[]';
+  if (raw === cachedHistoryRaw) return cachedHistorySummary;
+  const data = summarizeLocalHistory(readHistory(gameStorage));
+  cachedHistoryRaw = raw;
+  cachedHistorySummary = data;
+  return data;
+}
 lobby = bindLobby({
   startMatch:startLocalMatch,
   historyCount() {
-    try { return readHistory(gameStorage).length; } catch { return null; }
+    try { return localHistorySummary().saved; } catch { return null; }
   },
+  historySummary:localHistorySummary,
 });
+bindNavigation();
 render();
 playComputer();
 
