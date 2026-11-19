@@ -73,3 +73,20 @@ export function applyDrawClaim(match, seat, command, now) {
     version:current.version+1,
   }};
 }
+
+/**
+ * Server-authoritative private-room resignation. The player may resign on
+ * either turn; stale versions and an already-finished game cannot be altered.
+ */
+export function applyResign(match,seat,command,now) {
+  const current=advanceClock(match,now);
+  if(current.outcome) return {match:current,error:'Match ended'};
+  if(current.turnStartedAt===null) return {match:current,error:'Waiting for opponent'};
+  if(!['w','b'].includes(seat)) return {match:current,error:'Invalid seat'};
+  if(command?.expectedVersion!==current.version) return {match:current,error:'Position changed'};
+  return {match:{
+    ...current,
+    outcome:seat==='w' ? 'Black wins by resignation' : 'White wins by resignation',
+    version:current.version+1,
+  }};
+}
