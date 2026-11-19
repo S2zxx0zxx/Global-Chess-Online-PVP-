@@ -141,6 +141,9 @@ export function bindLobby({startMatch, historyCount, historySummary, practiceSum
       persist();
     };
   }
+  document.addEventListener('chess-screen-changed',event => {
+    if(event.detail?.view === 'profile') refreshStats();
+  });
   element('result-open').onclick = () => result.showModal();
   element('result-rematch').onclick = () => {result.close();element('rematch').click();};
   element('result-history').onclick = () => {result.close();element('history-button').click();};
