@@ -312,3 +312,28 @@ html[data-view="data"] #data-hub,html[data-view="about"] #about-hub{display:bloc
 #data-delete{border-color:#d47e6f;background:#512822}
 #data-feedback{min-height:20px;color:#f6d2ab;font-size:.83rem}
 .linkish-button{min-height:44px;border:1px solid #a3815c;border-radius:12px;background:#3a2722;color:var(--ch-color-brand-cream);font-weight:650;margin-top:10px}
+
+/* CH-01 SCR-07 landscape acceptance: keep a full readable board on short screens. */
+@media (orientation:landscape) and (min-width:600px) and (max-height:560px){
+  html[data-view="match"] main{padding:4px 10px 4px}
+  html[data-view="match"] #match-layout{display:block!important;margin-top:0!important;max-width:none}
+  #match-layout #match-tools{display:none}
+  .tools-open #match-layout #match-tools{display:block;position:fixed;z-index:60;inset:8px 10px;max-width:520px;max-height:none;overflow:auto}
+  #match-area{display:grid;max-width:none;width:100%;margin:0;
+    grid-template-columns:minmax(190px,min(75svh,45vw)) minmax(0,1fr);
+    grid-template-rows:36px repeat(7,min-content);gap:4px 14px;align-items:center}
+  #match-area .match-toolbar{grid-column:1/-1;grid-row:1;min-height:34px}
+  #match-area .match-toolbar button{min-height:32px;padding:4px 10px}
+  #match-area .board,#match-area #scene{grid-column:1;grid-row:2/span 7;
+    width:min(100%,calc(100svh - 70px))!important;max-width:none;margin:0!important;align-self:start;justify-self:start}
+  #match-area #black-panel{grid-column:2;grid-row:2;min-height:36px;padding:5px 10px}
+  #match-area .match-status{grid-column:2;grid-row:3;min-height:16px;text-align:left;font-size:.72rem}
+  #match-area .match-clock-strip{grid-column:2;grid-row:4;min-height:18px;text-align:left;font-size:.76rem}
+  #match-area .board-tools{grid-column:2;grid-row:5}
+  #match-area .board-tools button{min-height:32px;padding:4px 9px}
+  #match-area #white-panel{grid-column:2;grid-row:6;min-height:36px;padding:5px 10px}
+  #match-area .match-footer{grid-column:2;grid-row:7;min-height:25px}
+  #match-area .coach-tip{grid-column:2;grid-row:8;min-height:28px}
+  #match-area.black-bottom #white-panel{grid-row:2}
+  #match-area.black-bottom #black-panel{grid-row:6}
+}
