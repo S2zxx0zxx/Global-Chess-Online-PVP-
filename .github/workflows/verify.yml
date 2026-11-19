@@ -8,6 +8,7 @@ on:
       - feat/playable-chess-foundation
       - feat/chess-v3-m0-mobile-shell
       - fix/chess-v3-offline-save-recovery
+      - fix/chess-v3-bot-content-correctness
   workflow_dispatch:
 
 permissions:
