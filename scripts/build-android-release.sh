@@ -66,5 +66,12 @@ GRADLE
 (cd android && ./gradlew --no-daemon --stacktrace bundleRelease)
 bundle='android/app/build/outputs/bundle/release/app-release.aab'
 test -s "$bundle"
-jarsigner -verify -strict "$bundle" >/dev/null
+# A self-signed upload-key certificate is not expected to chain to a public CA.
+# Verify the JAR signature integrity without treating that expected trust warning as a failure.
+verification_log="${RUNNER_TEMP:-/tmp}/chess-bundle-verify-$.log"
+trap 'rm -f "$keyfile" "$verification_log"' EXIT
+jarsigner -verify -verbose "$bundle" > "$verification_log"
+grep -q 'jar verified.' "$verification_log" || {
+  echo 'Bundle signature verification failed' >&2; exit 1
+}
 echo 'Signed AAB generated and JAR signature verified; no Play upload performed.'
