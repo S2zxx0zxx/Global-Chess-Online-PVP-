@@ -201,6 +201,22 @@ try {
   if (!(await evaluate('document.getElementById("profile-xp").textContent === "10"'))) throw new Error('Profile XP did not match earned event journal');
   if (!(await evaluate('document.getElementById("profile-achievements").textContent.includes("First solve")'))) throw new Error('Earned achievement missing');
   console.log('Exercise XP idempotence and genuine Profile achievement: passed');
+  await evaluate('document.getElementById("profile-data").click(); true');
+  await waitUntil(()=>evaluate('document.documentElement.dataset.view === "data"'));
+  if (!(await evaluate('document.getElementById("data-hub").textContent.includes("Cloudflare-hosted match server")'))) {
+    throw new Error('Privacy data flow disclosure missing');
+  }
+  await evaluate('document.getElementById("data-back").click(); true');
+  await evaluate('document.getElementById("profile-about").click(); true');
+  await waitUntil(()=>evaluate('document.documentElement.dataset.view === "about"'));
+  await evaluate('document.getElementById("about-back").click(); true');
+  if (!(await evaluate('document.documentElement.dataset.view === "profile"'))) {
+    throw new Error('Data and About navigation did not return to local Profile');
+  }
+  if (!(await evaluate('document.getElementById("pwa-update").hidden === true'))) {
+    throw new Error('PWA update falsely advertised with no waiting worker');
+  }
+  console.log('Privacy, About, profile-return and no-fake-update flows: passed');
   await evaluate('document.getElementById("profile-edit").click(); true');
   if (!(await evaluate('document.getElementById("profile-dialog").open'))) throw new Error('Edit profile did not open');
   await evaluate('document.querySelector("#profile-dialog form[method=dialog] button").click(); true');
