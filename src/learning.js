@@ -1,6 +1,7 @@
 import { renderPieceArt } from './piece-art.js';
 import { Chess } from 'chess.js';
 import { extraLessons, extraPuzzles } from './learning-pack.js';
+import {progressKey, legacyProgressKey, readProgress, recordExercise, migrateLegacyProgress, progressSummary} from './progression.js';
 
 export const lessons = [
   {id:'center',title:'Control the center',prompt:'As White, move the king’s pawn two squares to claim the center.',answer:'e4',explanation:'The pawn controls d5 and opens lines for the queen and bishop.'},
@@ -37,35 +38,39 @@ export function solveExercise(game, exercise, from, to, promotion) {
   }
   return null;
 }
-const key = 'global-chess.learning.v1';
-export function bindLearning(names) {
+export function bindLearning(names,storage) {
   const get = id => document.getElementById(id);
   const dialog = get('learn-dialog');
   const picker = get('lesson-picker');
   const board = get('lesson-board');
   let completed = new Set();
-  try {
-    const saved = JSON.parse(localStorage.getItem(key) ?? '[]');
-    if (Array.isArray(saved)) completed = new Set(saved.filter(id => typeof id === 'string'));
-  } catch { /* Learning still works for this session. */ }
+  let journalError = '';
   let exercises, exercise, game, selected, solved;
   let focusSquare;
   function mergeProgress() {
     try {
-      const saved = JSON.parse(localStorage.getItem(key) ?? '[]');
-      if (Array.isArray(saved)) {
-        for (const id of saved) if (typeof id === 'string') completed.add(id);
-      }
-    } catch { /* Keep progress available in this tab. */ }
+      const legacy = localStorage.getItem(legacyProgressKey);
+      if (legacy !== null) migrateLegacyProgress(storage,legacy,lessons,puzzles);
+      const summary = progressSummary(readProgress(storage.getItem(progressKey)),lessons,puzzles);
+      completed = summary.completed;
+      journalError = '';
+    } catch {
+      // Never replace a corrupt journal or overwrite the legacy save without consent.
+      journalError = 'Progress storage needs recovery. Your move can still be practiced.';
+    }
   }
   function updateProgress() {
-    const count = [...lessons,...puzzles].filter(item => completed.has(item.id)).length;
-    const daily = [...completed].filter(id => /^daily-\d{4}-\d{2}-\d{2}$/.test(id)).length;
-    const achievements = [count >= 1 && 'First solve', lessons.every(item => completed.has(item.id)) && 'Opening basics',
-      puzzles.every(item => completed.has(item.id)) && 'Tactics starter', daily >= 3 && 'Daily regular'].filter(Boolean);
-    get('lesson-progress').textContent = count + ' / ' + (lessons.length+puzzles.length) + ' exercises · ' + (count*10+daily*15) + ' XP' +
-      (achievements.length ? ' · ' + achievements.join(', ') : '');
+    try {
+      const summary = progressSummary(readProgress(storage.getItem(progressKey)),lessons,puzzles);
+      const known = summary.lessonsSolved+summary.puzzlesSolved;
+      get('lesson-progress').textContent = known + ' / ' + (lessons.length+puzzles.length) +
+        ' exercises · ' + summary.xp + ' local XP' +
+        (summary.achievements.length ? ' · ' + summary.achievements.join(', ') : '');
+    } catch {
+      get('lesson-progress').textContent = 'Progress unavailable; your current practice remains playable.';
+    }
   }
+  mergeProgress();
   function render(focus) {
     board.replaceChildren();
     for (const [rank,row] of game.board().entries()) {
@@ -106,10 +111,17 @@ export function bindLearning(names) {
     solved = true;
     selected = undefined;
     mergeProgress();
-    completed.add(exercise.id);
     let message = 'Correct. ' + exercise.explanation;
-    try { localStorage.setItem(key,JSON.stringify([...completed])); }
-    catch { message += ' Progress is available for this session.'; }
+    const kind = exercise.id.startsWith('daily-') ? 'daily'
+      : lessons.some(item => item.id === exercise.id) ? 'lesson' : 'puzzle';
+    if (!journalError) {
+      try {
+        recordExercise(storage,{kind,exerciseId:exercise.id});
+        completed.add(exercise.id);
+      } catch {
+        message += ' Progress could not be safely saved; do not close until recovered.';
+      }
+    } else message += ' ' + journalError;
     get('lesson-feedback').textContent = message;
     updateProgress();
     render(square);
