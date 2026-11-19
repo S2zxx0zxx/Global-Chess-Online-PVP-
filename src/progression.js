@@ -15,7 +15,7 @@ export function readProgress(raw) {
   for (const event of obj.events) {
     if (!event || !kinds.has(event.kind) || typeof event.exerciseId !== 'string' ||
         !idPattern.test(event.exerciseId) ||
-        (event.kind === 'daily' && !/^daily-\\d{4}-\\d{2}-\\d{2}$/.test(event.exerciseId)) ||
+        (event.kind === 'daily' && !/^daily-\d{4}-\d{2}-\d{2}$/.test(event.exerciseId)) ||
         (event.kind !== 'daily' && event.exerciseId.startsWith('daily-'))) {
       throw new Error('Invalid exercise journal event');
     }
@@ -30,7 +30,7 @@ export function readProgress(raw) {
 
 export function recordExercise(storage, {kind, exerciseId}) {
   if (!kinds.has(kind) || typeof exerciseId !== 'string' || !idPattern.test(exerciseId) ||
-      (kind === 'daily' && !/^daily-\\d{4}-\\d{2}-\\d{2}$/.test(exerciseId)) ||
+      (kind === 'daily' && !/^daily-\d{4}-\d{2}-\d{2}$/.test(exerciseId)) ||
       (kind !== 'daily' && exerciseId.startsWith('daily-'))) {
     throw new Error('Invalid exercise completion');
   }
@@ -54,7 +54,7 @@ export function migrateLegacyProgress(storage,legacyRaw,lessons,puzzles) {
     let kind;
     if (lessonsById.has(id)) kind='lesson';
     else if (puzzlesById.has(id)) kind='puzzle';
-    else if (/^daily-\\d{4}-\\d{2}-\\d{2}$/.test(id)) kind='daily';
+    else if (/^daily-\d{4}-\d{2}-\d{2}$/.test(id)) kind='daily';
     if (kind && recordExercise(storage,{kind,exerciseId:id})) added++;
   }
   return added;
