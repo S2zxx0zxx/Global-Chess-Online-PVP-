@@ -32,7 +32,10 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys
     .filter(key => key.startsWith(prefix) && key !== version)
-    .map(key => caches.delete(key)))));
+    .map(key => caches.delete(key)))).then(() => self.clients.claim()));
+});
+self.addEventListener('message', event => {
+  if (event.data?.type === 'SKIP_WAITING') event.waitUntil(self.skipWaiting());
 });
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
