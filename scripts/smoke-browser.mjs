@@ -183,9 +183,24 @@ try {
   if (!(await evaluate('document.documentElement.dataset.view === "learn"'))) throw new Error('Learn tab did not open');
   await evaluate('document.getElementById("learn-open").click(); true');
   if (!(await evaluate('document.getElementById("learn-dialog").open'))) throw new Error('Lessons did not open');
+  await evaluate('document.querySelector("#lesson-board [data-square=e2]").click(); true');
+  await evaluate('document.querySelector("#lesson-board [data-square=e4]").click(); true');
+  await waitUntil(() => evaluate('document.getElementById("lesson-feedback").textContent.includes("Correct.")'));
+  if (!(await evaluate('document.getElementById("lesson-progress").textContent.includes("10 local XP")'))) {
+    throw new Error('Legitimate exercise did not award exactly 10 local XP');
+  }
+  await evaluate('document.getElementById("lesson-reset").click(); true');
+  await evaluate('document.querySelector("#lesson-board [data-square=e2]").click(); true');
+  await evaluate('document.querySelector("#lesson-board [data-square=e4]").click(); true');
+  if (!(await evaluate('document.getElementById("lesson-progress").textContent.includes("10 local XP")'))) {
+    throw new Error('Repeating a lesson incorrectly duplicated XP');
+  }
   await evaluate('document.querySelector("#learn-dialog form[method=dialog] button").click(); true');
   await evaluate('document.querySelector("#bottom-nav [data-nav=profile]").click(); true');
   if (!(await evaluate('document.documentElement.dataset.view === "profile"'))) throw new Error('Profile tab did not open');
+  if (!(await evaluate('document.getElementById("profile-xp").textContent === "10"'))) throw new Error('Profile XP did not match earned event journal');
+  if (!(await evaluate('document.getElementById("profile-achievements").textContent.includes("First solve")'))) throw new Error('Earned achievement missing');
+  console.log('Exercise XP idempotence and genuine Profile achievement: passed');
   await evaluate('document.getElementById("profile-edit").click(); true');
   if (!(await evaluate('document.getElementById("profile-dialog").open'))) throw new Error('Edit profile did not open');
   await evaluate('document.querySelector("#profile-dialog form[method=dialog] button").click(); true');
