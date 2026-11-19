@@ -3,6 +3,7 @@ import { loadBrowserMateSolver } from './mate-solver.js';
 import { bindLearning, lessons, puzzles } from './learning.js';
 import {progressKey, readProgress, progressSummary as summarizePracticeProgress} from './progression.js';
 import { bindLobby } from './lobby.js';
+import {exportLocalUserData, deleteLocalUserData} from './privacy-data.js';
 import { bindNavigation, navigate } from './navigation.js';
 import { openGameStorage } from './storage.js';
 import { bindOnline } from './online.js';
@@ -32,6 +33,7 @@ const promotion = document.querySelector('#promotion');
 const names = { k:'King', q:'Queen', r:'Rook', b:'Bishop', n:'Knight', p:'Pawn' };
 let state = restoreGame();
 let notice = '';
+let resettingLocalData = false;
 try {
   state = restoreGame(gameStorage.getItem(key));
 } catch {
@@ -275,6 +277,7 @@ function render(move) {
 }
 
 function save() {
+  if (resettingLocalData) return true;
   if (online?.active) return;
   try {
     const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove, state.preset, state.humanSide, state.resignedSide);
@@ -501,8 +504,85 @@ bindNavigation();
 render();
 playComputer();
 
+const getData = id => document.getElementById(id);
+getData('data-export').onclick = () => {
+  try {
+    const json=exportLocalUserData(gameStorage,localStorage);
+    const blob=new Blob([json],{type:'application/json'});
+    const href=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=href;
+    a.download='global-chess-local-archive.json';
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(href),1500);
+    getData('data-feedback').textContent='Local archive downloaded. Keep it private. This is not a match-backup import file.';
+  } catch {
+    getData('data-feedback').textContent='Local data export failed. Your saved games have not been changed.';
+  }
+};
+getData('data-delete').onclick = async () => {
+  if (online?.active) {
+    getData('data-feedback').textContent='Leave the active private room first; deleting local seat credentials cannot end the remote game.';
+    return;
+  }
+  if (!confirm('Erase all locally saved chess games, profile, tutorials and learning progress from this device? This cannot be undone.')) return;
+  resettingLocalData=true;
+  stopComputer();
+  const button=getData('data-delete');
+  button.disabled=true;
+  try {
+    await deleteLocalUserData(gameStorage,localStorage);
+    location.reload(); // pagehide's save() is suppressed by resettingLocalData.
+  } catch {
+    getData('data-feedback').textContent='Local data deletion did not finish. Please retry; do not assume it was removed.';
+    resettingLocalData=false;
+    button.disabled=false;
+  }
+};
+
+let waitingUpdate;
+const updateBanner=getData('pwa-update');
+const updateLabel=getData('pwa-update-text');
+function showUpdate(worker) {
+  if (!worker || !navigator.serviceWorker.controller) return;
+  waitingUpdate=worker;
+  updateBanner.hidden=false;
+  updateLabel.textContent='A newer version is ready. Finish or save your match before installing.';
+}
+getData('pwa-update-later').onclick = () => { updateBanner.hidden=true; };
+getData('pwa-update-apply').onclick = async () => {
+  if (!waitingUpdate || waitingUpdate.state==='redundant') return;
+  if (online?.active) {
+    updateLabel.textContent='Leave your private online game before applying an update.';
+    return;
+  }
+  if (document.documentElement.dataset.view==='match' && !outcome(state.game) &&
+      !confirm('Save your offline game and apply this update now?')) return;
+  const applyButton=getData('pwa-update-apply');
+  applyButton.disabled=true;
+  try {
+    if (!save()) throw new Error('Save failed');
+    await gameStorage.flush?.();
+    navigator.serviceWorker.addEventListener('controllerchange',()=>location.reload(),{once:true});
+    waitingUpdate.postMessage({type:'SKIP_WAITING'});
+    updateLabel.textContent='Installing update…';
+  } catch {
+    applyButton.disabled=false;
+    updateLabel.textContent='Unable to save your match. Update postponed; please export a backup.';
+  }
+};
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    showUpdate(reg.waiting);
+    reg.addEventListener('updatefound',()=>{
+      const worker=reg.installing;
+      worker?.addEventListener('statechange',()=>{
+        if(worker.state==='installed') showUpdate(worker);
+      });
+    });
+  }).catch(() => {
     notice = 'Offline cache unavailable. Keep this tab open to continue playing.';
     render();
   });
