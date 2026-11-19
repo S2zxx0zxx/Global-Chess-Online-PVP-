@@ -131,7 +131,8 @@ export function bindOnline({onMatch, onLeave}) {
   }
 
   async function submit(action, command) {
-    if (!snapshot || !canMove(session.seat)) return;
+    if (!snapshot || !session || (action !== 'resign' && !canMove(session.seat)) ||
+        (action === 'resign' && snapshot.match.outcome)) return;
     submitting = true;
     const current = generation;
     try {
@@ -157,5 +158,6 @@ export function bindOnline({onMatch, onLeave}) {
     },
     move({from,to,promotion}) { return submit('move',{from,to,promotion}); },
     claim(move) { return submit('claim',{move}); },
+    resign() { return submit('resign',{}); },
   };
 }
