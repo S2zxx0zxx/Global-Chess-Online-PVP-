@@ -127,3 +127,10 @@ html.ch-shell-ready{scroll-padding-bottom:100px}
  .ch-shell-ready.ch-view-match #match-area{width:min(100%,620px)}
  .ch-shell-ready.ch-view-match .layout>aside{width:min(100%,620px)}
 }
+
+/* SCR-02: skippable first-move micro-tutorial, never covers the board. */
+.ch-first-move-tip{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 13px;margin:8px 0;border:1px solid #e5be75a6;border-radius:12px;background:linear-gradient(110deg,#63412c,#462729);color:#fff0d4}
+.ch-first-move-tip p{margin:0;font-size:.82rem;line-height:1.35}
+.ch-first-move-tip button,.ch-tutorial-replay{min-height:44px;padding:9px 10px;border:1px solid var(--ch-card-stroke);border-radius:10px;background:#73432f;color:#ffe7c2;white-space:nowrap;font-weight:700}
+.ch-tutorial-replay{display:block;width:100%;margin-bottom:10px;text-align:center}
+@media(max-width:359px){.ch-first-move-tip{align-items:stretch;flex-direction:column}.ch-first-move-tip button{width:100%}}
