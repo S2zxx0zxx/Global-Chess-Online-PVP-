@@ -60,11 +60,30 @@ export function mountAppShell({startMatch, historyCount}) {
   }
   main.append(nav);
 
+  const toolbar=element('div','ch-match-toolbar');
   const back = element('button','ch-match-home','← Home');
   back.id='ch-match-home';
   back.type='button';
   back.addEventListener('click',()=>go('home'));
-  match.prepend(back);
+  const tools=element('button','ch-match-tools','More options');
+  tools.id='ch-match-tools';
+  tools.type='button';
+  tools.setAttribute('aria-expanded','false');
+  tools.setAttribute('aria-controls','ch-match-sidebar');
+  tools.addEventListener('click',()=>{
+    const opened=document.documentElement.classList.toggle('ch-tools-open');
+    tools.setAttribute('aria-expanded',String(opened));
+    if(opened) byId('ch-match-sidebar').scrollIntoView({block:'nearest'});
+  });
+  toolbar.append(back,tools);
+  match.prepend(toolbar);
+  document.querySelector('.layout>aside').id='ch-match-sidebar';
+  const dock=element('section','ch-match-dock');
+  dock.setAttribute('aria-label','Match status and controls');
+  for(const id of ['clocks','status','moves','result-open','rematch','claim','online-status','online-invite','online-copy']) {
+    dock.append(byId(id));
+  }
+  match.append(dock);
 
   const setup = element('dialog','ch-setup-dialog');
   setup.id = 'ch-setup-dialog';
@@ -146,7 +165,11 @@ export function mountAppShell({startMatch, historyCount}) {
       tab.setAttribute('aria-current',active?'page':'false');
     }
     if(next==='profile') refreshProfile();
-    if(next!=='match') window.scrollTo({top:0,behavior:'instant'});
+    if(next!=='match') {
+      root.classList.remove('ch-tools-open');
+      tools.setAttribute('aria-expanded','false');
+      window.scrollTo({top:0,behavior:'instant'});
+    }
     if(next==='match') match.focus({preventScroll:true});
   }
   byId('lobby-resume').addEventListener('click',()=>go('match'));
