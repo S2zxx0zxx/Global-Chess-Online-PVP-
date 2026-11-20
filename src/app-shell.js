@@ -141,7 +141,6 @@ export function mountAppShell({startMatch, historyCount}) {
     play.hidden=next!=='play';
     learn.hidden=next!=='learn';
     profile.hidden=next!=='profile';
-    byId('lobby-resume').hidden=next!=='home'||byId('lobby-resume').hidden;
     for(const tab of nav.querySelectorAll('button')){
       const active=tab.dataset.chView===next;
       tab.setAttribute('aria-current',active?'page':'false');
