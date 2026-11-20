@@ -48,6 +48,13 @@ export async function mountBoard(canvas, selectSquare) {
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
     const moving = new Map();
     let needsFrame = true;
+    // WebGL shader compilation and texture upload can outlast the first scene
+    // frame. A single on-demand render can leave a permanently blank canvas.
+    let warmupUntil = performance.now() + 3500;
+    scene.onReadyObservable.add(() => {
+      needsFrame = true;
+      warmupUntil = Math.max(warmupUntil, performance.now() + 650);
+    });
     scene.onBeforeRenderObservable.add(() => {
       const now = performance.now();
       for (const [mesh, {start,end,since}] of moving) {
@@ -68,6 +75,10 @@ export async function mountBoard(canvas, selectSquare) {
       new URL('./chess-assets/board/maple-walnut.webp',document.baseURI).href,scene,
     );
     boardArt.specularColor = new Color3(.19,.14,.10);
+    boardArt.diffuseTexture.onLoadObservable.add(() => {
+      needsFrame = true;
+      warmupUntil = Math.max(warmupUntil, performance.now() + 650);
+    });
     const marked = material('selected', color('board-select'));
     const target = material('legal move', color('board-hint'));
     const previous = material('last move', color('board-last'));
@@ -238,7 +249,7 @@ export async function mountBoard(canvas, selectSquare) {
     document.addEventListener('visibilitychange',refresh);
     engine.onContextRestoredObservable.add(refresh);
     engine.runRenderLoop(() => {
-      if (document.hidden || !(needsFrame || moving.size || effects.size)) return;
+      if (document.hidden || !(performance.now() < warmupUntil || needsFrame || moving.size || effects.size)) return;
       needsFrame = false;
       scene.render();
     });
