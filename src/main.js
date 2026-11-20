@@ -343,7 +343,7 @@ function startLocalMatch(mode, preset, difficulty) {
   selected = undefined;
   save();
   render();
-  appShell?.go('match');
+  appShell?.onNewMatch();
   return true;
 }
 for (const mode of ['local', 'computer']) {
