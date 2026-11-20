@@ -85,6 +85,50 @@ export function mountAppShell({startMatch, historyCount}) {
   }
   match.append(dock);
 
+  const tutorial=element('section','ch-first-move-tip');
+  tutorial.id='ch-first-move-tip';
+  tutorial.hidden=true;
+  tutorial.setAttribute('role','status');
+  const tip=element('p','ch-tip-message','Tap a white piece to see its legal moves.');
+  const skip=element('button','ch-tip-skip','Skip tutorial');
+  skip.type='button';
+  tutorial.append(tip,skip);
+  match.insertBefore(tutorial,byId('black-panel'));
+  const tutorialKey='global-chess.first-move-v1';
+  let lessonStep=0;
+  function finishTutorial(){
+    tutorial.hidden=true;
+    lessonStep=0;
+    try{localStorage.setItem(tutorialKey,'done');}catch{}
+  }
+  skip.addEventListener('click',finishTutorial);
+  function startTutorial(force=false){
+    if(!force){
+      try{if(localStorage.getItem(tutorialKey)==='done')return;}catch{}
+    }
+    lessonStep=1;
+    tip.textContent='Tap a white piece to see its legal moves.';
+    tutorial.hidden=false;
+  }
+  byId('board').addEventListener('click',()=>{
+    if(tutorial.hidden)return;
+    if(lessonStep===1&&byId('board').querySelector('[aria-pressed=true]')){
+      lessonStep=2;
+      tip.textContent='Now tap one of the highlighted squares to make your move.';
+    } else if(lessonStep===2&&byId('moves').children.length){
+      finishTutorial();
+    }
+  });
+  const replayTutorial=element('button','ch-tutorial-replay','Replay first-move tutorial');
+  replayTutorial.type='button';
+  replayTutorial.addEventListener('click',()=>{
+    document.documentElement.classList.remove('ch-tools-open');
+    tools.setAttribute('aria-expanded','false');
+    startTutorial(true);
+    match.scrollIntoView({block:'start'});
+  });
+  byId('ch-match-sidebar').prepend(replayTutorial);
+
   const setup = element('dialog','ch-setup-dialog');
   setup.id = 'ch-setup-dialog';
   setup.setAttribute('aria-labelledby','ch-setup-title');
@@ -177,5 +221,9 @@ export function mountAppShell({startMatch, historyCount}) {
   byId('online-leave').addEventListener('click',()=>go('home'));
   document.documentElement.classList.add('ch-shell-ready');
   go(new URLSearchParams(location.hash.slice(1)).has('invite')?'match':'home');
-  return {go,openSetup,get view(){return view;}};
+  return {
+    go,openSetup,
+    onNewMatch(){go('match');startTutorial();},
+    get view(){return view;},
+  };
 }
