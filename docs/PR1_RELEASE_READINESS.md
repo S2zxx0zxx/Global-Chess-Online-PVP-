@@ -110,3 +110,40 @@ An absence of REST commit-status records is **not** proof that Checks API has no
 **Status: source-level foundation and narrow hosted CI/browser smoke verified at `59cf19f`;
 full release blocked by unfinished full-stack features and missing device/deployed-network/security evidence.** This is not an acceptance of the larger Work Agent mandate
 as complete. Continue in small PRs; do not bypass these gates to obtain a green badge.
+
+## 2026-11-20 — v3 mobile-first implementation wave
+
+Source contract: user-supplied `Chess_Final_Production_Ready_Planning_Pack_v3_2026-11-18.zip`,
+particularly `docs/03_SCREEN_BY_SCREEN_UX_SPEC.md` and `docs/04_DESIGN_SYSTEM_FOUNDATIONS.md`.
+The ZIP contains 602 execution tasks and 30 screen contracts. These source contracts are **not**
+automatically satisfied just by implementing an interface shell.
+
+### New working code
+
+- `src/app-shell.js` and `src/app-shell.css`: branded responsive mobile Home, Play,
+  Learn and local Profile views; four-tab navigation; mode/setup dialog; original color tokens;
+  board-focused match layout; contextual action dock; accessible advanced-tools disclosure.
+- `src/main.js`: route existing local game, computer mode and online match updates through shell.
+- Optional, skippable first-move tutorial tied to actual legal-move selection.
+- `src/board3d.js`: initial shader/texture warm-up to avoid blank WebGL canvas after on-demand rendering.
+- `scripts/smoke-browser.mjs`: 360px mobile Chromium navigation checks, legal move,
+  actual rendered 3D pixel evidence, screenshots; fails on an undrawn canvas.
+- `.github/workflows/verify.yml`: CI uploads mobile Home and 3D screenshots.
+
+### Actual verification
+
+[GitHub Actions run #44743409922](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/44743409922)
+passed on commit `99a328c448e0efd7e8c8775bb0966d25b8a18284`: **27/27 Node tests**,
+production Vite build, 3D size budget, 360px mobile navigation, local move,
+real rendered Babylon/Havok pixels and WASM/offline asset checks.
+
+### Not closed by this wave
+
+This UI shell does **not** implement every v3 screen contract, shared typed React
+architecture, full design asset library, signed Capacitor Android app, verified live PvP,
+complete profile/reward journal, release-appropriate privacy/terms, analytics or monetization.
+Do not count SCR-00–29 as VERIFIED until per-screen tests, screenshot acceptance and
+architecture criteria pass. Current repo must not be described as production-ready.
+
+No merge, paid rollout, live payment onboarding or Play Store submission authorized by
+this evidence alone.
