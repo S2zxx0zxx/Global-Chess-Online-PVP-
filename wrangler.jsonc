@@ -1,0 +1,15 @@
+{
+  "name": "global-chess-online-pvp",
+  "main": "server/cloudflare-worker.js",
+  "build": { "command": "node scripts/prepare-worker-solver.js" },
+  "compatibility_date": "2026-11-18",
+  "assets": {
+    "directory": "./dist",
+    "run_worker_first": ["/api/*"]
+  },
+  "ratelimits": [{ "name": "ROOM_CREATION_LIMIT", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }],
+  "durable_objects": {
+    "bindings": [{ "name": "ROOMS", "class_name": "Room" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }]
+}
