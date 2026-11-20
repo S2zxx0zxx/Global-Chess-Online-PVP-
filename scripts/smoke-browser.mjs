@@ -93,13 +93,40 @@ try {
   }
   await send('Page.enable');
   await send('Runtime.enable');
+  await send('Emulation.setDeviceMetricsOverride', {width:360,height:800,deviceScaleFactor:1,mobile:true});
   await send('Page.navigate', {url:'http://127.0.0.1:4173/'});
   await waitUntil(() => evaluate('document.readyState === "complete" && !!document.getElementById("local")'));
   await waitUntil(() => evaluate('document.getElementById("launch").hidden === true'));
+  await evaluate('if(document.querySelector("#welcome-dialog[open]"))document.querySelector("#welcome-dialog button").click(); true');
+  await waitUntil(() => evaluate('document.documentElement.classList.contains("ch-view-home")'));
+  if (!(await evaluate('getComputedStyle(document.querySelector(".layout")).display === "none"'))) {
+    throw new Error('Home view showed desktop game controls');
+  }
+  await mkdir('artifacts', {recursive:true});
+  const homeShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/chess-v3-mobile-home.png',Buffer.from(homeShot.data,'base64'));
+  await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=play]").click(); true');
+  if (!(await evaluate('document.getElementById("ch-play-hub").hidden === false'))) {
+    throw new Error('Play hub did not open');
+  }
+  await evaluate('document.querySelector("[data-setup=computer]").click(); true');
+  if (!(await evaluate('document.getElementById("ch-setup-dialog").open === true'))) {
+    throw new Error('New-match setup did not open');
+  }
+  await evaluate('document.getElementById("ch-setup-cancel").click(); true');
+  await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=learn]").click(); true');
+  if (!(await evaluate('document.getElementById("ch-learn-hub").hidden === false'))) {
+    throw new Error('Learn hub did not open');
+  }
+  await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=profile]").click(); true');
+  if (!(await evaluate('document.getElementById("ch-profile-hub").hidden === false'))) {
+    throw new Error('Local profile screen did not open');
+  }
   await evaluate('document.getElementById("local").click(); true');
   await evaluate('document.querySelector("#board [data-square=e2]").click(); true');
   await evaluate('document.querySelector("#board [data-square=e4]").click(); true');
   await waitUntil(() => evaluate('document.querySelector("#moves li")?.textContent?.includes("e4") === true'));
+  console.log('Mobile v3 Home, Play, Setup, Learn, Profile, local match: passed');
   console.log('Browser local chess move: passed');
 
   await evaluate('document.getElementById("view").click(); true');
@@ -109,7 +136,6 @@ try {
   if (errors.length) throw new Error('Browser exceptions: ' + errors.join(' | '));
   console.log('Browser Babylon/Havok board mount: passed');
 
-  await mkdir('artifacts', {recursive:true});
   const screenshot = await send('Page.captureScreenshot', {format:'png', captureBeyondViewport:false});
   await writeFile('artifacts/chess-3d-browser-smoke.png', Buffer.from(screenshot.data,'base64'));
 } catch (error) {
