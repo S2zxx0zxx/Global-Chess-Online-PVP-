@@ -8,6 +8,8 @@ import { Chess } from 'chess.js';
 import { readHistory, recordMatch } from './history.js';
 import { startClock, remainingClock } from './clock.js';
 import './style.css';
+import './app-shell.css';
+import { mountAppShell } from './app-shell.js';
 import { restoreGame, serializeGame, result, claimableDraw, intendedDraw, timeoutResult } from './game.js';
 
 import { matchKey as key, exportBackup, importBackup } from './backup.js';
@@ -47,6 +49,7 @@ const clocks = document.querySelector('#clocks');
 let tickAt = performance.now();
 let online;
 let lobby;
+let appShell;
 let flipped = false;
 let wasVisible = !document.hidden;
 const flip = document.querySelector('#flip-board');
@@ -340,6 +343,7 @@ function startLocalMatch(mode, preset, difficulty) {
   selected = undefined;
   save();
   render();
+  appShell?.go('match');
   return true;
 }
 for (const mode of ['local', 'computer']) {
@@ -361,6 +365,7 @@ online = bindOnline({
     const played = match.moves.length === previousPly + 1
       ? state.game.history({verbose:true}).at(-1) : undefined;
     render(played);
+    appShell?.go('match');
   },
   onLeave() {
     if (!offlineState) return;
@@ -373,6 +378,12 @@ online = bindOnline({
   },
 });
 lobby = bindLobby({
+  startMatch:startLocalMatch,
+  historyCount() {
+    try { return readHistory(gameStorage).length; } catch { return null; }
+  },
+});
+appShell = mountAppShell({
   startMatch:startLocalMatch,
   historyCount() {
     try { return readHistory(gameStorage).length; } catch { return null; }
