@@ -134,7 +134,15 @@ try {
     'document.getElementById("view").textContent === "Use 2D board" && !document.getElementById("scene").hidden'
   ), 45000);
   if (errors.length) throw new Error('Browser exceptions: ' + errors.join(' | '));
-  console.log('Browser Babylon/Havok board mount: passed');
+  // A toggled canvas is not proof that the 3D scene drew a frame.
+  // Capture its actual pixels; flat, undrawn canvases compress to tiny PNGs.
+  const sceneRect=await evaluate(`(() => {const r=document.getElementById("scene").getBoundingClientRect(); return {x:Math.max(0,r.left+3),y:Math.max(0,r.top+3),width:Math.max(1,r.width-6),height:Math.max(1,r.height-6)};})()`);
+  const renderedCanvas=await waitUntil(async ()=>{
+    const shot=await send('Page.captureScreenshot',{format:'png',clip:{...sceneRect,scale:1}});
+    return Buffer.from(shot.data,'base64').length > 7000;
+  },15000);
+  if (!renderedCanvas) throw new Error('3D renderer never produced a detailed frame');
+  console.log('Browser Babylon/Havok 3D scene pixels: rendered');
 
   const screenshot = await send('Page.captureScreenshot', {format:'png', captureBeyondViewport:false});
   await writeFile('artifacts/chess-3d-browser-smoke.png', Buffer.from(screenshot.data,'base64'));
