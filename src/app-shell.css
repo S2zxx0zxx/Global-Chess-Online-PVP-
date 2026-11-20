@@ -103,3 +103,27 @@ html.ch-shell-ready{scroll-padding-bottom:100px}
 @media(prefers-reduced-motion:reduce){
  .ch-shell-ready *, .ch-shell-ready *::before,.ch-shell-ready *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
+
+/* SCR-07: keep the board large and the game controls contextual, not a web dashboard. */
+.ch-match-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
+#ch-match-home{margin:0;flex:0 0 auto}
+#ch-match-tools{min-height:46px;padding:9px 14px;border-radius:12px;border:1px solid var(--ch-card-stroke);background:#4a2b25;color:#fff0d5;font-weight:700}
+.ch-shell-ready.ch-view-match .layout>aside{display:none}
+.ch-shell-ready.ch-view-match.ch-tools-open .layout>aside{display:block}
+.ch-match-dock{display:grid;gap:8px;width:100%;margin:13px 0 8px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,#4a2826,#291718);border:1px solid var(--ch-card-stroke)}
+.ch-match-dock #clocks{margin:0;text-align:center;font-size:1rem;font-weight:900;font-variant-numeric:tabular-nums;color:#f9d48b}
+.ch-match-dock #status{margin:0;min-height:21px;font-size:.84rem;color:#f4ddc1;line-height:1.4}
+.ch-match-dock #moves{display:flex;gap:12px;min-height:25px;margin:0;padding:0;list-style:none;overflow-x:auto;max-height:56px;white-space:nowrap;scrollbar-width:thin}
+.ch-match-dock #moves:empty{display:none}
+.ch-match-dock #moves li{padding:4px 9px;background:#1b0f12;border-radius:8px;font-size:.78rem}
+.ch-match-dock #claim,.ch-match-dock #rematch,.ch-match-dock #result-open,.ch-match-dock #online-copy{margin:0;min-height:44px;border:1px solid var(--ch-card-stroke);border-radius:10px;background:#63402e;color:#fff0d5;padding:8px 12px}
+.ch-match-dock #rematch,.ch-match-dock #result-open{background:var(--ch-highlight);color:#31170e;font-weight:800}
+.ch-match-dock #online-status{margin:0;font-size:.78rem;line-height:1.4;color:#f7d594}
+.ch-match-dock #online-invite{font-size:.82rem;color:#f8d390;overflow-wrap:anywhere}
+.ch-shell-ready.ch-view-match #ch-match-sidebar{box-shadow:0 12px 24px #0004}
+@media(min-width:800px){
+ .ch-shell-ready.ch-view-match.ch-tools-open .layout>aside{display:block}
+ .ch-shell-ready.ch-view-match .layout{display:flex;flex-direction:column}
+ .ch-shell-ready.ch-view-match #match-area{width:min(100%,620px)}
+ .ch-shell-ready.ch-view-match .layout>aside{width:min(100%,620px)}
+}
