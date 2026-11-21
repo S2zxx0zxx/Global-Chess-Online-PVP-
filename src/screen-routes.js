@@ -30,7 +30,7 @@ const appearance=name=>{
 };
 export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','settings','data','transfer','recovery','update','about']);
 
-export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise,getMatchSummary,resignCurrentMatch}){
+export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
   main.insertBefore(screen,el('ch-tab-bar'));
@@ -52,14 +52,19 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise
     const stack=()=>{const x=mk('div','ch-button-stack');section.append(x);return x;};
 
     if(route==='menu'||route==='pause'){
-      title('Game session',route==='pause'?'Match interruption':'Match menu','Your board remains in the chess engine. No simulated rewards or opponent.');
-      if(route==='pause')paragraph(section,'Visible timed games continue counting down. Local clocks pause when the app is hidden, not when this menu is open.','ch-inline-notice ch-notice-warning');
+      const details=getMatchSummary();
+      const paused=route==='pause'&&!details?.online&&pauseCurrentMatch();
+      title('Game session',route==='pause'?'Match paused':'Match menu','Your chessboard and moves remain owned by the game engine.');
+      if(route==='pause')paragraph(section,paused?'Local clock and opponent processing are frozen until you resume.':'Online matches cannot be paused; server clocks continue.','ch-inline-notice');
       const items=group();
-      card(items,'Resume match','Return to the chessboard',()=>go('match'));
+      card(items,'Resume match','Return to the chessboard',()=>{resumeCurrentMatch();go('match');});
       card(items,'Flip board','Rotate the viewpoint only',()=>{el('flip-board').click();go('match');});
       card(items,'Save & exit','Return Home without replacing this game',()=>go('home'));
       card(items,'Restart match','Existing confirmation protects unfinished games',()=>{go('match');el('rematch').click();});
       card(items,'Settings','Accessibility and board preferences',()=>go('settings'));
+      if(route==='menu' && !getMatchSummary()?.online && !getMatchSummary()?.outcome){
+        card(items,'Pause match','Freeze the local clock and computer until resumed',()=>go('pause'));
+      }
       const match=getMatchSummary();
       if(!match?.online && !match?.outcome){
         card(items,'Resign game','Ends the current offline match after confirmation',()=>{
