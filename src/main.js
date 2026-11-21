@@ -471,6 +471,11 @@ appShell = mountAppShell({
   },
   readSavedHistory(){ return readHistory(gameStorage); },
   writeSavedHistory(entries){ gameStorage.setItem(historyKey,JSON.stringify(entries)); },
+  async clearCompletedHistory(){
+    gameStorage.setItem(historyKey,'[]');
+    if(gameStorage.durable !== false)await gameStorage.flush?.();
+    return {durable:gameStorage.durable !== false};
+  },
   resignCurrentMatch(){
     updateClock();
     if(online?.active || outcome(state.game) || (state.preset === undefined && !state.game.history().length))return false;
