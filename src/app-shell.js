@@ -12,7 +12,7 @@ function element(tag, className, text) {
 
 // The v3 M0 shell intentionally calls existing, tested game commands rather
 // than keeping a separate copy of chess state in the presentation layer.
-export function mountAppShell({startMatch, historyCount, readSavedHistory, writeSavedHistory, getMatchSummary, resignCurrentMatch}) {
+export function mountAppShell({startMatch, historyCount, readSavedHistory, writeSavedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch}) {
   const main = document.querySelector('main');
   const lobby = byId('lobby');
   const match = byId('match-area');
@@ -209,6 +209,7 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   byId('profile-form').addEventListener('submit',()=>queueMicrotask(refreshProfile));
   function go(next) {
     if (!views.has(next)) throw new Error('Unknown chess view: '+next);
+    if(view==='pause' && next==='match')resumeCurrentMatch();
     view=next;
     const root=document.documentElement;
     for(const item of views) root.classList.toggle('ch-view-'+item,item===next);
@@ -229,11 +230,11 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
     }
     if(next==='match') match.focus({preventScroll:true});
   }
-  byId('lobby-resume').addEventListener('click',()=>go('match'));
+  byId('lobby-resume').addEventListener('click',()=>{resumeCurrentMatch();go('match');});
   byId('lobby-online').addEventListener('click',()=>go('match'));
   byId('online-leave').addEventListener('click',()=>go('home'));
   screenRoutes=mountScreenRoutes({
-    main,go,readHistory:readSavedHistory,writeHistory:writeSavedHistory,getMatchSummary,resignCurrentMatch,
+    main,go,readHistory:readSavedHistory,writeHistory:writeSavedHistory,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,
     openExercise(exercise){
       byId('learn').click();
       const list=[...lessons,...puzzles,dailyExercise()];
