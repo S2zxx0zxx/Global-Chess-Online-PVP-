@@ -140,7 +140,18 @@ try {
   if (!(await evaluate('document.getElementById("ch-profile-hub").hidden === false'))) {
     throw new Error('Local profile screen did not open');
   }
-  await evaluate('document.getElementById("local").click(); true');
+  const skips=await evaluate(`(() => {
+    document.getElementById("local").click();
+    const intro=document.getElementById("versus"), button=document.getElementById("versus-skip");
+    if(intro.hidden)return false;
+    const r=button.getBoundingClientRect();
+    const hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
+    const pointer=hit===button || button.contains(hit);
+    button.click();
+    return pointer && intro.hidden;
+  })()`);
+  if(!skips)throw new Error('VS Skip cannot receive pointer input or close the introduction');
+  console.log('SCR-06 VS transition skip is actually pointer-accessible: passed');
   const tutorialShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/SCR-02-first-move.png',Buffer.from(tutorialShot.data,'base64'));
   await evaluate('document.querySelector("#board [data-square=e2]").click(); true');
