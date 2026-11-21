@@ -167,6 +167,33 @@ try {
   const screenshot = await send('Page.captureScreenshot', {format:'png', captureBeyondViewport:false});
   await writeFile('artifacts/chess-3d-browser-smoke.png', Buffer.from(screenshot.data,'base64'));
 
+  // Start a real new game with the computer as White and player as Black.
+  // The CDP dialog listener explicitly accepts replacement of the prior match.
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=play'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-play")'));
+  await evaluate('document.querySelector("[data-setup=computer]").click(); true');
+  await evaluate('document.getElementById("ch-setup-side").value="b";document.getElementById("ch-setup-difficulty").value="easy";document.getElementById("ch-setup-start").click();true');
+  await waitUntil(()=>evaluate('document.getElementById("white-player").textContent.includes("Computer") && document.querySelector("#moves li") !== null && document.getElementById("board").classList.contains("flipped")'),25000);
+  const blackShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/SCR-05-black-vs-computer.png',Buffer.from(blackShot.data,'base64'));
+  console.log('Computer White, human Black, legal computer opening and board orientation: passed');
+
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=menu'});
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-menu")'));
+  await evaluate('document.querySelector("#ch-extra-screen .ch-danger-card").click();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-result") && document.querySelector("#ch-extra-screen h1")?.textContent?.includes("White wins by resignation") === true'));
+  const endShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/SCR-11-real-result.png',Buffer.from(endShot.data,'base64'));
+  console.log('Confirmed resignation and truthful result screen: passed');
+  await sleep(500);
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=history'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#ch-extra-screen .ch-history-row") !== null'));
+  await evaluate('document.querySelector("#ch-extra-screen .ch-history-row button").click();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-review") && document.querySelector("#ch-extra-screen .ch-review-board") !== null'));
+  const reviewShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/SCR-12-real-review.png',Buffer.from(reviewShot.data,'base64'));
+  console.log('Completed game history and replay: passed');
+
   // ZIP v3 screen-by-screen visual regression: these are route renders,
   // not assertions that every release-gate behavior is finished.
   const screenNames=['history','review','lessons','lesson','puzzles','puzzle','puzzle-result',
@@ -182,6 +209,16 @@ try {
     await writeFile('artifacts/screens/'+name+'.png',Buffer.from(image.data,'base64'));
   }
   console.log('Rendered and captured all '+screenNames.length+' additional v3 routes in Chromium');
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=appearance'});
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-appearance") && document.querySelectorAll(".ch-piece-card").length === 2'));
+  await evaluate('document.querySelectorAll(".ch-piece-card")[1].click();true');
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=match'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#board .piece-art") !== null'));
+  const crest=await evaluate('Array.from(document.querySelectorAll("#board .piece-art")).some(img=>img.src.includes("/brand/pieces/"))');
+  if(!crest)throw new Error('Saved SVG piece skin was not rendered after navigation');
+  const crestShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/SCR-23-crest-piece-style.png',Buffer.from(crestShot.data,'base64'));
+  console.log('Persistent original Crest chess pieces: passed');
   for(const width of [320,360,412,768]){
     await send('Emulation.setDeviceMetricsOverride',{width,height:800,deviceScaleFactor:1,mobile:true});
     await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=home'});
