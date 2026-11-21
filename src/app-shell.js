@@ -183,6 +183,9 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
     button.addEventListener('click',()=>openSetup(button.dataset.setup)));
   document.addEventListener('chess-open-setup',event=>openSetup(event.detail?.format||'computer'));
   document.addEventListener('chess-open-result',()=>go('result'));
+  document.addEventListener('chess-navigate',event=>{
+    if(views.has(event.detail?.route))go(event.detail.route);
+  });
   byId('ch-setup-form').addEventListener('submit',event=>{
     event.preventDefault();
     byId('preset').value=time.value;
