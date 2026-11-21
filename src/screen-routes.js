@@ -55,7 +55,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise
       const details=getMatchSummary();
       const paused=route==='pause'&&!details?.online&&pauseCurrentMatch();
       title('Game session',route==='pause'?'Match paused':'Match menu','Your chessboard and moves remain owned by the game engine.');
-      if(route==='pause')paragraph(section,paused?'Local clock and opponent processing are frozen until you resume.':'Online matches cannot be paused; server clocks continue.','ch-inline-notice');
+      if(route==='pause')paragraph(section,paused?'Local clock and opponent processing are frozen until you resume.':details?.online?'Online matches cannot be paused; server clocks continue.':'No active offline match is available to pause.','ch-inline-notice');
       const items=group();
       card(items,'Resume match','Return to the chessboard',()=>{resumeCurrentMatch();go('match');});
       card(items,'Flip board','Rotate the viewpoint only',()=>{el('flip-board').click();go('match');});
