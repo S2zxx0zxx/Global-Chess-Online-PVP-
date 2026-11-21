@@ -12,7 +12,7 @@ function element(tag, className, text) {
 
 // The v3 M0 shell intentionally calls existing, tested game commands rather
 // than keeping a separate copy of chess state in the presentation layer.
-export function mountAppShell({startMatch, historyCount, readSavedHistory, writeSavedHistory, getMatchSummary}) {
+export function mountAppShell({startMatch, historyCount, readSavedHistory, writeSavedHistory, getMatchSummary, resignCurrentMatch}) {
   const main = document.querySelector('main');
   const lobby = byId('lobby');
   const match = byId('match-area');
@@ -233,7 +233,7 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   byId('lobby-online').addEventListener('click',()=>go('match'));
   byId('online-leave').addEventListener('click',()=>go('home'));
   screenRoutes=mountScreenRoutes({
-    main,go,readHistory:readSavedHistory,writeHistory:writeSavedHistory,getMatchSummary,
+    main,go,readHistory:readSavedHistory,writeHistory:writeSavedHistory,getMatchSummary,resignCurrentMatch,
     openExercise(exercise){
       byId('learn').click();
       const list=[...lessons,...puzzles,dailyExercise()];
