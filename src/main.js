@@ -459,6 +459,21 @@ appShell = mountAppShell({
     try { return summarizeMatches(readHistory(gameStorage)).completed; } catch { return null; }
   },
   storagePersistent: gameStorage.durable,
+  async onNativeBackground(){
+    updateClock();
+    if(online?.active)return;
+    if(!save()||gameStorage.durable===false)return;
+    try{await gameStorage.flush();}catch{
+      window.dispatchEvent(new Event('chess-storage-error'));
+    }
+  },
+  onNativeForeground(){
+    // Android onStop/onResume is independent of visibilitychange timing.
+    // Local clocks are intentionally paused while the Activity is backgrounded.
+    tickAt=performance.now();
+    wasVisible=true;
+    render();
+  },
   hasCorruptMatch(){return Boolean(corruptMatchRaw);},
   saveAndExitCurrentMatch(){
     return finalizeOfflineExit({
