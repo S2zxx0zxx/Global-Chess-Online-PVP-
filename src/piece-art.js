@@ -3,7 +3,10 @@ export function renderPieceArt(cell, piece, names) {
   const image = document.createElement('img');
   const side = piece.color === 'w' ? 'white' : 'black';
   let crest = false;
-  try { crest = localStorage.getItem('global-chess.pieces.v1') === 'crest'; }
+  try {
+    const selected = localStorage.getItem('global-chess.pieces.v1');
+    crest = selected === 'crest' || selected === '"crest"';
+  }
   catch { /* Storage-disabled guests can still see classic pieces. */ }
   image.src = crest
     ? new URL('./brand/pieces/piece_' + side + '_' + names[piece.type].toLowerCase() + '.svg', document.baseURI).href
