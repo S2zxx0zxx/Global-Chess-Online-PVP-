@@ -199,3 +199,9 @@
 #ch-boot-recovery button{min-height:50px;width:min(100%,380px);padding:12px 16px;border:1px solid #d8a45d;border-radius:14px;background:#e5b366;color:#281715;font-weight:800;cursor:pointer}
 #ch-boot-recovery button+button{background:#4b2926;color:#fff1da}
 #ch-boot-recovery button:focus-visible{outline:3px solid #77cbff;outline-offset:3px}
+
+/* Guest first-run disclosure: never represent temporary storage as durable. */
+.ch-welcome-storage-warning{margin:12px 0;padding:10px 12px;background:#6d382d;border:1px solid #efbc75;border-radius:11px;color:#fff1d5;font-size:.84rem;line-height:1.5}
+.ch-welcome-links{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:16px 0 0}
+.ch-welcome-links a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;color:#f6d493;font-size:.84rem;text-decoration:underline;text-underline-offset:4px}
+.ch-welcome-links a:focus-visible{outline:3px solid #80ccff;outline-offset:3px}
