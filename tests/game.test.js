@@ -92,3 +92,18 @@ test('player side survives save and legacy saves remain White by default', () =>
   assert.equal(restoreGame(serializeGame(game,'computer')).playerSide,'w');
   assert.throws(() => restoreGame(raw.replace('"playerSide":"b"','"playerSide":"q"')));
 });
+
+
+test('offline resignation persists once and rejects contradictory terminal saves', () => {
+  const {game} = restoreGame();
+  for (const move of ['e4','e5']) game.move(move);
+  const save = serializeGame(game,'computer',undefined,null,'standard',undefined,'untimed','b','b');
+  const restored = restoreGame(save);
+  assert.equal(restored.resignedBy,'b');
+  assert.equal(restored.playerSide,'b');
+  assert.deepEqual(restored.game.history(),['e4','e5']);
+  assert.throws(() => restoreGame(save.replace('"resignedBy":"b"','"resignedBy":"q"')));
+  const final = restoreGame();
+  for (const move of ['f3','e5','g4','Qh4#']) final.game.move(move);
+  assert.throws(() => restoreGame(serializeGame(final.game,'local',undefined,null,'standard',undefined,'untimed','w','w')));
+});
