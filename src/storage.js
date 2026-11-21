@@ -9,7 +9,11 @@ function reportStorageError() {
 
 // Browser privacy settings may disable BOTH IndexedDB and localStorage. In that
 // case a safe in-memory session is preferable to a startup crash or fake save.
-export function fallbackGameStorage(browserStorage = globalThis.localStorage) {
+export function fallbackGameStorage(browserStorage) {
+  // Even accessing the localStorage property can throw SecurityError.
+  if (browserStorage === undefined) {
+    try { browserStorage = globalThis.localStorage; } catch { browserStorage = null; }
+  }
   const memory = new Map();
   let durable = false;
   try {
