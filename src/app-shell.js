@@ -253,7 +253,11 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   }
   lobby.append(more);
   document.documentElement.classList.add('ch-shell-ready');
-  go(new URLSearchParams(location.hash.slice(1)).has('invite')?'match':'home');
+  // Read-only deep links let QA visit each ZIP v3 screen without modifying
+  // active game state. Invite hashes always take precedence.
+  const requested = new URL(location.href).searchParams.get('screen');
+  const invite = new URLSearchParams(location.hash.slice(1)).has('invite');
+  go(invite ? 'match' : (views.has(requested) ? requested : 'home'));
   return {
     go,openSetup,
     onNewMatch(){go('match');startTutorial();},
