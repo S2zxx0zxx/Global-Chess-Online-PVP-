@@ -110,3 +110,24 @@
 /* SCR-06: honest, skippable 900ms-max introduction */
 #versus{pointer-events:auto;flex-wrap:wrap;max-width:90vw;gap:7px}
 #versus #versus-skip{position:absolute;right:8px;bottom:6px;min-height:32px;padding:5px 9px;color:#fff0dc;background:#57342b;border:1px solid #c79a67;border-radius:8px;font-size:.74rem}
+
+/* Visual QA 360x800 / ZIP SCR-03: one-line top bar and no text/art collisions. */
+.ch-extra-body>.ch-back-button{width:auto;max-width:110px;align-self:flex-start;font-size:.86rem}
+@media(max-width:480px){
+  .ch-shell-ready .masthead{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:7px;flex-wrap:nowrap;padding:2px 0 8px}
+  .ch-shell-ready .masthead .brand{min-width:0;gap:7px}
+  .ch-shell-ready .masthead .brand strong{font-size:.72rem;letter-spacing:.055em;white-space:nowrap}
+  .ch-shell-ready .masthead .brand small{font-size:.58rem}
+  .ch-shell-ready .masthead .brand img{width:38px;height:38px}
+  .ch-shell-ready .masthead nav{margin:0;display:flex;gap:5px}
+  .ch-shell-ready .masthead nav button{width:44px;height:44px;min-width:44px;min-height:44px;display:grid;place-items:center;font-size:0;padding:4px;position:relative}
+  .ch-shell-ready #profile-open::after{content:'';width:27px;height:27px;background:url('/brand/nav-profile.svg') center/contain no-repeat}
+  .ch-shell-ready #settings-open::after{content:'⚙';font-size:24px;line-height:1;color:#f0c57b}
+  .ch-shell-ready .mode-cards button:nth-child(n+3)::after{right:-8%;bottom:-13%;width:42%;height:110%;opacity:.7}
+  .ch-shell-ready .mode-cards button:nth-child(n+3) strong,.ch-shell-ready .mode-cards button:nth-child(n+3) small{max-width:72%}
+  .ch-shell-ready .mode-cards button:nth-child(n+3){padding:12px 10px;min-height:91px}
+  .ch-shell-ready .mode-cards button:nth-child(n+3) strong{font-size:.93rem}
+  .ch-shell-ready .mode-cards button:nth-child(n+3) small{font-size:.69rem}
+  .ch-shell-ready .lobby{margin-top:8px}
+}
+@media(max-width:340px){.ch-shell-ready .mode-cards button:nth-child(n+3) strong,.ch-shell-ready .mode-cards button:nth-child(n+3) small{max-width:82%}}
