@@ -67,6 +67,9 @@ try {
     if (response.method === 'Runtime.exceptionThrown') {
       errors.push(response.params?.exceptionDetails?.text ?? 'Browser exception');
     }
+    if (response.method === 'Page.javascriptDialogOpening') {
+      void send('Page.handleJavaScriptDialog',{accept:true}).catch(error=>errors.push(error.message));
+    }
     if (!response.id) return;
     const settle = pending.get(response.id);
     if (!settle) return;
@@ -97,6 +100,11 @@ try {
   await send('Page.navigate', {url:'http://127.0.0.1:4173/'});
   await waitUntil(() => evaluate('document.readyState === "complete" && !!document.getElementById("local")'));
   await waitUntil(() => evaluate('document.getElementById("launch").hidden === true'));
+  await mkdir('artifacts',{recursive:true});
+  if(await evaluate('document.querySelector("#welcome-dialog[open]") !== null')){
+    const welcomeShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+    await writeFile('artifacts/SCR-01-welcome.png',Buffer.from(welcomeShot.data,'base64'));
+  }
   await evaluate('if(document.querySelector("#welcome-dialog[open]"))document.querySelector("#welcome-dialog button").click(); true');
   await waitUntil(() => evaluate('document.documentElement.classList.contains("ch-view-home")'));
   if (!(await evaluate('getComputedStyle(document.querySelector(".layout")).display === "none"'))) {
@@ -113,16 +121,28 @@ try {
   if (!(await evaluate('document.getElementById("ch-setup-dialog").open === true'))) {
     throw new Error('New-match setup did not open');
   }
+  const setupShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/SCR-05-match-setup.png',Buffer.from(setupShot.data,'base64'));
   await evaluate('document.getElementById("ch-setup-cancel").click(); true');
   await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=learn]").click(); true');
   if (!(await evaluate('document.getElementById("ch-learn-hub").hidden === false'))) {
     throw new Error('Learn hub did not open');
   }
+  await evaluate('document.getElementById("ch-open-lessons").click(); true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-lessons")'));
+  await evaluate('document.querySelector("#ch-extra-screen .ch-feature-card").click(); true');
+  await evaluate('document.querySelector("#ch-extra-screen .ch-action.primary").click(); true');
+  await waitUntil(()=>evaluate('document.getElementById("learn-dialog").open === true'));
+  const lessonShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/SCR-15-lesson-player.png',Buffer.from(lessonShot.data,'base64'));
+  await evaluate('document.querySelector("#learn-dialog form[method=dialog] button").click(); true');
   await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=profile]").click(); true');
   if (!(await evaluate('document.getElementById("ch-profile-hub").hidden === false'))) {
     throw new Error('Local profile screen did not open');
   }
   await evaluate('document.getElementById("local").click(); true');
+  const tutorialShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/SCR-02-first-move.png',Buffer.from(tutorialShot.data,'base64'));
   await evaluate('document.querySelector("#board [data-square=e2]").click(); true');
   await evaluate('document.querySelector("#board [data-square=e4]").click(); true');
   await waitUntil(() => evaluate('document.querySelector("#moves li")?.textContent?.includes("e4") === true'));
