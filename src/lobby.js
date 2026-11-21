@@ -35,14 +35,14 @@ export function bindLobby({startMatch, historyCount}) {
   function focusBoard() {
     element('match-area').focus();
   }
+  // ZIP v3 SCR-04/SCR-05: selecting a mode opens editable match setup,
+  // rather than silently starting an arbitrary opponent or player color.
   for (const preset of ['classic','quick']) {
-    element('lobby-' + preset).onclick = () => {
-      if (startMatch('local',preset,'standard')) focusBoard();
-    };
+    element('lobby-' + preset).onclick = () =>
+      document.dispatchEvent(new CustomEvent('chess-open-setup',{detail:{format:preset}}));
   }
-  element('lobby-computer').onclick = () => {
-    if (startMatch('computer',element('preset').value,element('difficulty').value)) focusBoard();
-  };
+  element('lobby-computer').onclick = () =>
+    document.dispatchEvent(new CustomEvent('chess-open-setup',{detail:{format:'computer'}}));
   element('lobby-online').onclick = () => {
     if (!element('online-leave').hidden) return focusBoard();
     element('online-create').click();
