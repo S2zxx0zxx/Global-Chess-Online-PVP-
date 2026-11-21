@@ -26,8 +26,11 @@ export function bindLobby({startMatch, historyCount}) {
     return {name, avatar};
   }
   function persist() {
-    try { localStorage.setItem(key, JSON.stringify(preferences)); } catch { /* Preferences still apply in this session. */ }
+    let stored = true;
+    try { localStorage.setItem(key, JSON.stringify(preferences)); }
+    catch { stored = false; }
     apply();
+    return stored;
   }
   function focusBoard() {
     element('match-area').focus();
@@ -75,7 +78,16 @@ export function bindLobby({startMatch, historyCount}) {
   element('result-open').onclick = () => result.showModal();
   element('result-rematch').onclick = () => {result.close();element('rematch').click();};
   element('result-history').onclick = () => {result.close();element('history-button').click();};
-  welcome.addEventListener('close', () => { preferences.welcomed = true; persist(); });
+  welcome.addEventListener('close', () => {
+    if (welcome.returnValue !== 'guest') return;
+    if (!preferences.localId) {
+      preferences.localId = 'guest-' + (typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)))
+          .map(value => value.toString(16).padStart(2,'0')).join(''));
+    }
+    preferences.welcomed = true;
+    if (!persist()) window.dispatchEvent(new Event('chess-storage-error'));
+  });
   if (!preferences.welcomed && !new URLSearchParams(location.hash.slice(1)).has('invite')) welcome.showModal();
   apply();
 
