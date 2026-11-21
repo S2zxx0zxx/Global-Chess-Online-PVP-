@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feat/playable-chess-foundation
+      - feat/chess-v3-m02a-safe-exit-navigation-qa
   push:
     branches:
       - main
