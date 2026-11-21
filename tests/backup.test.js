@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {exportBackup, importBackup, matchKey} from '../src/backup.js';
+import {exportBackup, importBackup, previewBackup, matchKey} from '../src/backup.js';
 import {restoreGame, serializeGame} from '../src/game.js';
 
 test('backup restores active position and malformed imports preserve it', () => {
@@ -20,4 +20,18 @@ test('backup restores active position and malformed imports preserve it', () => 
   invalid.history = [{outcome:'Draw',snapshot:'bad'}];
   assert.throws(() => importBackup(storage,JSON.stringify(invalid)));
   assert.equal(exportBackup(storage),backup);
+});
+
+test('backup preview reports validated local game counts without mutating storage', () => {
+  const {game} = restoreGame();
+  game.move('d4');
+  const serialized = serializeGame(game,'local');
+  const raw = JSON.stringify({version:1,match:serialized,history:[{outcome:'White wins by resignation',snapshot:serialized}]});
+  const preview=previewBackup(raw);
+  assert.deepEqual(preview.summary,{
+    historyCount:1, activePly:1, activeMode:'local', hasActiveMatch:true,
+  });
+  const oversized = raw + 'x'.repeat(2_000_001);
+  assert.throws(()=>previewBackup(oversized),/too large/);
+  assert.throws(()=>previewBackup(JSON.stringify({version:1,match:'illegal',history:[]})));
 });
