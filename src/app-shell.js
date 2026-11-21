@@ -162,6 +162,7 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   play.querySelectorAll('[data-setup]').forEach(button =>
     button.addEventListener('click',()=>openSetup(button.dataset.setup)));
   document.addEventListener('chess-open-setup',event=>openSetup(event.detail?.format||'computer'));
+  document.addEventListener('chess-open-result',()=>go('result'));
   byId('ch-setup-form').addEventListener('submit',event=>{
     event.preventDefault();
     byId('preset').value=time.value;
