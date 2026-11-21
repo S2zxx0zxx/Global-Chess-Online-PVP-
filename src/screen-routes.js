@@ -30,7 +30,7 @@ const EXPORT=(data,name,type)=>{
 const appearance=name=>{
   document.documentElement.dataset.chTheme=['maple','walnut','forest'].includes(name)?name:'maple';
 };
-export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','settings','data','transfer','recovery','update','about']);
+export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','settings','data','transfer','recovery','update','about']);
 
 export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate}){
   const screen=mk('section','ch-screen ch-extra-screen');
@@ -48,7 +48,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise
     screen.replaceChildren();
     const section=mk('div','ch-extra-body');
     screen.append(section);
-    const parents={menu:'match',pause:'match',result:'match',review:'history',history:'profile',lessons:'learn',lesson:'lessons',puzzles:'learn',puzzle:'puzzles','puzzle-result':'puzzles',daily:'learn',progress:'profile',achievements:'profile',appearance:'profile',settings:'profile',data:'settings',transfer:'data',recovery:'match',update:'settings',about:'settings'};
+    const parents={menu:'match',pause:'match',result:'match',review:'history',history:'profile',lessons:'learn',lesson:'lessons',puzzles:'learn',puzzle:'puzzles','puzzle-result':'puzzles',daily:'learn',progress:'profile',achievements:'profile',appearance:'profile',avatars:'profile',settings:'profile',data:'settings',transfer:'data',recovery:'match',update:'settings',about:'settings'};
     const title=(group,name,sub)=>heading(section,group,name,sub,()=>go(parents[route]||'home'));
     const group=()=>{const x=mk('div','ch-feature-grid');section.append(x);return x;};
     const stack=()=>{const x=mk('div','ch-button-stack');section.append(x);return x;};
@@ -231,6 +231,47 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise
         const copy=mk('div');copy.append(mk('strong','',name),mk('small','',desc));
         row.append(copy,mk('span','ch-achievement-state',earned?'Earned':'Locked'));list.append(row);
       }
+    }
+    if(route==='avatars'){
+      title('Free local customization','Avatars & frames','Original icon and frame choices are stored on this device. No locked items or coins.');
+      const icons=[['♞','Knight','/brand/guest-avatar.svg'],['♜','Rook','/brand/pieces/piece_white_rook.svg'],['♛','Queen','/brand/pieces/piece_white_queen.svg']];
+      const gallery=mk('div','ch-avatar-gallery');section.append(gallery);
+      const current=ls('global-chess.preferences.v1',{});
+      const selected=['♞','♜','♛'].includes(current.avatar)?current.avatar:'♞';
+      for(const [value,label,src] of icons){
+        const button=mk('button','ch-avatar-card'+(value===selected?' ch-selected':''));
+        button.type='button';button.setAttribute('aria-pressed',String(value===selected));
+        const image=mk('img');image.src=src;image.alt='';image.width=90;image.height=90;
+        button.append(image,mk('strong','',label));
+        button.addEventListener('click',()=>{
+          const settings=ls('global-chess.preferences.v1',{});
+          settings.avatar=value;
+          if(!save('global-chess.preferences.v1',settings)){
+            paragraph(section,'This avatar cannot be saved on this device.','ch-inline-notice ch-notice-warning');
+            return;
+          }
+          window.dispatchEvent(new Event('chess-profile-changed'));
+          for(const card of gallery.children){card.classList.toggle('ch-selected',card===button);card.setAttribute('aria-pressed',String(card===button));}
+        });
+        gallery.append(button);
+      }
+      section.append(mk('h2','ch-section-title','Decorative frames'));
+      const frames=mk('div','ch-frame-gallery');section.append(frames);
+      for(const [value,label] of [['gold','Antique Gold'],['walnut','Royal Walnut'],['teal','Forest Teal']]){
+        const selectedFrame=ls('global-chess.avatar-frame.v1','gold')===value;
+        const button=mk('button','ch-frame-card ch-frame-'+value+(selectedFrame?' ch-selected':''));
+        button.type='button';button.textContent=label;
+        button.setAttribute('aria-pressed',String(selectedFrame));
+        button.addEventListener('click',()=>{
+          if(!save('global-chess.avatar-frame.v1',value)){
+            paragraph(section,'This frame cannot be saved on this device.','ch-inline-notice ch-notice-warning');return;
+          }
+          window.dispatchEvent(new Event('chess-profile-changed'));
+          for(const card of frames.children){card.classList.toggle('ch-selected',card===button);card.setAttribute('aria-pressed',String(card===button));}
+        });
+        frames.append(button);
+      }
+      section.append(btn('View player profile',()=>go('profile'),'primary'));
     }
     if(route==='appearance'){
       title('Original color treatments','Appearance','Three free chessboard looks. No fabricated shop or currency.');
