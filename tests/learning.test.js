@@ -17,8 +17,8 @@ test('every bundled exercise has a legal solution and preview preserves the posi
   }
 });
 
-test('daily identity is stable within a UTC date and changes at midnight', () => {
-  const first = dailyExercise(new Date('2026-11-18T00:00:00Z'));
-  assert.deepEqual(first,dailyExercise(new Date('2026-11-18T23:59:59Z')));
-  assert.notEqual(first.id,dailyExercise(new Date('2026-11-19T00:00:00Z')).id);
+test('daily identity is stable within a local date and changes at local midnight', () => {
+  const first = dailyExercise(new Date(2026,10,18,0,0,0));
+  assert.deepEqual(first,dailyExercise(new Date(2026,10,18,23,59,59)));
+  assert.notEqual(first.id,dailyExercise(new Date(2026,10,19,0,0,0)).id);
 });
