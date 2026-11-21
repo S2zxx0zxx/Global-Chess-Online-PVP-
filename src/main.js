@@ -7,6 +7,7 @@ import { openGameStorage } from './storage.js';
 import { bindOnline } from './online.js';
 import { Chess } from 'chess.js';
 import { readHistory, recordMatch } from './history.js';
+import { commitHistoryReplacement } from './history-mutation.js';
 import { summarizeMatches } from './game-stats.js';
 import { startClock, remainingClock } from './clock.js';
 import './style.css';
@@ -500,7 +501,7 @@ appShell = mountAppShell({
     }
   },
   readSavedHistory(){ return readHistory(gameStorage); },
-  writeSavedHistory(entries){ gameStorage.setItem(historyKey,JSON.stringify(entries)); },
+  writeSavedHistory(entries){ return commitHistoryReplacement(gameStorage,historyKey,entries); },
   async clearCompletedHistory(){
     gameStorage.setItem(historyKey,'[]');
     if(gameStorage.durable !== false)await gameStorage.flush?.();
