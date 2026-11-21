@@ -251,6 +251,7 @@ function commit(move) {
   selected = undefined;
   save();
   render(played);
+  window.dispatchEvent(new CustomEvent('chess-move-committed', {detail:{color:played.color,from:played.from,to:played.to}}));
   playComputer();
 }
 
