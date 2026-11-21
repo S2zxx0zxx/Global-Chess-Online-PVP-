@@ -149,7 +149,7 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   const setup = element('dialog','ch-setup-dialog');
   setup.id = 'ch-setup-dialog';
   setup.setAttribute('aria-labelledby','ch-setup-title');
-  setup.innerHTML='<form method="dialog" id="ch-setup-form"><p class="ch-eyebrow">NEW MATCH</p><h2 id="ch-setup-title">Set your game</h2><label>Play against<select id="ch-setup-opponent"><option value="computer">Computer</option><option value="local">Local friend</option></select></label><label>Time control<select id="ch-setup-time"><option value="untimed">Untimed</option><option value="classic">Classic · 15 minutes</option><option value="quick">Quick · 5 minutes</option></select></label><label id="ch-setup-difficulty-row">Computer difficulty<select id="ch-setup-difficulty"><option value="easy">Beginner</option><option value="standard">Casual</option><option value="hard">Challenging</option></select></label><label>Play as<select id="ch-setup-side"><option value="w">White</option><option value="b">Black</option><option value="random">Random</option></select></label><p class="ch-setup-note">The computer plays the opposite color. Local friends may flip the board during play.</p><div class="ch-dialog-actions"><button type="button" id="ch-setup-cancel">Cancel</button><button type="submit" id="ch-setup-start">Start match</button></div></form>';
+  setup.innerHTML='<form method="dialog" id="ch-setup-form"><p class="ch-eyebrow">NEW MATCH</p><h2 id="ch-setup-title">Set your game</h2><label>Play against<select id="ch-setup-opponent"><option value="computer">Computer</option><option value="local">Local friend</option></select></label><label>Time control<select id="ch-setup-time"><option value="untimed">Untimed</option><option value="classic">Classic · 15 minutes</option><option value="quick">Quick · 5 minutes</option></select></label><label id="ch-setup-difficulty-row">Computer difficulty<select id="ch-setup-difficulty"><option value="easy">Beginner</option><option value="standard">Casual</option><option value="hard">Challenging</option></select></label><label id="ch-setup-side-row">Play as<select id="ch-setup-side"><option value="w">White</option><option value="b">Black</option><option value="random">Random</option></select></label><p class="ch-setup-note">The computer plays the opposite color. Local friends may flip the board during play.</p><div class="ch-dialog-actions"><button type="button" id="ch-setup-cancel">Cancel</button><button type="submit" id="ch-setup-start">Start match</button></div></form>';
   main.append(setup);
 
   const opponent=byId('ch-setup-opponent');
@@ -157,7 +157,11 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   const difficulty=byId('ch-setup-difficulty');
   const playerSide=byId('ch-setup-side');
   const difficultyRow=byId('ch-setup-difficulty-row');
-  opponent.addEventListener('change',()=>{difficultyRow.hidden=opponent.value!=='computer';});
+  const sideRow=byId('ch-setup-side-row');
+  opponent.addEventListener('change',()=>{
+    difficultyRow.hidden=opponent.value!=='computer';
+    sideRow.hidden=opponent.value!=='computer';
+  });
   byId('ch-setup-cancel').addEventListener('click',()=>setup.close());
   setup.addEventListener('cancel',()=>{});
   function openSetup(kind='computer') {
@@ -172,6 +176,7 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
     difficulty.value=['easy','standard','hard'].includes(last.difficulty)?last.difficulty:'easy';
     playerSide.value=['w','b','random'].includes(last.playerSide)?last.playerSide:'w';
     difficultyRow.hidden=opponent.value!=='computer';
+    sideRow.hidden=opponent.value!=='computer';
     setup.showModal();
   }
   play.querySelectorAll('[data-setup]').forEach(button =>
