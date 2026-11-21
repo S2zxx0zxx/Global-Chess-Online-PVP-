@@ -2,6 +2,7 @@ import {Chess} from 'chess.js';
 import {lessons,puzzles,dailyExercise} from './learning.js';
 import {restoreGame} from './game.js';
 import {renderPieceArt} from './piece-art.js';
+import {feedbackPreferences,setFeedbackPreference} from './feedback.js';
 
 const el=id=>document.getElementById(id);
 const ls=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback;}catch{return fallback;}};
@@ -256,6 +257,31 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise
       const input=mk('input');input.type='checkbox';input.checked=ls('global-chess.reduce-motion.v1',false)===true;
       input.onchange=()=>{document.documentElement.classList.toggle('ch-reduce-motion',input.checked);save('global-chess.reduce-motion.v1',input.checked);};
       motion.append(label,input);options.append(motion);
+      for(const [setting,name,description] of [
+        ['sound','Move sounds','Subtle original chess feedback; off by default'],
+        ['haptics','Haptic feedback','Brief optional vibration on supported phones'],
+      ]){
+        const item=mk('label','ch-setting-row'),descriptionBox=mk('span');
+        descriptionBox.append(mk('strong','',name),mk('small','',description));
+        const checkbox=mk('input');checkbox.type='checkbox';
+        checkbox.checked=feedbackPreferences()[setting];
+        if(setting==='haptics' && typeof navigator.vibrate !== 'function'){
+          checkbox.disabled=true;
+          descriptionBox.append(mk('small','','Not supported on this device'));
+        }
+        if(setting==='sound' && !(window.AudioContext||window.webkitAudioContext)){
+          checkbox.disabled=true;
+          descriptionBox.append(mk('small','','Audio unavailable in this browser'));
+        }
+        checkbox.addEventListener('change',()=>{
+          if(!setFeedbackPreference(setting,checkbox.checked)){
+            checkbox.checked=!checkbox.checked;
+            paragraph(section,'This device could not save that preference.','ch-inline-notice ch-notice-warning');
+          }
+        });
+        item.append(descriptionBox,checkbox);options.append(item);
+      }
+      paragraph(section,'Language: English (currently supported). Additional translations will be added only when verified.','ch-inline-notice');
       const nav=group();
       card(nav,'Appearance','Choose a board style',()=>go('appearance'));
       card(nav,'Data & privacy','Backups and local saves',()=>go('data'));
