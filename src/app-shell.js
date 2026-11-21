@@ -12,7 +12,7 @@ function element(tag, className, text) {
 
 // The v3 M0 shell intentionally calls existing, tested game commands rather
 // than keeping a separate copy of chess state in the presentation layer.
-export function mountAppShell({startMatch, historyCount, readSavedHistory, writeSavedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch}) {
+export function mountAppShell({startMatch, historyCount, readSavedHistory, writeSavedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, storagePersistent = true}) {
   const main = document.querySelector('main');
   const lobby = byId('lobby');
   const match = byId('match-area');
@@ -20,6 +20,11 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   const views = new Set(['home', 'play', 'learn', 'profile', 'match']);
   let view = 'home';
   let screenRoutes;
+  if (!storagePersistent) {
+    const message = element('p','ch-volatile-warning','Session-only mode: browser storage is unavailable. Chess works, but games and progress will not survive closing this tab.');
+    message.setAttribute('role','alert');
+    main.prepend(message);
+  }
 
   const hero = element('div', 'ch-hero');
   hero.innerHTML = '<div class="ch-hero-mark"><img class="ch-brand-art" src="/brand/global-chess-emblem.svg" alt="Global Chess emblem"></div><p class="ch-eyebrow">THE CLASSIC GAME, REIMAGINED</p><h2>GLOBAL CHESS</h2><p>Play your way. Learn every game.</p>';
@@ -210,8 +215,19 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
     byId('ch-history-total').textContent=total===null?'Unavailable':String(total);
   }
   byId('profile-form').addEventListener('submit',()=>queueMicrotask(refreshProfile));
-  function go(next) {
+  function go(next, options = {}) {
     if (!views.has(next)) throw new Error('Unknown chess view: '+next);
+    if (!options.fromHistory) {
+      // Keep the URL and browser history in step with in-app navigation.
+      // On mobile, Back returns to the previous screen without discarding a match.
+      try {
+        const url = new URL(location.href);
+        url.searchParams.set('screen', next);
+        const target = url.pathname + url.search + url.hash;
+        const replace = options.replace || history.state?.chessView === next;
+        history[replace ? 'replaceState' : 'pushState']({ ...history.state, chessView: next }, '', target);
+      } catch { /* Standalone/browser-restricted environments keep local navigation. */ }
+    }
     if(view==='pause' && next==='match')resumeCurrentMatch();
     view=next;
     const root=document.documentElement;
@@ -262,7 +278,11 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   // active game state. Invite hashes always take precedence.
   const requested = new URL(location.href).searchParams.get('screen');
   const invite = new URLSearchParams(location.hash.slice(1)).has('invite');
-  go(invite ? 'match' : (views.has(requested) ? requested : 'home'));
+  window.addEventListener('popstate', () => {
+    const target = history.state?.chessView ?? new URLSearchParams(location.search).get('screen');
+    go(views.has(target) ? target : 'home', {fromHistory:true});
+  });
+  go(invite ? 'match' : (views.has(requested) ? requested : 'home'), {replace:true});
   return {
     go,openSetup,
     onNewMatch(){go('match');startTutorial();},
