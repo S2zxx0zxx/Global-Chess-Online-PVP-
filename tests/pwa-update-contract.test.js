@@ -8,5 +8,6 @@ test('versioned PWA worker cannot force an update without an explicit message', 
   assert.match(generatedSource,/self\.addEventListener\('message'/);
   assert.match(generatedSource,/event\.waitUntil\(self\.skipWaiting\(\)\)/);
   assert.match(generatedSource,/self\.clients\.claim\(\)/);
-  assert.doesNotMatch(generatedSource,/self\.addEventListener\('install'[^]*self\.skipWaiting/);
+  const installSection = generatedSource.split("self.addEventListener('install'")[1].split("self.addEventListener('message'")[0];
+  assert.doesNotMatch(installSection,/skipWaiting/);
 });
