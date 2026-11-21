@@ -92,12 +92,13 @@ export function bindLobby({startMatch, historyCount}) {
   apply();
 
   return {
-    render({outcome, turn, mode, online, started}) {
+    render({outcome, turn, mode, playerSide = 'w', online, started}) {
       element('lobby-resume').hidden = !started || Boolean(outcome);
       element('result-open').hidden = !outcome;
       element('result-copy').textContent = outcome ?? '';
       element('result-rematch').hidden = online;
-      element('black-player').textContent = !online && mode === 'computer' ? 'Computer · Black' : 'Black';
+      element('black-player').textContent = !online && mode === 'computer' && playerSide === 'w' ? 'Computer · Black' : 'Black';
+      element('white-player').textContent = !online && mode === 'computer' && playerSide === 'b' ? 'Computer · White' : 'White';
       for (const [label, side] of [['black','b'],['white','w']]) {
         const active = !outcome && started && turn === side;
         element(label + '-panel').classList.toggle('active-player', active);
