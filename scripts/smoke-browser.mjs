@@ -323,6 +323,19 @@ try {
     throw new Error('Browser Back did not return keyboard focus to the Play Hub heading');
   console.log('Browser Back returns from Learn to Play with accessible focus: passed');
 
+  // SCR-13: deleting a completed match must await its IDB commit and remain
+  // deleted after a full reload (not merely vanish from the current DOM).
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=history'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#ch-extra-screen .ch-history-row button") !== null'));
+  const recordsBefore=await evaluate('document.querySelectorAll("#ch-extra-screen .ch-history-row").length');
+  await evaluate('document.querySelector("#ch-extra-screen .ch-history-row button:nth-child(2)").click();true');
+  await waitUntil(()=>evaluate('document.getElementById("ch-history-feedback")?.textContent?.includes("history saved") === true'));
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=history'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-history")'));
+  const recordsAfter=await evaluate('document.querySelectorAll("#ch-extra-screen .ch-history-row").length');
+  if(recordsAfter!==recordsBefore-1)throw new Error('Single match deletion did not survive a full browser reload');
+  console.log('SCR-13 history delete committed and persisted after reload: passed');
+
   // Screen contracts SCR-00/01: denied browser storage must not crash the app,
   // and the UI may NOT claim a durable save for temporary guest play.
   await send('Page.addScriptToEvaluateOnNewDocument',{source:
