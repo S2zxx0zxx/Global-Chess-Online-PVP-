@@ -354,12 +354,12 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         grid.append(tile);
       }
       section.append(mk('h2','ch-section-title','Piece collection'));
-      paragraph(section,'Choose between the existing classic artwork and the original SVG Crest set. Both are free.');
+      paragraph(section,'Both finishes use the same original vector chess pieces. Royal Crest retains richer gold and oxblood shading; no third-party bitmap assets are loaded.');
       const pieceGrid=mk('div','ch-piece-grid');section.append(pieceGrid);
-      for(const [name,label,detail] of [['classic','Classic','Traditional dimensional pieces'],['crest','Royal Crest','Original ivory and oxblood SVG family']]){
+      for(const [name,label,detail] of [['classic','Classic Finish','Soft ivory treatment of original vectors'],['crest','Royal Crest','Richer original SVG gold and oxblood finish']]){
         const item=mk('button','ch-piece-card'+(ls('global-chess.pieces.v1','classic')===name?' ch-selected':''));
         item.type='button';
-        const preview=mk('img','ch-piece-example');preview.src=name==='crest'?'/brand/pieces/piece_white_knight.svg':'/chess-assets/pieces/white-knight.webp';
+        const preview=mk('img','ch-piece-example '+(name==='crest'?'ch-piece-crest':'ch-piece-classic'));preview.src='/brand/pieces/piece_white_knight.svg';
         preview.alt='';
         item.append(preview,mk('strong','',label),mk('small','',detail));
         item.onclick=()=>{
