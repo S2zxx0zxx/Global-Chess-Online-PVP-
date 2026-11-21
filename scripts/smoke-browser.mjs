@@ -237,12 +237,37 @@ try {
     await waitUntil(()=>evaluate(
       'document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-'+name+'") && document.querySelector("#ch-extra-screen:not([hidden]) h1")?.textContent?.length > 2'
     ),20000);
+    const landmark=await evaluate('(() => {const x=document.getElementById("ch-extra-screen"), h=x.querySelector("h1");return h?.id==="ch-extra-screen-title" && x.getAttribute("aria-labelledby")===h.id && h.tabIndex===-1})()');
+    if(!landmark)throw new Error('Screen '+name+' has no labelled, keyboard-focusable heading');
     const overflow=await evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth');
     if(overflow>2)throw new Error('Screen '+name+' overflows 360px: '+overflow);
     const image=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
     await writeFile('artifacts/screens/'+name+'.png',Buffer.from(image.data,'base64'));
   }
   console.log('Rendered, overflow-checked and captured all '+screenNames.length+' additional v3 routes in Chromium');
+  // Critical screens must remain usable across compact phones, tablets,
+  // large text and landscape. These are bounded browser acceptance samples,
+  // not a substitute for physical device, TalkBack or visual signoff.
+  const critical=['home','play','learn','profile','history','settings','data','appearance'];
+  for(const [width,height] of [[320,640],[412,915],[768,900]]){
+    await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
+    for(const name of critical){
+      await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen='+name});
+      await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-'+name+'")'));
+      const overflow=await evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth');
+      if(overflow>2)throw new Error(name+' overflows at '+width+'px: '+overflow);
+    }
+  }
+  await send('Emulation.setDeviceMetricsOverride',{width:360,height:800,deviceScaleFactor:1,mobile:true});
+  for(const name of ['home','play','profile','history','settings','data']){
+    await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen='+name});
+    await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-'+name+'")'));
+    const overflow=await evaluate('document.documentElement.style.fontSize="200%";document.documentElement.scrollWidth-document.documentElement.clientWidth');
+    if(overflow>2)throw new Error(name+' overflows at 200% text scale: '+overflow);
+    await evaluate('document.documentElement.style.fontSize="";true');
+  }
+  await send('Emulation.setDeviceMetricsOverride',{width:360,height:800,deviceScaleFactor:1,mobile:true});
+  console.log('Critical responsive route matrix: 320/412/768px + 200% text: passed');
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=appearance'});
   await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-appearance") && document.querySelectorAll(".ch-piece-card").length === 2'));
   await evaluate('document.querySelectorAll(".ch-piece-card")[1].click();true');
@@ -260,6 +285,11 @@ try {
   await evaluate('document.querySelectorAll(".ch-avatar-card")[1].click();document.querySelector(".ch-frame-teal").click();true');
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=profile'});
   await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#ch-profile-avatar img")?.src.includes("piece_white_rook.svg")===true && document.getElementById("ch-profile-avatar").dataset.frame === "teal"'));
+  for(const id of ['history-dialog','claim-dialog','promotion']){
+    const labelled=await evaluate('(() => {const d=document.getElementById("'+id+'");return d?.getAttribute("aria-labelledby") && document.getElementById(d.getAttribute("aria-labelledby"))})()');
+    if(!labelled)throw new Error('Modal '+id+' has no accessible title');
+  }
+  console.log('Review, history, claim and promotion semantic labels: passed');
   console.log('Original avatar and decorative frame persist across reload: passed');
   for(const width of [320,360,412,768]){
     await send('Emulation.setDeviceMetricsOverride',{width,height:800,deviceScaleFactor:1,mobile:true});
