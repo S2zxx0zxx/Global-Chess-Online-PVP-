@@ -11,17 +11,33 @@ export function exportBackup(storage) {
   }, null, 2);
 }
 
-export function importBackup(storage, raw) {
-  if (raw.length > 2_000_000) throw new Error('Backup too large');
+export function previewBackup(raw) {
+  if (typeof raw !== 'string' || raw.length > 2_000_000) throw new Error('Backup too large');
   const {version, match, history} = JSON.parse(raw);
   if (version !== 1 || !(match === null || typeof match === 'string') ||
       !Array.isArray(history) || history.length > 50) throw new Error('Invalid backup');
   const restored = restoreGame(match);
   for (const entry of history) {
-    if (!entry || typeof entry.outcome !== 'string' || entry.outcome.length > 100 ||
-        typeof entry.snapshot !== 'string') throw new Error('Invalid history entry');
+    if (!entry || typeof entry.outcome !== 'string' || !entry.outcome.trim() ||
+        entry.outcome.length > 100 || typeof entry.snapshot !== 'string') {
+      throw new Error('Invalid history entry');
+    }
     restoreGame(entry.snapshot);
   }
+  return {
+    match, history, restored,
+    // Validated, truthful preview — never estimate ratings or credit rewards.
+    summary: {
+      historyCount: history.length,
+      activePly: restored.game.history().length,
+      activeMode: restored.mode,
+      hasActiveMatch: match !== null,
+    },
+  };
+}
+
+export function importBackup(storage, raw) {
+  const {match, history, restored} = previewBackup(raw);
   const oldHistory = storage.getItem(historyKey);
   storage.setItem(historyKey, JSON.stringify(history));
   try {
