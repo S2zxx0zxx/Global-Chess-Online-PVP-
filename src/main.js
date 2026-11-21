@@ -219,7 +219,12 @@ function render(move) {
   const storageNote = gameStorage.durable === false ? 'Session only · Progress will not be saved after closing' : '';
   status.textContent = [state.paused ? 'Match paused · Open Pause screen to resume' : (outcome(game) ?? (mode === 'computer' && game.turn() !== state.playerSide ? 'Computer thinking…' :
     (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : ''))), notice, storageNote].filter(Boolean).join(' · ');
-  claim.hidden = state.paused || (online?.active && !online.canMove(game.turn())) || Boolean(outcome(game)) || (mode === 'computer' && game.turn() !== state.playerSide);
+  const drawAllowed = !outcome(game) && (claimableDraw(game) ||
+    game.moves({verbose:true}).some(({from,to,promotion}) =>
+      Boolean(intendedDraw(game,{from,to,promotion}))));
+  claim.hidden = state.paused || (online?.active && !online.canMove(game.turn())) ||
+    Boolean(outcome(game)) || (mode === 'computer' && game.turn() !== state.playerSide) ||
+    !drawAllowed;
   const moves = game.history();
   document.querySelector('#moves').replaceChildren(...moves.filter((_, index) => index % 2 === 0).map((move, index) => {
     const item = document.createElement('li');
