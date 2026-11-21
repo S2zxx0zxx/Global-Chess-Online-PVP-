@@ -32,7 +32,7 @@ const appearance=name=>{
 };
 export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','settings','data','transfer','recovery','update','about']);
 
-export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
+export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,saveAndExitCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
   main.insertBefore(screen,el('ch-tab-bar'));
@@ -67,7 +67,39 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
       const items=group();
       card(items,'Resume match','Return to the chessboard',()=>{resumeCurrentMatch();go('match');});
       card(items,'Flip board','Rotate the viewpoint only',()=>{el('flip-board').click();go('match');});
-      card(items,'Save & exit','Return Home without replacing this game',()=>go('home'));
+      if(details.online){
+        card(items,'Return Home','Your private-room match remains active and its server clock continues',()=>go('home'));
+      } else {
+        // Button remains disabled until IndexedDB confirms the last snapshot
+        // was committed. An exception or storage downgrade must not navigate.
+        const feedback=paragraph(section,'','ch-inline-notice ch-notice-warning');
+        feedback.id='ch-save-exit-status';
+        feedback.setAttribute('role','status');
+        feedback.hidden=true;
+        const saveButton=card(items,'Save & exit','Pause, commit the latest move, then return Home',async()=>{
+          saveButton.disabled=true;
+          feedback.hidden=false;
+          feedback.textContent='Saving the latest match…';
+          try {
+            const result=await saveAndExitCurrentMatch();
+            if(result?.ok){go('home');return;}
+            feedback.setAttribute('role','alert');
+            feedback.textContent=result?.reason||'Could not verify the saved match. Stay in this session.';
+            leave.hidden=false;
+          } catch {
+            feedback.setAttribute('role','alert');
+            feedback.textContent='Saving failed unexpectedly. No navigation happened; retry or open Recovery.';
+            leave.hidden=false;
+          } finally {
+            saveButton.disabled=false;
+          }
+        });
+        const leave=btn('Leave without saving',()=>{
+          if(confirm('The latest game may not be saved. Return Home anyway?'))go('home');
+        },'ch-danger-card');
+        leave.hidden=true;
+        section.append(leave);
+      }
       card(items,'Restart match','Existing confirmation protects unfinished games',()=>{go('match');el('rematch').click();});
       card(items,'Settings','Accessibility and board preferences',()=>go('settings'));
       if(route==='menu' && !getMatchSummary()?.online && !getMatchSummary()?.outcome){
