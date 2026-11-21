@@ -160,6 +160,14 @@ try {
   if (!(await evaluate('document.getElementById("claim").hidden === true')))
     throw new Error('A draw-claim button appeared without an eligible position');
   console.log('Mobile v3 Home, Play, Setup, Learn, Profile, local match: passed');
+  const imageContract=await evaluate(`(() => {
+    const imgs=[...document.querySelectorAll("#board .piece-art")];
+    const bg=getComputedStyle(document.getElementById("board"),"::before").backgroundImage;
+    return imgs.length===32 && imgs.every(x=>x.src.includes("/brand/pieces/")&&x.src.endsWith(".svg")) &&
+      bg.includes("/brand/board-maple-walnut.svg");
+  })()`);
+  if(!imageContract)throw new Error('Default chessboard still loads unknown-provenance WebP art');
+  console.log('Original SVG board and original 12-piece family in live match: passed');
   console.log('Browser local chess move: passed');
   // UI navigation must go through a real match menu and wait for a committed
   // IndexedDB write before claiming the move was saved.
@@ -174,6 +182,13 @@ try {
   await evaluate('document.getElementById("lobby-resume").click();true');
   await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-match") && document.querySelector("#moves li")?.textContent?.includes("e4") === true'));
   console.log('SCR-09 save-exit commits and restores the latest move after full reload: passed');
+  // Hardware and browser Back may bypass explicit exit UI. The existing
+  // offline match must pause even if Back navigates directly to the lobby.
+  await evaluate('history.back();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-home") && document.getElementById("status").textContent.includes("Match paused")'));
+  await evaluate('document.getElementById("lobby-resume").click();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-match") && !document.getElementById("status").textContent.includes("Match paused")'));
+  console.log('Browser Back auto-pauses local match and Resume restarts clock: passed');
 
   await evaluate('document.getElementById("view").click(); true');
   await waitUntil(() => evaluate(
@@ -270,7 +285,19 @@ try {
   console.log('Critical responsive route matrix: 320/412/768px + 200% text: passed');
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=appearance'});
   await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-appearance") && document.querySelectorAll(".ch-piece-card").length === 2'));
-  await evaluate('document.querySelectorAll(".ch-piece-card")[1].click();true');
+  const treatments=await evaluate(`(() => {
+    const tiles=[...document.querySelectorAll(".ch-theme-card")];
+    const skins=[...document.querySelectorAll(".ch-piece-card")];
+    if(tiles.filter(x=>x.getAttribute("aria-pressed")==="true").length!==1 ||
+       skins.filter(x=>x.getAttribute("aria-pressed")==="true").length!==1)return false;
+    tiles[2].click();
+    skins[1].click();
+    return document.documentElement.dataset.chTheme==="forest" &&
+      tiles[2].getAttribute("aria-pressed")==="true" &&
+      skins[1].getAttribute("aria-pressed")==="true";
+  })()`);
+  if(!treatments)throw new Error('Appearance selected states not reflected to screen readers');
+  console.log('Original board theme and piece finish ARIA state: passed');
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=match'});
   await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#board .piece-art") !== null'));
   const crest=await evaluate('Array.from(document.querySelectorAll("#board .piece-art")).some(img=>img.src.includes("/brand/pieces/"))');
