@@ -98,6 +98,17 @@ export function claimableDraw(game) {
 }
 
 
+// Cheap early exit keeps 2D/3D move rendering fast on low-memory devices.
+// The earliest prospective threefold repetition needs seven completed plies;
+// the prospective 50-move claim needs at least 99 reversible halfmoves.
+export function hasAvailableDrawClaim(game) {
+  if (claimableDraw(game)) return true;
+  const reversible = Number(game.fen().split(' ')[4]);
+  if (game.history().length < 7 && reversible < 99) return false;
+  return game.moves({verbose:true}).some(({from,to,promotion}) =>
+    Boolean(intendedDraw(game,{from,to,promotion})));
+}
+
 export function intendedDraw(game, move) {
   if (result(game)) return null;
   if (!move || typeof move !== 'object' ||
