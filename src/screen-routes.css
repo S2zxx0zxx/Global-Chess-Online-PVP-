@@ -100,3 +100,9 @@
 .ch-tab[data-ch-view=learn] .ch-tab-icon{background-image:url('/brand/nav-learn.svg')}
 .ch-tab[data-ch-view=profile] .ch-tab-icon{background-image:url('/brand/nav-profile.svg')}
 @media(max-width:359px){.ch-piece-grid{grid-template-columns:1fr}.ch-piece-card{min-height:130px}}
+
+/* SCR-07 touch-first gesture response; game rules remain authoritative. */
+#board{touch-action:none}
+#board.ch-dragging{cursor:grabbing}
+#board.ch-dragging button[aria-pressed=true]{outline:3px solid #f5ce83;outline-offset:-4px;z-index:2}
+#board button{touch-action:none}
