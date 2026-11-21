@@ -286,7 +286,7 @@ try {
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=profile'});
   await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#ch-profile-avatar img")?.src.includes("piece_white_rook.svg")===true && document.getElementById("ch-profile-avatar").dataset.frame === "teal"'));
   for(const id of ['history-dialog','claim-dialog','promotion']){
-    const labelled=await evaluate('(() => {const d=document.getElementById("'+id+'");return d?.getAttribute("aria-labelledby") && document.getElementById(d.getAttribute("aria-labelledby"))})()');
+    const labelled=await evaluate('(() => {const d=document.getElementById("'+id+'");return Boolean(d?.getAttribute("aria-labelledby") && document.getElementById(d.getAttribute("aria-labelledby")))})()');
     if(!labelled)throw new Error('Modal '+id+' has no accessible title');
   }
   console.log('Review, history, claim and promotion semantic labels: passed');
