@@ -1,4 +1,5 @@
-import { lessons, puzzles } from './learning.js';
+import { lessons, puzzles, dailyExercise } from './learning.js';
+import { mountScreenRoutes } from './screen-routes.js';
 
 const byId = id => document.getElementById(id);
 
@@ -11,13 +12,14 @@ function element(tag, className, text) {
 
 // The v3 M0 shell intentionally calls existing, tested game commands rather
 // than keeping a separate copy of chess state in the presentation layer.
-export function mountAppShell({startMatch, historyCount}) {
+export function mountAppShell({startMatch, historyCount, readSavedHistory, writeSavedHistory}) {
   const main = document.querySelector('main');
   const lobby = byId('lobby');
   const match = byId('match-area');
   if (!main || !lobby || !match) throw new Error('Missing chess app shell');
   const views = new Set(['home', 'play', 'learn', 'profile', 'match']);
   let view = 'home';
+  let screenRoutes;
 
   const hero = element('div', 'ch-hero');
   hero.innerHTML = '<div class="ch-hero-mark" aria-hidden="true">♞ <span>♚</span> ♜</div><p class="ch-eyebrow">THE CLASSIC GAME, REIMAGINED</p><h2>GLOBAL CHESS</h2><p>Play your way. Learn every game.</p>';
@@ -173,16 +175,13 @@ export function mountAppShell({startMatch, historyCount}) {
     picker.value=String(index);
     picker.dispatchEvent(new Event('change'));
   }
-  byId('ch-open-lessons').addEventListener('click',()=>openExercises('lessons'));
-  byId('ch-open-puzzles').addEventListener('click',()=>openExercises('puzzles'));
-  byId('ch-open-daily').addEventListener('click',()=>openExercises('daily'));
+  byId('ch-open-lessons').addEventListener('click',()=>go('lessons'));
+  byId('ch-open-puzzles').addEventListener('click',()=>go('puzzles'));
+  byId('ch-open-daily').addEventListener('click',()=>go('daily'));
 
   byId('ch-edit-profile').addEventListener('click',()=>byId('profile-open').click());
-  byId('ch-profile-history').addEventListener('click',()=>{
-    go('match');
-    byId('history-button').click();
-  });
-  byId('ch-profile-settings').addEventListener('click',()=>byId('settings-open').click());
+  byId('ch-profile-history').addEventListener('click',()=>go('history'));
+  byId('ch-profile-settings').addEventListener('click',()=>go('settings'));
 
   // The core still owns profile and match state. The shell only reads truthful,
   // already-saved local values; no fake ranks, coins or leaderboard statistics.
@@ -204,8 +203,9 @@ export function mountAppShell({startMatch, historyCount}) {
     play.hidden=next!=='play';
     learn.hidden=next!=='learn';
     profile.hidden=next!=='profile';
+    screenRoutes?.show(next);
     for(const tab of nav.querySelectorAll('button')){
-      const active=tab.dataset.chView===next;
+      const active=tab.dataset.chView===next || (['history','review','progress','achievements','appearance','settings','data','transfer','update','about'].includes(next)&&tab.dataset.chView==='profile') || (['lessons','lesson','puzzles','puzzle','puzzle-result','daily'].includes(next)&&tab.dataset.chView==='learn');
       tab.setAttribute('aria-current',active?'page':'false');
     }
     if(next==='profile') refreshProfile();
@@ -219,6 +219,27 @@ export function mountAppShell({startMatch, historyCount}) {
   byId('lobby-resume').addEventListener('click',()=>go('match'));
   byId('lobby-online').addEventListener('click',()=>go('match'));
   byId('online-leave').addEventListener('click',()=>go('home'));
+  screenRoutes=mountScreenRoutes({
+    main,go,readHistory:readSavedHistory,writeHistory:writeSavedHistory,
+    openExercise(exercise){
+      byId('learn').click();
+      const list=[...lessons,...puzzles,dailyExercise()];
+      const picker=byId('lesson-picker');
+      const index=list.findIndex(item=>item.id===exercise.id);
+      if(index!==-1){picker.value=String(index);picker.dispatchEvent(new Event('change'));}
+    },
+  });
+  for(const route of screenRoutes.routes)views.add(route);
+  const profileActions=profile.querySelector('.ch-profile-actions');
+  for(const [label,route] of [['Progress','progress'],['Achievements','achievements'],['Appearance','appearance'],['Data & Privacy','data']]){
+    const link=element('button','ch-profile-shortcut',label);link.type='button';link.addEventListener('click',()=>go(route));
+    profileActions.append(link);
+  }
+  const more=element('div','ch-home-shortcuts');
+  for(const [label,route] of [['Daily Challenge','daily'],['Puzzles','puzzles'],['Achievements','achievements'],['Appearance','appearance']]){
+    const link=element('button','ch-home-shortcut',label);link.type='button';link.addEventListener('click',()=>go(route));more.append(link);
+  }
+  lobby.append(more);
   document.documentElement.classList.add('ch-shell-ready');
   go(new URLSearchParams(location.hash.slice(1)).has('invite')?'match':'home');
   return {
