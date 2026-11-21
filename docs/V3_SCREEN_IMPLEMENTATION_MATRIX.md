@@ -39,7 +39,32 @@ This is an implementation/evidence ledger, **not** a claim that any contract is 
 
 ## Executed browser evidence
 
-- [GitHub Actions #44942313695](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/44942313695): 29/29 unit tests, real 360px Chromium local chess + 3D pixel smoke, 20 auxiliary-route screenshots and 320/360/412/768 horizontal-overflow checks. Later commits require re-verification on their final SHA.
+- [GitHub Actions #44947446464](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/44947446464): 42/42 unit tests, a production PWA build, real 2D move + Babylon 3D rendered-pixel smoke, 21 auxiliary-route screenshots, Black-side computer game, verified resignation/replay, persisted avatars/Crest pieces, browser Back, simulated blocked browser storage, 320/360/412/768 horizontal overflow checks, 200% text-scale check, landscape viewport, WASM and offline assets. Run applies to SHA `75b3c982b41b30a073426baa16c12987fff03ec9`.
 - Additional art modules: `public/brand/`, `public/brand/pieces/`; see `docs/V3_ARTWORK_PROVENANCE.md`.
 - Live Cloudflare deployment can lag draft PR and must be identified separately before saying users see the new design.
 - **No gate can be marked FINAL_GRADE merely because a page renders or an asset exists.** Real device/accessibility/product acceptance still pending.
+
+## 2026-11-22 — implementation hardening wave (code completion is not device certification)
+
+The current PR includes code-level improvements for the following contracts:
+
+| Contract | Delivered implementation | Still blocking FINAL_GRADE |
+|---|---|---|
+| SCR-00, 01, 27 | IndexedDB/localStorage-to-memory fallback, visible session-only guest warning, actionable fatal bootstrap fallback, preserved corrupt raw saves and consent before overwrite, working in-app privacy/license navigation | Failures of the actual Android/PWA bootstrap, background migrations, indexed DB corruption and accessible recovery on device |
+| SCR-02 | Skippable first-move tutorial adapts to human color, commits through 2D/keyboard/drag/3D | Promotion/check coach marks, TalkBack annotations and full first-run device test |
+| SCR-03–06 | Mobile responsive home/play, format setup, White/Black/Random for computer, accurate VS labels, skippable introduction | Final art/spacing review against original screen contracts on physical devices |
+| SCR-07–10 | Legal draw claim only when genuinely possible, paused-game drag blocked, authenticated offline pause/resign, no false pause without active match | Android app pause/resume, full promotion focus, remote authoritative resign, exhaustive FIDE edge QA |
+| SCR-11–13 | Real outcome, saved replay, PGN export, history pagination, durable-history clear action | Full recovery across quota and interrupted transactions; additional endgame states |
+| SCR-14–19 | Offline lessons/puzzles, staged legal hints, truthful puzzle result and device-local daily date | Content provenance, alternative solutions, filters and differential puzzle validation |
+| SCR-20–23 | Verified vs-computer win/loss/draw/streak, original guest avatar and frame gallery, persistent board/Crest themes | Match/event XP journal, independent content/master ownership review, full 3D skin parity |
+| SCR-24–26 | Original opt-in WebAudio and haptics controls, truthful English-only language availability, validated JSON import preview, export, confirmed history deletion | New languages not available, production-ready Privacy/Terms and all browser-storage fault injection |
+| SCR-28–29 | Service worker activates new version only on user request after an active-game and durable-save preflight; source license notices | Real downloaded-update/rollback on devices, official build ID, final terms and support sign-off |
+
+New verified evidence: [GitHub Actions #44947446464](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/44947446464).
+A passing headless Chromium test **does not replace** Android install, human visual acceptance,
+200% OS-font testing across all 30 routes, screen-reader QA, paid commercial terms approval,
+or 3D performance measurements from low-memory hardware.
+
+**Strict status: 30/30 source contracts mapped, zero contracts fully accepted.**
+Do not auto-merge or call this a production release. No money, bank, payments,
+unapproved licensed artwork or destructive production changes were introduced.
