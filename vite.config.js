@@ -33,10 +33,20 @@ const url = file => new URL(file, self.registration.scope).href;
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(version).then(cache => cache.addAll(files.map(url))));
 });
+// Updates must never force-reload an active chess match. A user-approved
+// UI action sends this message only after match and storage preflight.
+self.addEventListener('message', event => {
+  if (event.data?.type === 'GLOBAL_CHESS_ACTIVATE_UPDATE') {
+    event.waitUntil(self.skipWaiting());
+  }
+});
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys
-    .filter(key => key.startsWith(prefix) && key !== version)
-    .map(key => caches.delete(key)))));
+  event.waitUntil(Promise.all([
+    caches.keys().then(keys => Promise.all(keys
+      .filter(key => key.startsWith(prefix) && key !== version)
+      .map(key => caches.delete(key)))),
+    self.clients.claim(),
+  ]));
 });
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
