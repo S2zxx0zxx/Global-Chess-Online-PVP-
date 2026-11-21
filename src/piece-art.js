@@ -8,10 +8,10 @@ export function renderPieceArt(cell, piece, names) {
     crest = selected === 'crest' || selected === '"crest"';
   }
   catch { /* Storage-disabled guests can still see classic pieces. */ }
-  image.src = crest
-    ? new URL('./brand/pieces/piece_' + side + '_' + names[piece.type].toLowerCase() + '.svg', document.baseURI).href
-    : new URL('./chess-assets/pieces/' + side + '-' + names[piece.type].toLowerCase() + '.webp', document.baseURI).href;
-  image.className = 'piece-art';
+  // Both finishes use assets authored inside this repository. Earlier WebP
+  // pieces have not cleared commercial provenance; never load them at runtime.
+  image.src = new URL('./brand/pieces/piece_' + side + '_' + names[piece.type].toLowerCase() + '.svg', document.baseURI).href;
+  image.className = 'piece-art ' + (crest ? 'ch-piece-crest' : 'ch-piece-classic');
   image.alt = '';
   image.draggable = false;
   cell.append(image);
