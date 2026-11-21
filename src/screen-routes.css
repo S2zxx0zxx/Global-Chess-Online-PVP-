@@ -85,3 +85,18 @@
 @media(max-width:359px){.ch-feature-grid{grid-template-columns:1fr}.ch-theme-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ch-history-row{flex-direction:column;align-items:stretch}.ch-history-buttons{justify-content:flex-start}.ch-extra-screen{padding:18px 12px}}
 @media(max-width:500px){.ch-extra-screen{margin-top:8px;padding:20px 15px 28px}.ch-achievement{grid-template-columns:30px minmax(0,1fr)}.ch-achievement-state{grid-column:2}.ch-review-controls .ch-action{min-width:0}}
 @media(min-width:768px){.ch-extra-screen{padding:34px 30px 40px}}
+
+/* v3 dual-license original artwork collection; all artwork stays local/offline */
+.ch-section-title{margin:14px 0 0;font:800 1.3rem Georgia,serif;color:#ffdfa4}
+.ch-piece-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:7px 0 16px}
+.ch-piece-card{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:7px;padding:14px;min-height:175px;border:1px solid var(--ch-card-stroke);border-radius:16px;background:linear-gradient(130deg,#59392d,#2b1b20);color:#ffedd5}
+.ch-piece-card.ch-selected{border:3px solid #f5ca80;padding:12px}
+.ch-piece-card strong{font-size:1.1rem}
+.ch-piece-card small{font-size:.75rem;line-height:1.35;text-align:center;color:#dfbfa0}
+.ch-piece-example{width:88px;height:88px;object-fit:contain}
+.ch-tab-icon{display:block;flex:0 0 29px;width:29px;height:29px;font-size:0!important;background-size:contain;background-position:center;background-repeat:no-repeat}
+.ch-tab[data-ch-view=home] .ch-tab-icon{background-image:url('/brand/nav-home.svg')}
+.ch-tab[data-ch-view=play] .ch-tab-icon{background-image:url('/brand/nav-play.svg')}
+.ch-tab[data-ch-view=learn] .ch-tab-icon{background-image:url('/brand/nav-learn.svg')}
+.ch-tab[data-ch-view=profile] .ch-tab-icon{background-image:url('/brand/nav-profile.svg')}
+@media(max-width:359px){.ch-piece-grid{grid-template-columns:1fr}.ch-piece-card{min-height:130px}}
