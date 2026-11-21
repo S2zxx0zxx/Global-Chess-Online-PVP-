@@ -113,6 +113,10 @@ export function bindLearning(names) {
     get('lesson-feedback').textContent = message;
     updateProgress();
     render(square);
+    const kind = lessons.some(item => item.id === exercise.id) ? 'lesson' : 'puzzle';
+    queueMicrotask(() => window.dispatchEvent(new CustomEvent('chess-exercise-solved', {
+      detail: {id:exercise.id, title:exercise.title, explanation:exercise.explanation, kind},
+    })));
   }
   function load(index) {
     exercise = exercises[index];
