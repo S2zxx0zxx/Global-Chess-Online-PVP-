@@ -131,3 +131,7 @@
   .ch-shell-ready .lobby{margin-top:8px}
 }
 @media(max-width:340px){.ch-shell-ready .mode-cards button:nth-child(n+3) strong,.ch-shell-ready .mode-cards button:nth-child(n+3) small{max-width:82%}}
+
+/* Confirmation-only destructive match action, with a text label and border cue. */
+.ch-danger-card{border:2px solid #e8a581;background:linear-gradient(150deg,#733e32,#452324)}
+.ch-danger-card strong{color:#fff3de}
