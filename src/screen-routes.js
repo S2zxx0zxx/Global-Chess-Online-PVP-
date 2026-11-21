@@ -144,7 +144,10 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
       section.append(filters);
       const result=mk('div','ch-history-rows');section.append(result);
       const pager=mk('div','ch-pager');section.append(pager);
-      let page=0;
+      const feedback=paragraph(section,'','ch-inline-notice');
+      feedback.id='ch-history-feedback';
+      feedback.setAttribute('role','status');feedback.hidden=true;
+      let page=0,mutationBusy=false;
       function redraw(){
         const full=records()||[];
         const filtered=full.map((item,i)=>({item,i})).filter(({item})=>{
@@ -160,11 +163,32 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
             const x=restoreGame(item.snapshot);
             copy.append(mk('small','',x.mode==='computer'?'Vs computer':'Local friend'),mk('small','',x.game.history().length+' half-moves'));
           }catch{copy.append(mk('small','ch-error','Unable to load this save'));}
-          buttons.append(btn('Review',()=>{selected=i;go('review');}),btn('Delete',()=>{
-            if(!confirm('Permanently delete only this recorded match?'))return;
-            try{writeHistory(full.filter((_,index)=>index!==i));redraw();}
-            catch{paragraph(section,'Delete failed. Existing records were preserved.','ch-inline-notice ch-notice-warning');}
-          }));
+          const review=btn('Review',()=>{selected=i;go('review');});
+          const remove=btn('Delete',async()=>{
+            if(mutationBusy||!confirm('Permanently delete only this recorded match?'))return;
+            mutationBusy=true;
+            const controls=[...result.querySelectorAll('button'),...pager.querySelectorAll('button')];
+            controls.forEach(control=>{control.disabled=true;});
+            filters.disabled=true;
+            feedback.hidden=false;feedback.textContent='Saving the updated match history…';
+            try{
+              // Do not delete from an already stale/changed local history view.
+              const latest=records();
+              if(!latest || JSON.stringify(latest)!==JSON.stringify(full))throw Error('History changed; reload the screen first');
+              await writeHistory(full.filter((_,index)=>index!==i));
+              feedback.setAttribute('role','status');
+              feedback.textContent='Match deleted and updated history saved on this device.';
+              redraw();
+              (result.querySelector('button')||filters).focus({preventScroll:true});
+            }catch{
+              feedback.setAttribute('role','alert');
+              feedback.textContent='Deletion could not be confirmed. Existing history was restored when possible. Export a backup and retry.';
+            }finally{
+              mutationBusy=false;filters.disabled=false;
+              controls.filter(control=>control.isConnected).forEach(control=>{control.disabled=false;});
+            }
+          });
+          buttons.append(review,remove);
           row.append(copy,buttons);result.append(row);
         }
         const prev=btn('Previous',()=>{if(page>0){page--;redraw();}});
