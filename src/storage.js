@@ -1,33 +1,105 @@
 import { matchKey, historyKey } from './backup.js';
 
+const STORAGE_NAME = 'global-chess';
+const STORAGE_KEYS = [matchKey, historyKey];
+
+function reportStorageError() {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('chess-storage-error'));
+}
+
+// Browser privacy settings may disable BOTH IndexedDB and localStorage. In that
+// case a safe in-memory session is preferable to a startup crash or fake save.
+export function fallbackGameStorage(browserStorage = globalThis.localStorage) {
+  const memory = new Map();
+  let durable = false;
+  try {
+    const probe = '__global_chess_storage_probe__';
+    browserStorage.setItem(probe, '1');
+    browserStorage.removeItem(probe);
+    durable = true;
+  } catch { /* Continue with an explicitly volatile session. */ }
+  for (const key of STORAGE_KEYS) {
+    try {
+      const value = browserStorage.getItem(key);
+      if (typeof value === 'string') memory.set(key, value);
+    } catch { /* No access to persisted legacy data. */ }
+  }
+  return {
+    get durable() { return durable; },
+    get kind() { return durable ? 'localStorage' : 'memory'; },
+    getItem(key) { return memory.get(key) ?? null; },
+    setItem(key, value) {
+      const text = String(value);
+      if (durable) {
+        try { browserStorage.setItem(key, text); }
+        catch { durable = false; reportStorageError(); }
+      }
+      memory.set(key, text);
+    },
+    removeItem(key) {
+      if (durable) {
+        try { browserStorage.removeItem(key); }
+        catch { durable = false; reportStorageError(); }
+      }
+      memory.delete(key);
+    },
+  };
+}
+
 export async function openGameStorage() {
-  const keys = [matchKey, historyKey];
-  const values = new Map();
   let db;
+  let timer;
+  let timedOut = false;
+  try {
+    db = await Promise.race([
+      new Promise((resolve, reject) => {
+        const request = indexedDB.open(STORAGE_NAME, 1);
+        request.onupgradeneeded = () => {
+          if (!request.result.objectStoreNames.contains('saves'))
+            request.result.createObjectStore('saves');
+        };
+        request.onsuccess = () => {
+          // A late IndexedDB completion after timeout must not leak a handle.
+          if (timedOut) request.result.close();
+          else resolve(request.result);
+        };
+        request.onerror = () => reject(request.error || new Error('Database open failed'));
+        request.onblocked = () => reject(new Error('Database blocked by another tab'));
+      }),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => { timedOut = true; reject(new Error('Database open timed out')); }, 3500);
+      }),
+    ]);
+  } catch {
+    return fallbackGameStorage();
+  } finally {
+    clearTimeout(timer);
+  }
+
+  const values = new Map();
   let needsMigration = false;
   try {
-    db = await new Promise((resolve, reject) => {
-      const request = indexedDB.open('global-chess', 1);
-      request.onupgradeneeded = () => request.result.createObjectStore('saves');
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-      request.onblocked = () => reject(new Error('Storage blocked'));
-    });
+    db.onversionchange = () => {
+      db.close();
+      reportStorageError();
+    };
     const saved = await new Promise((resolve, reject) => {
       const request = db.transaction('saves').objectStore('saves').get('snapshot');
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(request.error || new Error('Could not read saved games'));
     });
-    needsMigration = !saved;
-    for (const key of keys) {
+    if (saved !== undefined && (typeof saved !== 'object' || saved === null || Array.isArray(saved)))
+      throw new Error('Corrupt saved-game container');
+    needsMigration = saved === undefined;
+    for (const key of STORAGE_KEYS) {
       let legacy = null;
-      try { legacy = localStorage.getItem(key); } catch { /* IndexedDB remains available. */ }
-      const value = saved ? saved[key] : legacy;
-      if (typeof value === 'string') values.set(key, value);
+      try { legacy = localStorage.getItem(key); } catch { /* IndexedDB still works. */ }
+      const value = saved !== undefined ? saved[key] : legacy;
+      if (typeof value === 'string') values.set(key,value);
     }
   } catch {
-    db?.close();
-    return localStorage;
+    db.close();
+    return fallbackGameStorage();
   }
 
   let queued = false;
@@ -41,13 +113,18 @@ export async function openGameStorage() {
 
   function writeSnapshot() {
     queued = false;
-    const reportError = () => window.dispatchEvent(new Event('chess-storage-error'));
+    const changes = [...dirty].map(key => [key, values.get(key)]);
+    if (!changes.length) return;
+    dirty.clear();
+    const retryLater = () => {
+      for (const [key] of changes) dirty.add(key);
+      reportStorageError();
+    };
     try {
       const transaction = db.transaction('saves', 'readwrite');
-      transaction.onabort = reportError;
+      transaction.onabort = retryLater;
+      transaction.onerror = () => reportStorageError();
       const store = transaction.objectStore('saves');
-      const changes = [...dirty].map(key => [key,values.get(key)]);
-      dirty.clear();
       const read = store.get('snapshot');
       read.onsuccess = () => {
         const snapshot = read.result ?? {};
@@ -55,17 +132,20 @@ export async function openGameStorage() {
           if (value === undefined) delete snapshot[key];
           else snapshot[key] = value;
         }
-        store.put(snapshot,'snapshot');
+        store.put(snapshot, 'snapshot');
       };
+      read.onerror = () => { try { transaction.abort(); } catch {} };
     } catch {
-      reportError();
+      retryLater();
     }
   }
 
   if (needsMigration) for (const key of values.keys()) persist(key);
   return {
+    durable: true,
+    kind: 'indexedDB',
     getItem: key => values.get(key) ?? null,
-    setItem(key, value) { values.set(key, value); persist(key); },
+    setItem(key,value) { values.set(key,String(value)); persist(key); },
     removeItem(key) { values.delete(key); persist(key); },
   };
 }
