@@ -20,7 +20,7 @@ fi
 npm ci --no-audit --no-fund
 npm run build
 npm install --no-save --package-lock=false --no-audit --no-fund \
-  @capacitor/core@8.6.2 @capacitor/android@8.6.2 @capacitor/cli@8.6.2 @capacitor/app@8.1.0
+  @capacitor/core@8.6.2 @capacitor/android@8.6.2 @capacitor/cli@8.6.2 @capacitor/app@8.1.0 @resvg/resvg-js@2.6.2
 node - <<'JS'
 import fs from 'node:fs';
 const path='capacitor.config.json';
@@ -31,6 +31,7 @@ fs.writeFileSync(path,JSON.stringify(cfg,null,2)+'\n');
 JS
 npx cap add android
 npx cap sync android
+node scripts/generate-android-assets.mjs
 if ! grep -q 'targetSdkVersion = 36' android/variables.gradle; then
   echo 'Target API 36 build contract failed' >&2; exit 1
 fi
