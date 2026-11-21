@@ -54,8 +54,8 @@
 .ch-theme-preview{display:block;aspect-ratio:1;width:100%;border:5px solid #855235;border-radius:9px;box-shadow:inset 0 0 0 1px #fff5bb33;background-color:#efd9bd;background-size:50% 50%;background-image:conic-gradient(#976242 25%,#efd9bd 0 50%,#976242 0 75%,#efd9bd 0)}
 .ch-preview-walnut{background-color:#d6bb98;background-image:conic-gradient(#784f3f 25%,#e4ceaf 0 50%,#784f3f 0 75%,#e4ceaf 0)}
 .ch-preview-forest{background-color:#d3dfca;background-image:conic-gradient(#357166 25%,#e7e6cb 0 50%,#357166 0 75%,#e7e6cb 0)}
-:root[data-ch-theme=walnut] .ch-shell-ready .board:not(.ch-review-board)::before{filter:sepia(.2) brightness(.79) saturate(.95)}
-:root[data-ch-theme=forest] .ch-shell-ready .board:not(.ch-review-board)::before{filter:sepia(.26) hue-rotate(95deg) brightness(.95)}
+:root.ch-shell-ready[data-ch-theme=walnut] .board:not(.ch-review-board)::before{filter:sepia(.2) brightness(.79) saturate(.95)}
+:root.ch-shell-ready[data-ch-theme=forest] .board:not(.ch-review-board)::before{filter:sepia(.26) hue-rotate(95deg) brightness(.95)}
 .ch-option-list{display:flex;flex-direction:column;gap:10px;margin:10px 0 20px}
 .ch-setting-row{display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:78px;padding:12px 15px;border:1px solid var(--ch-card-stroke);border-radius:13px;background:#3c2625}
 .ch-setting-row strong,.ch-setting-row small{display:block;line-height:1.45}
