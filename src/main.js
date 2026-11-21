@@ -12,7 +12,7 @@ import './app-shell.css';
 import { mountAppShell } from './app-shell.js';
 import { restoreGame, serializeGame, result, claimableDraw, intendedDraw, timeoutResult } from './game.js';
 
-import { matchKey as key, exportBackup, importBackup } from './backup.js';
+import { matchKey as key, historyKey, exportBackup, importBackup } from './backup.js';
 async function initialize() {
 // The optional WASM mating solver must not delay guest-first gameplay.
 const gameStorage = await openGameStorage();
@@ -388,6 +388,8 @@ appShell = mountAppShell({
   historyCount() {
     try { return readHistory(gameStorage).length; } catch { return null; }
   },
+  readSavedHistory(){ return readHistory(gameStorage); },
+  writeSavedHistory(entries){ gameStorage.setItem(historyKey,JSON.stringify(entries)); },
 });
 render();
 playComputer();
