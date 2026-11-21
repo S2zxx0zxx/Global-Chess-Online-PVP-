@@ -7,6 +7,7 @@ import { openGameStorage } from './storage.js';
 import { bindOnline } from './online.js';
 import { Chess } from 'chess.js';
 import { readHistory, recordMatch } from './history.js';
+import { summarizeMatches } from './game-stats.js';
 import { startClock, remainingClock } from './clock.js';
 import './style.css';
 import './app-shell.css';
@@ -436,13 +437,13 @@ online = bindOnline({
 lobby = bindLobby({
   startMatch:startLocalMatch,
   historyCount() {
-    try { return readHistory(gameStorage).length; } catch { return null; }
+    try { return summarizeMatches(readHistory(gameStorage)).completed; } catch { return null; }
   },
 });
 appShell = mountAppShell({
   startMatch:startLocalMatch,
   historyCount() {
-    try { return readHistory(gameStorage).length; } catch { return null; }
+    try { return summarizeMatches(readHistory(gameStorage)).completed; } catch { return null; }
   },
   storagePersistent: gameStorage.durable,
   async preparePwaUpdate(){
