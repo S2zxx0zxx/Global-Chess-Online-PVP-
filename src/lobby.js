@@ -9,7 +9,7 @@ function loadPreferences() {
   return {};
 }
 
-export function bindLobby({startMatch, historyCount}) {
+export function bindLobby({startMatch, historyCount, storagePersistent = true}) {
   const element = id => document.getElementById(id);
   const preferences = loadPreferences();
   window.addEventListener('chess-profile-changed',() => {
@@ -20,6 +20,20 @@ export function bindLobby({startMatch, historyCount}) {
   const settings = element('settings-dialog');
   const result = element('result-dialog');
   const welcome = element('welcome-dialog');
+  if (!storagePersistent) {
+    const button=welcome.querySelector('form button[value=guest]');
+    button.textContent='Play without saving';
+    const disclosure=document.createElement('p');
+    disclosure.className='ch-welcome-storage-warning';
+    disclosure.textContent='This browser is blocking permanent game storage. Moves and learning progress will be lost after the tab closes.';
+    button.closest('form').before(disclosure);
+  }
+  for(const [id,route] of [['ch-welcome-data','data'],['ch-welcome-about','about']]){
+    element(id).addEventListener('click',event=>{
+      event.preventDefault();welcome.close();
+      document.dispatchEvent(new CustomEvent('chess-navigate',{detail:{route}}));
+    });
+  }
 
   function apply() {
     const name = typeof preferences.name === 'string' ? preferences.name.trim().slice(0,24) : '';
