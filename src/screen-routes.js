@@ -34,7 +34,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
   main.insertBefore(screen,el('ch-tab-bar'));
-  let selected=0,exercise=lessons[0],fault=false,ply=0;
+  let selected=0,exercise=lessons[0],lastSolved=null,fault=false,ply=0;
   appearance(ls('global-chess.appearance.v1','maple'));
 
   function records(){
@@ -160,7 +160,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise
       const actions=stack();actions.append(btn('Open interactive board',()=>openExercise(x),'primary'),btn('Back to collection',()=>go(route==='lesson'?'lessons':'puzzles')));
     }
     if(route==='puzzle-result'){
-      title('Correct solution',exercise?.title||'Puzzle solved',exercise?.explanation||'Your legal move was accepted.');
+      title(lastSolved?'Correct solution':'Puzzle practice',lastSolved?.title||'No completed puzzle yet',lastSolved?.explanation||'Solve a legal puzzle first to see its verified explanation.');
       const buttons=stack();buttons.append(btn('More puzzles',()=>go('puzzles'),'primary'),btn('Learning hub',()=>go('learn')));
     }
     if(route==='daily'){
@@ -303,6 +303,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise
   window.addEventListener('chess-exercise-solved',event=>{
     if(!event.detail||event.detail.kind==='lesson')return;
     exercise=event.detail;
+    lastSolved=event.detail;
     el('learn-dialog')?.close();
     go('puzzle-result');
   });
