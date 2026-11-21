@@ -117,17 +117,24 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
       try{if(localStorage.getItem(tutorialKey)==='done')return;}catch{}
     }
     lessonStep=1;
-    tip.textContent='Tap a white piece to see its legal moves.';
+    const summary = getMatchSummary();
+    const side = summary.mode === 'computer' && summary.playerSide === 'b' ? 'Black' : 'White';
+    tip.textContent='Tap a '+side+' piece to see its legal moves.';
+    tutorial.dataset.side = side === 'Black' ? 'b' : 'w';
     tutorial.hidden=false;
   }
   byId('board').addEventListener('click',()=>{
     if(tutorial.hidden)return;
     if(lessonStep===1&&byId('board').querySelector('[aria-pressed=true]')){
       lessonStep=2;
-      tip.textContent='Now tap one of the highlighted squares to make your move.';
+      tip.textContent='Now tap a highlighted square to make your move.';
     } else if(lessonStep===2&&byId('moves').children.length){
       finishTutorial();
     }
+  });
+  window.addEventListener('chess-move-committed', event => {
+    // Works equally with mouse, keyboard, touch drag and 3D board moves.
+    if (!tutorial.hidden && event.detail?.color === tutorial.dataset.side) finishTutorial();
   });
   const replayTutorial=element('button','ch-tutorial-replay','Replay first-move tutorial');
   replayTutorial.type='button';
