@@ -30,7 +30,7 @@ const appearance=name=>{
 };
 export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','settings','data','transfer','recovery','update','about']);
 
-export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch}){
+export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
   main.insertBefore(screen,el('ch-tab-bar'));
@@ -282,15 +282,50 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise
       const nav=stack();nav.append(btn('Export a backup',()=>el('export-backup')?.click(),'primary'),btn('Return to board',()=>go('match')),btn('Home',()=>go('home')));
     }
     if(route==='update'){
-      title('Match-safe upgrades','PWA update','Finish or export your current game before refreshing.');
-      const status=paragraph(section,'Use Check for update to look for downloaded assets.','ch-inline-notice');
-      section.append(btn('Check for update',async()=>{
-        if(!('serviceWorker' in navigator)){status.textContent='Service workers are not available in this browser.';return;}
-        try{const reg=await navigator.serviceWorker.getRegistration();
-          if(!reg){status.textContent='Offline service worker is not installed.';return;}
-          await reg.update();status.textContent=reg.waiting?'New assets are downloaded. Finish your match, then reload the app.':'No downloaded update is waiting. You can keep playing.';
-        }catch{status.textContent='Could not check right now. Your offline game remains available.';}
-      },'primary'));
+      title('Match-safe upgrades','PWA update','New assets are staged offline. A downloaded update never replaces your active match without asking.');
+      const status=paragraph(section,'Check for a downloaded update when you are ready.','ch-inline-notice');
+      const check=btn('Check for update',async()=>{
+        if(!('serviceWorker' in navigator)){
+          status.textContent='Service workers are unavailable in this browser. Browser refreshes are managed manually.';return;
+        }
+        check.disabled=true;
+        try{
+          const registration=await navigator.serviceWorker.getRegistration();
+          if(!registration){status.textContent='Offline service worker is not installed.';return;}
+          await registration.update();
+          if(registration.waiting){
+            status.textContent='An update is downloaded and waiting. Apply it only when your game is finished.';
+            apply.hidden=false;
+          } else {
+            status.textContent='No update is ready. Your current game stays available.';
+            apply.hidden=true;
+          }
+        }catch{
+          status.textContent='Update check failed. You can continue playing offline.';
+        }finally{check.disabled=false;}
+      },'primary');
+      const apply=btn('Apply downloaded update',async()=>{
+        if(!('serviceWorker' in navigator))return;
+        const registration=await navigator.serviceWorker.getRegistration();
+        if(!registration?.waiting){status.textContent='No downloaded update is ready.';apply.hidden=true;return;}
+        const ready=await preparePwaUpdate();
+        if(!ready.ok){status.textContent=ready.reason;return;}
+        if(!confirm('Your current chess state is saved. Activate the downloaded update now?'))return;
+        apply.disabled=true;
+        status.textContent='Applying downloaded update…';
+        navigator.serviceWorker.addEventListener('controllerchange',()=>location.reload(),{once:true});
+        registration.waiting.postMessage({type:'GLOBAL_CHESS_ACTIVATE_UPDATE'});
+      });
+      apply.hidden=true;
+      const actions=stack();
+      actions.append(check,apply,btn('Continue playing',()=>go('match')));
+      if('serviceWorker' in navigator){
+        navigator.serviceWorker.getRegistration().then(registration=>{
+          if(!screen.isConnected || screen.hidden || !registration?.waiting)return;
+          apply.hidden=false;
+          status.textContent='A downloaded update is ready. You can keep playing until you choose to apply it.';
+        }).catch(()=>{});
+      }
     }
     if(route==='about'){
       title('Original premium chess','About & licenses','A locally playable chess game built with established open-source engines.');
