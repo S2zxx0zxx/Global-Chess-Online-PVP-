@@ -12,7 +12,7 @@
 - Original, premium burgundy/mahogany/gold chess experience; original artwork, not a Chess Clash copy.
 - Guest-first, zero-budget-first, offline-first, with browser/PWA and independent Android installation sharing one versioned chess rules implementation.
 - M0 local chess, vs-computer, same-device game and offline saves; M1 web beta, lessons/puzzles, local progression; M2 Android release after its distinct gates; M3 independently validated Mistake-to-Mission; M4 optional consented ads; M5 optional hosted multiplayer.
-- **Original v3 specification:** 30 screen contracts `SCR-00..29`, 602 execution-task rows, 23 release gates `G0..G22`. The 602 task IDs/rows are NOT present as an auditable authoritative tracker in this repository snapshot; no percentage of 602 is verified here.
+- **Original v3 specification:** 30 screen contracts `SCR-00..29`, 602 execution-task rows, 23 release gates `G0..G22`. The 602 task IDs/rows are NOT present as an authoritative tracker in this **GitHub tree**; the owner's private Library **does** contain the original `Chess_Execution_Tracker_v3.xlsx`, independently inspected in this audit. Its `Tasks` tab has **602** immutable IDs (418 preserved from v2 and 184 new v3), all carrying original planning status `NOT_STARTED`. This is historical tracker state, not an accurate claim that code has never been written; no percentage of those 602 tasks is accepted here.
 - The blueprint proposes **shared React/TypeScript** domain/app architecture, while this main app is **Vite 8 + JavaScript ESM + chess.js 1.4.0**, Babylon/Havok for optional 3D, Cloudflare Worker/Durable Objects for experimental PvP. Treat this as an **architecture ADR gap** rather than silently claiming the planned stack is built or embarking on an unapproved risky rewrite.
 - npm `"private": true` and `"license": "UNLICENSED"` do **not** change the GitHub repository's **PUBLIC** visibility.
 
@@ -103,7 +103,7 @@ Source: PR #9 `docs/CH01_V3_RELEASE_GATES_EVIDENCE.md` + latest PR #1 acceptance
 5. **M-02D:** integrate server-side authenticated resignation (#10) with correct seat tokens, version and clock adjudication; keep private PvP experimental and separate from M0 offline acceptance.
 6. **M-02E:** integrate Capacitor/debug and signing CI (#4/#7) on current Vite output without storing keystores in Git. Actual Android release remains blocked on owner identity, permanent upload key and physical-device tests.
 7. Independently validate original WebP artwork/license, 3D memory/performance, public privacy/support/terms, real Cloudflare preview, reconnect/load/rate-limits, browser-PWA update, physical Android TalkBack.
-8. Recover authoritative `trackers/Chess_Execution_Ledger_v3.csv` (602 rows) from the original ZIP; map each immutable task ID to file/test/CI/acceptance. No unverifiable '602/602' claim.
+8. Use the owner-provided `Chess_Execution_Tracker_v3.xlsx` (602 rows) now inventoried separately. Link each immutable task ID to file/test/CI and product acceptance; verify per row before changing any original planning status. The source workbook is private and was not uploaded into this public repository.
 
 ## 8. Risk register / no-regression guardrails
 
@@ -127,7 +127,10 @@ Source: PR #9 `docs/CH01_V3_RELEASE_GATES_EVIDENCE.md` + latest PR #1 acceptance
 - [x] Selected high-risk files and presence/absence compared across canonical and stacked heads; integration decisions documented.
 - [x] All SCR-00..29 and G0..22 linked to existing ledgers without pretending release complete.
 - [x] Safe next-step integration order written; no user-facing gameplay files changed by this audit.
-- [ ] All 602 immutable task rows individually reconciled — **blocked by absent authoritative CSV in the audited GitHub repo**.
+- [x] All **602 immutable task IDs** inventoried from owner Library's v3 tracker; **418 v2 preserved / 184 v3 refinement**. Separate local evidence overlay produced with **506 keyword-linked candidate hints / 96 unmapped hints** (hints are NOT verified acceptance).
+- [ ] All 602 rows individually **accepted** against pinned source, tests, UX and gate criteria — **NOT COMPLETE**; no row was promoted to VERIFIED by this audit.
 - [ ] Full code-level/security review, physically measured devices, legal approval — not M-01 source-baseline evidence.
 
-**M-01 documentation/inventory is ready for review. Implementation integration, source task ledger reconciliation, release signoff and final UI quality remain open.**
+**M-01 repository/branch reconciliation, original 602-ID inventory and candidate evidence mapping are ready for review. Individual task acceptance, implementation integration, release signoff and final UI quality remain open.**
+
+**Private spreadsheet evidence:** The owner Library source `Chess_Execution_Tracker_v3.xlsx` was inspected (seven original tabs; `Tasks!A1:Q603`). A separate owner-downloadable `.xlsx` evidence overlay was generated without modifying the original task status or committing internal planning text into this PUBLIC GitHub repository. This workbook is not available as a GitHub source file. Candidate evidence links are automated heuristics requiring human/code acceptance; they cannot be treated as test results.
