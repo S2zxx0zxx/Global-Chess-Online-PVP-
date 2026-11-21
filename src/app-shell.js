@@ -252,6 +252,9 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
         history[replace ? 'replaceState' : 'pushState']({ ...history.state, chessView: next }, '', target);
       } catch { /* Standalone/browser-restricted environments keep local navigation. */ }
     }
+    // Navigating away via browser/Android Back must never leave a local timer
+    // counting down behind a hidden match. Private PvP remains server-timed.
+    if(view==='match' && next!=='match')pauseCurrentMatch();
     // Back/Resume from either game menu or Pause clears any temporary local
     // pause left by a cancelled or failed Save & Exit attempt.
     if((view==='pause'||view==='menu') && next==='match')resumeCurrentMatch();
