@@ -13,7 +13,7 @@ import './style.css';
 import './app-shell.css';
 import './screen-routes.css';
 import { mountAppShell } from './app-shell.js';
-import { restoreGame, serializeGame, savedMatchOutcome, claimableDraw, intendedDraw } from './game.js';
+import { restoreGame, serializeGame, savedMatchOutcome, claimableDraw, intendedDraw, hasAvailableDrawClaim } from './game.js';
 
 import { matchKey as key, historyKey, exportBackup, importBackup, previewBackup } from './backup.js';
 async function initialize() {
@@ -219,9 +219,7 @@ function render(move) {
   const storageNote = gameStorage.durable === false ? 'Session only · Progress will not be saved after closing' : '';
   status.textContent = [state.paused ? 'Match paused · Open Pause screen to resume' : (outcome(game) ?? (mode === 'computer' && game.turn() !== state.playerSide ? 'Computer thinking…' :
     (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : ''))), notice, storageNote].filter(Boolean).join(' · ');
-  const drawAllowed = !outcome(game) && (claimableDraw(game) ||
-    game.moves({verbose:true}).some(({from,to,promotion}) =>
-      Boolean(intendedDraw(game,{from,to,promotion}))));
+  const drawAllowed = !outcome(game) && hasAvailableDrawClaim(game);
   claim.hidden = state.paused || (online?.active && !online.canMove(game.turn())) ||
     Boolean(outcome(game)) || (mode === 'computer' && game.turn() !== state.playerSide) ||
     !drawAllowed;
