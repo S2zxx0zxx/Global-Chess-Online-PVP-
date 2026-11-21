@@ -217,11 +217,18 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
     let prefs={};
     try{prefs=JSON.parse(localStorage.getItem('global-chess.preferences.v1')||'{}')||{};}catch{}
     byId('ch-profile-name').textContent=typeof prefs.name==='string'&&prefs.name.trim()?prefs.name.trim().slice(0,24):'Guest player';
-    byId('ch-profile-avatar').textContent=['♞','♜','♛'].includes(prefs.avatar)?prefs.avatar:'♞';
+    const icons={'♞':'/brand/guest-avatar.svg','♜':'/brand/pieces/piece_white_rook.svg','♛':'/brand/pieces/piece_white_queen.svg'};
+    const avatar=byId('ch-profile-avatar');
+    const icon=document.createElement('img');
+    icon.src=icons[prefs.avatar]||icons['♞'];icon.alt='';
+    avatar.replaceChildren(icon);
+    const frame=(()=>{try{return JSON.parse(localStorage.getItem('global-chess.avatar-frame.v1')||'null');}catch{return null;}})();
+    avatar.dataset.frame=['gold','walnut','teal'].includes(frame)?frame:'gold';
     const total=historyCount();
     byId('ch-history-total').textContent=total===null?'Unavailable':String(total);
   }
   byId('profile-form').addEventListener('submit',()=>queueMicrotask(refreshProfile));
+  window.addEventListener('chess-profile-changed',refreshProfile);
   function go(next, options = {}) {
     if (!views.has(next)) throw new Error('Unknown chess view: '+next);
     if (!options.fromHistory) {
@@ -245,7 +252,7 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
     profile.hidden=next!=='profile';
     screenRoutes?.show(next);
     for(const tab of nav.querySelectorAll('button')){
-      const active=tab.dataset.chView===next || (['history','review','progress','achievements','appearance','settings','data','transfer','update','about'].includes(next)&&tab.dataset.chView==='profile') || (['lessons','lesson','puzzles','puzzle','puzzle-result','daily'].includes(next)&&tab.dataset.chView==='learn');
+      const active=tab.dataset.chView===next || (['history','review','progress','achievements','appearance','avatars','settings','data','transfer','update','about'].includes(next)&&tab.dataset.chView==='profile') || (['lessons','lesson','puzzles','puzzle','puzzle-result','daily'].includes(next)&&tab.dataset.chView==='learn');
       tab.setAttribute('aria-current',active?'page':'false');
     }
     if(next==='profile') refreshProfile();
@@ -271,7 +278,7 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   });
   for(const route of screenRoutes.routes)views.add(route);
   const profileActions=profile.querySelector('.ch-profile-actions');
-  for(const [label,route] of [['Progress','progress'],['Achievements','achievements'],['Appearance','appearance'],['Data & Privacy','data']]){
+  for(const [label,route] of [['Progress','progress'],['Achievements','achievements'],['Avatars & Frames','avatars'],['Appearance','appearance'],['Data & Privacy','data']]){
     const link=element('button','ch-profile-shortcut',label);link.type='button';link.addEventListener('click',()=>go(route));
     profileActions.append(link);
   }
