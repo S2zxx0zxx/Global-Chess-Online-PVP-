@@ -251,7 +251,9 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
         history[replace ? 'replaceState' : 'pushState']({ ...history.state, chessView: next }, '', target);
       } catch { /* Standalone/browser-restricted environments keep local navigation. */ }
     }
-    if(view==='pause' && next==='match')resumeCurrentMatch();
+    // Back/Resume from either game menu or Pause clears any temporary local
+    // pause left by a cancelled or failed Save & Exit attempt.
+    if((view==='pause'||view==='menu') && next==='match')resumeCurrentMatch();
     view=next;
     const root=document.documentElement;
     for(const item of views) root.classList.toggle('ch-view-'+item,item===next);
