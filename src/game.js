@@ -12,6 +12,7 @@ export function restoreGame(raw) {
   let difficulty = 'standard';
   let preset;
   let playerSide = 'w';
+  let resignedBy;
   if (raw) {
     const save = JSON.parse(raw);
     if (save.version !== 1 || !Array.isArray(save.moves) || !['local', 'computer'].includes(save.mode)) {
@@ -20,6 +21,7 @@ export function restoreGame(raw) {
     mode = save.mode;
     if (save.playerSide !== undefined && !['w','b'].includes(save.playerSide)) throw new Error('Invalid saved player side');
     playerSide = save.playerSide ?? 'w';
+    if (save.resignedBy !== undefined && !['w','b'].includes(save.resignedBy)) throw new Error('Invalid resignation side');
     if (['easy', 'standard', 'hard'].includes(save.difficulty)) difficulty = save.difficulty;
     if (save.clock !== undefined) {
       if (!validClock(save.clock)) throw new Error('Invalid saved clock');
@@ -39,6 +41,10 @@ export function restoreGame(raw) {
       if (outcome && outcome !== 'Draw by dead position') throw new Error('Move after match ended');
       game.move(move);
     }
+    if (save.resignedBy !== undefined) {
+      if (result(game) || save.drawClaim !== undefined) throw new Error('Resignation after completed match');
+      resignedBy = save.resignedBy;
+    }
     if (save.drawClaim !== undefined) {
       const reason = save.claimMove ? intendedDraw(game, save.claimMove) : claimableDraw(game);
       if (!reason || save.drawClaim !== reason) throw new Error('Invalid saved draw claim');
@@ -46,12 +52,12 @@ export function restoreGame(raw) {
       drawClaim = save.drawClaim;
     }
   }
-  return { game, mode, drawClaim, clock, difficulty, claimMove, preset, playerSide };
+  return { game, mode, drawClaim, clock, difficulty, claimMove, preset, playerSide, resignedBy };
 }
 
-export function serializeGame(game, mode, drawClaim, clock, difficulty, claimMove, preset, playerSide = 'w') {
+export function serializeGame(game, mode, drawClaim, clock, difficulty, claimMove, preset, playerSide = 'w', resignedBy) {
   const moves = game.history({ verbose: true }).map(({from, to, promotion}) => ({from, to, promotion}));
-  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty, claimMove, preset, playerSide });
+  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty, claimMove, preset, playerSide, resignedBy });
 }
 
 export function result(game) {
