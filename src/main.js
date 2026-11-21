@@ -438,6 +438,13 @@ appShell = mountAppShell({
   },
   readSavedHistory(){ return readHistory(gameStorage); },
   writeSavedHistory(entries){ gameStorage.setItem(historyKey,JSON.stringify(entries)); },
+  getMatchSummary(){
+    return {
+      outcome:outcome(state.game),mode:state.mode,
+      online:Boolean(online?.active),difficulty:state.difficulty,
+      playerSide:state.playerSide,moves:state.game.history().length,
+    };
+  },
 });
 render();
 playComputer();
