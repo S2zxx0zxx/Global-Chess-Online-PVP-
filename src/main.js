@@ -216,7 +216,7 @@ function render(move) {
   })));
   if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus();
   status.textContent = [state.paused ? 'Match paused · Open Pause screen to resume' : (outcome(game) ?? (mode === 'computer' && game.turn() !== state.playerSide ? 'Computer thinking…' :
-    (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : '')), notice].filter(Boolean).join(' · ');
+    (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : ''))), notice].filter(Boolean).join(' · ');
   claim.hidden = state.paused || (online?.active && !online.canMove(game.turn())) || Boolean(outcome(game)) || (mode === 'computer' && game.turn() !== state.playerSide);
   const moves = game.history();
   document.querySelector('#moves').replaceChildren(...moves.filter((_, index) => index % 2 === 0).map((move, index) => {
