@@ -7,7 +7,7 @@ const source=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 test('the default 2D and 3D board loads project-authored scalable art',()=>{
   const svg=source('public/brand/board-maple-walnut.svg');
   assert.match(svg,/viewBox="0 0 496 496"/);
-  assert.equal((svg.match(/width="56" height="56"/g)||[]).length,64);
+  assert.equal((svg.match(/<rect x="\d+" y="\d+" width="56" height="56"/g)||[]).length,64);
   assert.match(source('src/style.css'),/brand\/board-maple-walnut\.svg/);
   assert.match(source('src/board3d.js'),/brand\/board-maple-walnut\.svg/);
   assert.doesNotMatch(source('src/style.css')+source('src/board3d.js'),/chess-assets\//);
