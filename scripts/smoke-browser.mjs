@@ -174,9 +174,15 @@ try {
   await evaluate('document.querySelector("[data-setup=computer]").click(); true');
   await evaluate('document.getElementById("ch-setup-side").value="b";document.getElementById("ch-setup-difficulty").value="easy";document.getElementById("ch-setup-start").click();true');
   await waitUntil(()=>evaluate('document.getElementById("white-player").textContent.includes("Computer") && document.querySelector("#moves li") !== null && document.getElementById("board").classList.contains("flipped")'),25000);
+  const blackPlacement=await evaluate('(() => {const a=document.getElementById("white-panel").getBoundingClientRect(), b=document.getElementById("black-panel").getBoundingClientRect(),c=document.getElementById("board").getBoundingClientRect();return a.bottom<c.top && b.top>c.bottom && document.documentElement.classList.contains("ch-board-flipped");})()');
+  if(!blackPlacement)throw new Error('Player panels do not match Black-side board orientation');
   const blackShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/SCR-05-black-vs-computer.png',Buffer.from(blackShot.data,'base64'));
-  console.log('Computer White, human Black, legal computer opening and board orientation: passed');
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=match'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#board .piece-art") !== null'));
+  const afterReload=await evaluate('document.documentElement.classList.contains("ch-board-flipped") && document.getElementById("white-panel").getBoundingClientRect().bottom<document.getElementById("board").getBoundingClientRect().top');
+  if(!afterReload)throw new Error('Black-side player orientation was not restored after reload');
+  console.log('Computer White, human Black, legal opening and persisted player panel orientation: passed');
 
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=menu'});
   await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-menu")'));
