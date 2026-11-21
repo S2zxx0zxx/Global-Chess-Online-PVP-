@@ -167,3 +167,6 @@
 .ch-shell-ready.ch-view-match .ch-match-dock{order:5}
 :root.ch-board-flipped.ch-shell-ready.ch-view-match #white-panel{order:1}
 :root.ch-board-flipped.ch-shell-ready.ch-view-match #black-panel{order:4}
+
+/* Volatile guest mode: persistent, accessible disclosure above every screen. */
+.ch-volatile-warning{font:700 .85rem/1.5 system-ui;color:#fff1cc;background:#753b2c;border:2px solid #efbe7e;border-radius:14px;padding:12px 15px;margin:2px 0 12px;box-shadow:0 7px 20px #17080766}
