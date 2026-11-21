@@ -299,7 +299,39 @@ async function selectSquare(square) {
   const chosen = options.find(move => move.promotion === promotion.returnValue);
   if (chosen && state.game === game) commit(chosen);
 }
+// Pointer drag is presentation-only: legal move validation remains in selectSquare
+// and the chess.js state. Taps and keyboard operation continue to work.
+let dragStart;
+let suppressClickUntil = 0;
+board.addEventListener('pointerdown', event => {
+  if (!event.isPrimary || event.button !== 0 || outcome(state.game)) return;
+  const square = event.target.closest('[data-square]')?.dataset.square;
+  if (!square || (online?.active && !online.canMove(state.game.turn())) ||
+      (state.mode === 'computer' && state.game.turn() !== state.playerSide)) return;
+  if (state.game.get(square)?.color !== state.game.turn()) return;
+  dragStart = {square, x:event.clientX, y:event.clientY, pointerId:event.pointerId, dragging:false};
+});
+board.addEventListener('pointermove', event => {
+  if (!dragStart || dragStart.pointerId !== event.pointerId) return;
+  if (Math.hypot(event.clientX-dragStart.x,event.clientY-dragStart.y) < 10) return;
+  dragStart.dragging = true;
+  board.classList.add('ch-dragging');
+});
+board.addEventListener('pointerup', event => {
+  const drag = dragStart;
+  dragStart = undefined;
+  board.classList.remove('ch-dragging');
+  if (!drag || !drag.dragging || drag.pointerId !== event.pointerId) return;
+  const target = document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-square]')?.dataset.square;
+  if (!target || target === drag.square) return;
+  suppressClickUntil = performance.now() + 200;
+  selectSquare(drag.square);
+  queueMicrotask(() => selectSquare(target));
+});
+window.addEventListener('pointerup', () => {dragStart=undefined;board.classList.remove('ch-dragging');});
+window.addEventListener('pointercancel', () => {dragStart=undefined;board.classList.remove('ch-dragging');});
 board.addEventListener('click', ({target}) => {
+  if (performance.now() < suppressClickUntil) return;
   const square = target.closest('[data-square]')?.dataset.square;
   selectSquare(square);
 });
