@@ -12,7 +12,7 @@ import './style.css';
 import './app-shell.css';
 import './screen-routes.css';
 import { mountAppShell } from './app-shell.js';
-import { restoreGame, serializeGame, result, claimableDraw, intendedDraw, timeoutResult } from './game.js';
+import { restoreGame, serializeGame, savedMatchOutcome, claimableDraw, intendedDraw } from './game.js';
 
 import { matchKey as key, historyKey, exportBackup, importBackup, previewBackup } from './backup.js';
 async function initialize() {
@@ -43,10 +43,7 @@ let selected;
 const claim = document.querySelector('#claim');
 const outcome = game => {
   if (online?.active) return online.match.outcome;
-  if (state.drawClaim) return 'Draw by ' + state.drawClaim;
-  if (state.resignedBy) return (state.resignedBy === 'w' ? 'Black' : 'White') + ' wins by resignation';
-  return result(game) ?? (state.clock?.[game.turn()] === 0
-    ? timeoutResult(game, game.turn()) : null);
+  return savedMatchOutcome(state);
 };
 const clocks = document.querySelector('#clocks');
 let tickAt = performance.now();
