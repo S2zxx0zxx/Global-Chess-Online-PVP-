@@ -107,3 +107,18 @@ test('offline resignation persists once and rejects contradictory terminal saves
   for (const move of ['f3','e5','g4','Qh4#']) final.game.move(move);
   assert.throws(() => restoreGame(serializeGame(final.game,'local',undefined,null,'standard',undefined,'untimed','w','w')));
 });
+
+
+test('pause flag round trips through the v1 save without changing clocks or legal moves', () => {
+  const {game} = restoreGame();
+  game.move('d4');
+  const raw = serializeGame(game,'computer',undefined,{w:300000,b:295000},'easy',undefined,'quick','w',undefined,true);
+  const loaded = restoreGame(raw);
+  assert.equal(loaded.paused,true);
+  assert.deepEqual(loaded.clock,{w:300000,b:295000});
+  assert.equal(loaded.game.fen(),game.fen());
+  assert.equal(restoreGame(serializeGame(game,'local')).paused,false);
+  assert.throws(() => restoreGame(raw.replace('"paused":true','"paused":"yes"')));
+  const both = JSON.parse(raw);both.resignedBy='w';
+  assert.throws(() => restoreGame(JSON.stringify(both)));
+});
