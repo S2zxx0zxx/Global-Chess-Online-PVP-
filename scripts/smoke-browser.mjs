@@ -114,8 +114,8 @@ try {
   const homeShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/chess-v3-mobile-home.png',Buffer.from(homeShot.data,'base64'));
   await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=play]").click(); true');
-  if (!(await evaluate('document.getElementById("ch-play-hub").hidden === false'))) {
-    throw new Error('Play hub did not open');
+  if (!(await evaluate('document.getElementById("ch-play-hub").hidden === false && document.activeElement?.id === "ch-play-title"'))) {
+    throw new Error('Play Hub did not open with focus on its accessible heading');
   }
   await evaluate('document.querySelector("[data-setup=computer]").click(); true');
   if (!(await evaluate('document.getElementById("ch-setup-dialog").open === true'))) {
@@ -125,8 +125,8 @@ try {
   await writeFile('artifacts/SCR-05-match-setup.png',Buffer.from(setupShot.data,'base64'));
   await evaluate('document.getElementById("ch-setup-cancel").click(); true');
   await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=learn]").click(); true');
-  if (!(await evaluate('document.getElementById("ch-learn-hub").hidden === false'))) {
-    throw new Error('Learn hub did not open');
+  if (!(await evaluate('document.getElementById("ch-learn-hub").hidden === false && document.activeElement?.id === "ch-learn-title"'))) {
+    throw new Error('Learn hub did not open with focus on its accessible heading');
   }
   await evaluate('document.getElementById("ch-open-lessons").click(); true');
   await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-lessons")'));
@@ -150,6 +150,19 @@ try {
     throw new Error('A draw-claim button appeared without an eligible position');
   console.log('Mobile v3 Home, Play, Setup, Learn, Profile, local match: passed');
   console.log('Browser local chess move: passed');
+  // UI navigation must go through a real match menu and wait for a committed
+  // IndexedDB write before claiming the move was saved.
+  await evaluate('document.getElementById("ch-match-home").click();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-menu")'));
+  if(!(await evaluate('document.activeElement?.tagName === "H1" && document.activeElement === document.querySelector("#ch-extra-screen h1")')))
+    throw new Error('Match menu does not restore route heading focus');
+  await evaluate('Array.from(document.querySelectorAll("#ch-extra-screen .ch-feature-card")).find(x=>x.textContent.includes("Save & exit")).click();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-home")'));
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=home'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && !document.getElementById("lobby-resume").hidden'));
+  await evaluate('document.getElementById("lobby-resume").click();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-match") && document.querySelector("#moves li")?.textContent?.includes("e4") === true'));
+  console.log('SCR-09 save-exit commits and restores the latest move after full reload: passed');
 
   await evaluate('document.getElementById("view").click(); true');
   await waitUntil(() => evaluate(
@@ -213,10 +226,12 @@ try {
     await waitUntil(()=>evaluate(
       'document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-'+name+'") && document.querySelector("#ch-extra-screen:not([hidden]) h1")?.textContent?.length > 2'
     ),20000);
+    const overflow=await evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth');
+    if(overflow>2)throw new Error('Screen '+name+' overflows 360px: '+overflow);
     const image=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
     await writeFile('artifacts/screens/'+name+'.png',Buffer.from(image.data,'base64'));
   }
-  console.log('Rendered and captured all '+screenNames.length+' additional v3 routes in Chromium');
+  console.log('Rendered, overflow-checked and captured all '+screenNames.length+' additional v3 routes in Chromium');
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=appearance'});
   await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-appearance") && document.querySelectorAll(".ch-piece-card").length === 2'));
   await evaluate('document.querySelectorAll(".ch-piece-card")[1].click();true');
@@ -263,7 +278,9 @@ try {
   await evaluate('document.querySelector("[data-ch-view=learn]").click();true');
   await evaluate('history.back();true');
   await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-play")'));
-  console.log('Browser Back returns from Learn to Play: passed');
+  if(!(await evaluate('document.activeElement?.id === "ch-play-title"')))
+    throw new Error('Browser Back did not return keyboard focus to the Play Hub heading');
+  console.log('Browser Back returns from Learn to Play with accessible focus: passed');
 
   // Screen contracts SCR-00/01: denied browser storage must not crash the app,
   // and the UI may NOT claim a durable save for temporary guest play.
@@ -281,6 +298,13 @@ try {
   const volatileShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/SCR-27-volatile-storage.png',Buffer.from(volatileShot.data,'base64'));
   console.log('Blocked browser storage: offline play and honest session-only warning passed');
+  await evaluate('document.getElementById("ch-match-home").click();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-menu")'));
+  await evaluate('Array.from(document.querySelectorAll("#ch-extra-screen .ch-feature-card")).find(x=>x.textContent.includes("Save & exit")).click();true');
+  await waitUntil(()=>evaluate('document.getElementById("ch-save-exit-status")?.textContent?.includes("Session-only storage") === true'));
+  if(!(await evaluate('document.documentElement.classList.contains("ch-view-menu") && !Array.from(document.querySelectorAll("#ch-extra-screen button")).find(x=>x.textContent==="Leave without saving").hidden')))
+    throw new Error('Volatile Save & Exit navigated away without explicit warning or opt-in');
+  console.log('Volatile Save & Exit correctly blocks unsafe navigation: passed');
   if(errors.length)throw new Error('Chromium runtime exceptions: '+errors.join(' | '));
 } catch (error) {
   throw new Error(error.message + (previewLog ? '\nPreview logs:\n' + previewLog.slice(-3000) : ''));
