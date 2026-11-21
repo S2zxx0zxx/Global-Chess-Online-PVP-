@@ -1,0 +1,303 @@
+{
+  "schema_version": 1,
+  "observed_date": "2026-11-22",
+  "evidence_policy": "File/CI proof is not full screen, store, security, or production acceptance",
+  "repository": "S2zxx0zxx/Global-Chess-Online-PVP-",
+  "repository_visibility": "public",
+  "default_branch": "main",
+  "canonical_baseline": {
+    "source_pr": 1,
+    "branch": "feat/playable-chess-foundation",
+    "sha": "3d816890027889dacee5ff51f00fbd4817700418",
+    "base_branch": "main",
+    "base_sha": "ddb0d51778835cc39113e42c3466040a9f7fbebb",
+    "unit_tests": {
+      "passed": 42,
+      "failed": 0,
+      "run_url": "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/44947607359"
+    },
+    "ci_status": "success",
+    "ui_entry_files": [
+      "src/app-shell.js",
+      "src/screen-routes.js",
+      "src/main.js"
+    ]
+  },
+  "prs": [
+    {
+      "number": 1,
+      "base": "main",
+      "head": "feat/playable-chess-foundation",
+      "head_sha": "3d816890027889dacee5ff51f00fbd4817700418",
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "compare_to_primary": null,
+      "url": "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/1"
+    },
+    {
+      "number": 2,
+      "base": "feat/playable-chess-foundation",
+      "head": "feat/chess-v3-m0-mobile-shell",
+      "head_sha": "b42985ca42bec16931dced4546b0a4c6baac7ade",
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "mergeable": false,
+      "compare_to_primary": {
+        "status": "diverged",
+        "ahead_by": 44,
+        "behind_by": 171,
+        "merge_base": "68509fc2f9e9fd87ef4f23992c657cc177ae3057"
+      },
+      "url": "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/2"
+    },
+    {
+      "number": 3,
+      "base": "feat/chess-v3-m0-mobile-shell",
+      "head": "fix/chess-v3-offline-save-recovery",
+      "head_sha": "ba45dc68b69c1176414cf5066c53b3756efb5690",
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "compare_to_primary": {
+        "status": "diverged",
+        "ahead_by": 49,
+        "behind_by": 171,
+        "merge_base": "68509fc2f9e9fd87ef4f23992c657cc177ae3057"
+      },
+      "url": "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/3"
+    },
+    {
+      "number": 4,
+      "base": "fix/chess-v3-offline-save-recovery",
+      "head": "feat/chess-v3-android-debug-shell",
+      "head_sha": "56faad37c15ef8ab354dba3947b2bb10f6a56815",
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "compare_to_primary": {
+        "status": "diverged",
+        "ahead_by": 53,
+        "behind_by": 171,
+        "merge_base": "68509fc2f9e9fd87ef4f23992c657cc177ae3057"
+      },
+      "url": "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/4"
+    },
+    {
+      "number": 5,
+      "base": "feat/chess-v3-android-debug-shell",
+      "head": "feat/chess-v3-verified-local-progress",
+      "head_sha": "ade15933579a99226373ac6f36cf84adf8a6040b",
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "compare_to_primary": {
+        "status": "diverged",
+        "ahead_by": 64,
+        "behind_by": 171,
+        "merge_base": "68509fc2f9e9fd87ef4f23992c657cc177ae3057"
+      },
+      "url": "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/5"
+    },
+    {
+      "number": 6,
+      "base": "feat/chess-v3-verified-local-progress",
+      "head": "feat/chess-v3-data-controls-pwa-update",
+      "head_sha": "ac8bdf8155cf18f7e67c4909f7d1fd4f44166c94",
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "compare_to_primary": {
+        "status": "diverged",
+        "ahead_by": 74,
+        "behind_by": 171,
+        "merge_base": "68509fc2f9e9fd87ef4f23992c657cc177ae3057"
+      },
+      "url": "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/6"
+    },
+    {
+      "number": 7,
+      "base": "feat/chess-v3-data-controls-pwa-update",
+      "head": "feat/chess-v3-android-release-gate",
+      "head_sha": "4cf8bdda1018b598de70f1994b9d18ad5a776cc6",
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "compare_to_primary": {
+        "status": "diverged",
+        "ahead_by": 79,
+        "behind_by": 171,
+        "merge_base": "68509fc2f9e9fd87ef4f23992c657cc177ae3057"
+      },
+      "url": "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/7"
+    },
+    {
+      "number": 8,
+      "base": "feat/chess-v3-android-release-gate",
+      "head": "fix/chess-v3-bot-content-correctness",
+      "head_sha": "aff6271d036dd25d21a86a5f245d564613155796",
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "compare_to_primary": {
+        "status": "diverged",
+        "ahead_by": 85,
+        "behind_by": 171,
+        "merge_base": "68509fc2f9e9fd87ef4f23992c657cc177ae3057"
+      },
+      "url": "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/8"
+    },
+    {
+      "number": 9,
+      "base": "fix/chess-v3-bot-content-correctness",
+      "head": "test/chess-v3-accessibility-release-evidence",
+      "head_sha": "dcb8e0f1b5bb823cdb39826c5d6e4f3e95073e5c",
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "compare_to_primary": {
+        "status": "diverged",
+        "ahead_by": 88,
+        "behind_by": 171,
+        "merge_base": "68509fc2f9e9fd87ef4f23992c657cc177ae3057"
+      },
+      "url": "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/9"
+    },
+    {
+      "number": 10,
+      "base": "test/chess-v3-accessibility-release-evidence",
+      "head": "feat/chess-v3-pvp-server-resignation",
+      "head_sha": "0a2b66845e12f498d669ce156427c3601a6b93b3",
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "compare_to_primary": {
+        "status": "diverged",
+        "ahead_by": 93,
+        "behind_by": 171,
+        "merge_base": "68509fc2f9e9fd87ef4f23992c657cc177ae3057"
+      },
+      "url": "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/10"
+    }
+  ],
+  "screen_contracts": {
+    "SCR-00": "PARTIAL",
+    "SCR-01": "PARTIAL",
+    "SCR-02": "PARTIAL",
+    "SCR-03": "PARTIAL",
+    "SCR-04": "PARTIAL",
+    "SCR-05": "PARTIAL",
+    "SCR-06": "PARTIAL",
+    "SCR-07": "PARTIAL",
+    "SCR-08": "PARTIAL",
+    "SCR-09": "PARTIAL",
+    "SCR-10": "PARTIAL",
+    "SCR-11": "PARTIAL",
+    "SCR-12": "PARTIAL",
+    "SCR-13": "PARTIAL",
+    "SCR-14": "PARTIAL",
+    "SCR-15": "PARTIAL",
+    "SCR-16": "PARTIAL",
+    "SCR-17": "PARTIAL",
+    "SCR-18": "PARTIAL",
+    "SCR-19": "PARTIAL",
+    "SCR-20": "PARTIAL",
+    "SCR-21": "PARTIAL",
+    "SCR-22": "PARTIAL",
+    "SCR-23": "PARTIAL",
+    "SCR-24": "PARTIAL",
+    "SCR-25": "PARTIAL",
+    "SCR-26": "PARTIAL",
+    "SCR-27": "PARTIAL",
+    "SCR-28": "PARTIAL",
+    "SCR-29": "PARTIAL"
+  },
+  "release_gates": {
+    "G0": "PARTIAL",
+    "G1": "BLOCKED",
+    "G2": "PARTIAL",
+    "G3": "PARTIAL",
+    "G4": "PARTIAL",
+    "G5": "PARTIAL",
+    "G6": "PARTIAL",
+    "G7": "PARTIAL",
+    "G8": "PARTIAL",
+    "G9": "PARTIAL",
+    "G10": "PARTIAL",
+    "G11": "PARTIAL",
+    "G12": "PARTIAL",
+    "G13": "PARTIAL",
+    "G14": "BLOCKED",
+    "G15": "BLOCKED",
+    "G16": "BLOCKED",
+    "G17": "PARTIAL",
+    "G18": "BLOCKED",
+    "G19": "BLOCKED",
+    "G20": "DEFERRED",
+    "G21": "DEFERRED",
+    "G22": "PARTIAL"
+  },
+  "original_task_ledger": {
+    "planned_rows": 602,
+    "canonical_task_csv_in_audited_github_tree": false,
+    "individually_verified_rows": null,
+    "status": "NOT_RECONCILED",
+    "no_fabricated_completion": true
+  },
+  "branch_comparison": {
+    "refs": [
+      "feat/playable-chess-foundation",
+      "feat/chess-v3-pvp-server-resignation"
+    ],
+    "identical_files": [
+      "package.json"
+    ],
+    "changed_common_files": [
+      "src/main.js",
+      "src/learning.js",
+      "src/computer.js",
+      "src/storage.js",
+      "src/online.js",
+      "server/match.js"
+    ],
+    "missing_in_primary": [
+      "src/progression.js",
+      "src/privacy-data.js",
+      "src/navigation.js",
+      "src/profile-stats.js",
+      "capacitor.config.json",
+      ".github/workflows/android-debug.yml",
+      ".github/workflows/android-signing-smoke.yml",
+      ".github/workflows/android-production-release.yml",
+      "scripts/validate-learning-pack.mjs",
+      "tests/pvp-resignation.test.js"
+    ],
+    "missing_in_stacked": [
+      "src/app-shell.js",
+      "src/screen-routes.js",
+      "docs/V3_SCREEN_IMPLEMENTATION_MATRIX.md"
+    ]
+  },
+  "test_reference": {
+    "android_debug_pr4": "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/44456353185",
+    "android_ephemeral_signing_pr7": "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/44456369173"
+  },
+  "limitations": [
+    "No full 602-task source row audit",
+    "No independent full 97-file line-by-line review",
+    "No real Android device acceptance",
+    "No signed production Android app",
+    "No independently verified deployed two-device PvP",
+    "No legal/licensing/store signoff"
+  ]
+}
