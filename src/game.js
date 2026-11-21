@@ -11,12 +11,15 @@ export function restoreGame(raw) {
   let clock = null;
   let difficulty = 'standard';
   let preset;
+  let playerSide = 'w';
   if (raw) {
     const save = JSON.parse(raw);
     if (save.version !== 1 || !Array.isArray(save.moves) || !['local', 'computer'].includes(save.mode)) {
       throw new Error('Unsupported match save');
     }
     mode = save.mode;
+    if (save.playerSide !== undefined && !['w','b'].includes(save.playerSide)) throw new Error('Invalid saved player side');
+    playerSide = save.playerSide ?? 'w';
     if (['easy', 'standard', 'hard'].includes(save.difficulty)) difficulty = save.difficulty;
     if (save.clock !== undefined) {
       if (!validClock(save.clock)) throw new Error('Invalid saved clock');
@@ -43,12 +46,12 @@ export function restoreGame(raw) {
       drawClaim = save.drawClaim;
     }
   }
-  return { game, mode, drawClaim, clock, difficulty, claimMove, preset };
+  return { game, mode, drawClaim, clock, difficulty, claimMove, preset, playerSide };
 }
 
-export function serializeGame(game, mode, drawClaim, clock, difficulty, claimMove, preset) {
+export function serializeGame(game, mode, drawClaim, clock, difficulty, claimMove, preset, playerSide = 'w') {
   const moves = game.history({ verbose: true }).map(({from, to, promotion}) => ({from, to, promotion}));
-  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty, claimMove, preset });
+  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty, claimMove, preset, playerSide });
 }
 
 export function result(game) {
