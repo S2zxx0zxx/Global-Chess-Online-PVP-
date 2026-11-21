@@ -58,6 +58,12 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
       const paused=route==='pause'&&!details?.online&&pauseCurrentMatch();
       title('Game session',route==='pause'?(paused?'Match paused':'Pause unavailable'):'Match menu','Your chessboard and moves remain owned by the game engine.');
       if(route==='pause')paragraph(section,paused?'Local clock and opponent processing are frozen until you resume.':details?.online?'Online matches cannot be paused; server clocks continue.':'No active offline match is available to pause.','ch-inline-notice');
+      if (!details?.started) {
+        const empty=group();
+        card(empty,'Choose a game mode','Start a new offline chess match',()=>go('play'));
+        card(empty,'Home','Return to the main chess lobby',()=>go('home'));
+        return;
+      }
       const items=group();
       card(items,'Resume match','Return to the chessboard',()=>{resumeCurrentMatch();go('match');});
       card(items,'Flip board','Rotate the viewpoint only',()=>{el('flip-board').click();go('match');});
