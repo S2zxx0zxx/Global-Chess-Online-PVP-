@@ -1,6 +1,7 @@
 import {Chess} from 'chess.js';
 import {lessons,puzzles,dailyExercise} from './learning.js';
 import {restoreGame} from './game.js';
+import {summarizeMatches} from './game-stats.js';
 import {renderPieceArt} from './piece-art.js';
 import {feedbackPreferences,setFeedbackPreference} from './feedback.js';
 
@@ -189,22 +190,39 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise
       section.append(btn('Play today’s puzzle',()=>openExercise(exercise),'primary'));
     }
     if(route==='progress'){
-      title('Local player record','Your progress','All numbers are derived from saved games and completed exercises.');
-      const p=report(),saved=records(),grid=mk('div','ch-stats-grid');section.append(grid);
-      for(const [label,value] of [['Completed games',saved===null?'Unavailable':saved.length],['Lessons',p.completed.filter(x=>lessons.some(y=>y.id===x)).length+'/'+lessons.length],['Puzzles',p.completed.filter(x=>puzzles.some(y=>y.id===x)).length+'/'+puzzles.length],['Daily challenges',p.daily.length]]){
-        const tile=mk('div','ch-stat');tile.append(mk('strong','',String(value)),mk('span','',label));grid.append(tile);
+      title('Local player record','Your progress','Validated offline results. Local two-player games are not counted as personal wins.');
+      const progress=report(),saved=records(),stats=summarizeMatches(saved),grid=mk('div','ch-stats-grid');
+      section.append(grid);
+      if(saved===null)paragraph(section,'Match history is unavailable. No saved data was cleared.','ch-inline-notice ch-notice-warning');
+      const values=[
+        ['Completed games',saved===null?'Unavailable':stats.completed],
+        ['Local two-player',saved===null?'Unavailable':stats.localGames],
+        ['Vs Computer W / L / D',saved===null?'Unavailable':stats.wins+' / '+stats.losses+' / '+stats.draws],
+        ['Vs Computer win rate',saved===null?'Unavailable':stats.winRate+'%'],
+        ['Current bot win streak',saved===null?'Unavailable':stats.currentWinStreak],
+        ['Best bot win streak',saved===null?'Unavailable':stats.bestWinStreak],
+        ['Lessons completed',progress.completed.filter(x=>lessons.some(y=>y.id===x)).length+'/'+lessons.length],
+        ['Puzzles completed',progress.completed.filter(x=>puzzles.some(y=>y.id===x)).length+'/'+puzzles.length],
+        ['Daily challenges',progress.daily.length],
+      ];
+      for(const [label,value] of values){
+        const tile=mk('div','ch-stat');
+        tile.append(mk('strong','',String(value)),mk('span','',label));grid.append(tile);
       }
+      if(stats.invalid && saved!==null)paragraph(section,stats.invalid+' malformed or unverified saved record(s) excluded from statistics. Export a backup before attempting recovery.','ch-inline-notice ch-notice-warning');
       section.append(btn('Achievements',()=>go('achievements'),'primary'),btn('Match history',()=>go('history')));
     }
     if(route==='achievements'){
       title('Proven milestones','Achievements','Unlocks are computed from real local records, not simulated leaderboards.');
-      const p=report(),seen=new Set(p.completed),count=records()?.length||0;
+      const p=report(),seen=new Set(p.completed),stats=summarizeMatches(records());
       const awards=[
         ['First Steps','Complete one practice exercise',p.completed.length>=1],
         ['Chess Basics','Complete all twelve lessons',lessons.every(x=>seen.has(x.id))],
         ['Tactics Starter','Complete all included puzzles',puzzles.every(x=>seen.has(x.id))],
         ['Daily Regular','Practice on three distinct days',p.daily.length>=3],
-        ['Match Recorder','Finish a local match',count>0],
+        ['Match Recorder','Finish a validated local match',stats.completed>0],
+        ['Computer Challenger','Win one verified game against the computer',stats.wins>0],
+        ['Winning Run','Win three verified computer games in a row',stats.bestWinStreak>=3],
       ];
       const list=mk('div','ch-feature-list');section.append(list);
       for(const [name,desc,earned] of awards){
