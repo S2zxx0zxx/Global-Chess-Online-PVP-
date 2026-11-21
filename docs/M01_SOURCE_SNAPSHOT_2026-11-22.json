@@ -249,10 +249,26 @@
   },
   "original_task_ledger": {
     "planned_rows": 602,
-    "canonical_task_csv_in_audited_github_tree": false,
-    "individually_verified_rows": null,
-    "status": "NOT_RECONCILED",
-    "no_fabricated_completion": true
+    "source_file": "Chess_Execution_Tracker_v3.xlsx",
+    "source_surface": "owner_library_not_public_github",
+    "tasks_sheet": "Tasks!A1:Q603",
+    "source_origins": {
+      "V2_UPLOADED_PRESERVED": 418,
+      "V3_REFERENCE_REFINEMENT": 184
+    },
+    "source_original_status": {
+      "NOT_STARTED": 602
+    },
+    "audited_id_count": 602,
+    "candidate_hint_count": 506,
+    "unmapped_hint_count": 96,
+    "hint_method": "bounded keyword/explicit screen ID mapping to potential source files; not verified acceptance",
+    "accepted_verified_task_count": 0,
+    "code_completion_percentage": null,
+    "public_repo_contains_original_tracker": false,
+    "individual_code_acceptance_complete": false,
+    "confidential_source_text_uploaded_to_public_repo": false,
+    "status": "INVENTORIED_ACCEPTANCE_OPEN"
   },
   "branch_comparison": {
     "refs": [
@@ -293,7 +309,7 @@
     "android_ephemeral_signing_pr7": "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/44456369173"
   },
   "limitations": [
-    "No full 602-task source row audit",
+    "602 original v3 task rows individually inventoried; source/behavior/test acceptance for each is not yet complete",
     "No independent full 97-file line-by-line review",
     "No real Android device acceptance",
     "No signed production Android app",
