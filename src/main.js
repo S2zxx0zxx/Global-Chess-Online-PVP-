@@ -356,14 +356,24 @@ board.addEventListener('keydown', event => {
   next.focus();
 });
 let versusTimer;
+function closeVersus() {
+  clearTimeout(versusTimer);
+  document.querySelector('#versus').hidden = true;
+}
+document.querySelector('#versus-skip').onclick = closeVersus;
+document.addEventListener('visibilitychange',() => {
+  if(document.hidden)closeVersus();
+});
 function showVersus(white,black) {
   const card = document.querySelector('#versus');
   document.querySelector('#versus-white').textContent = white;
   document.querySelector('#versus-black').textContent = black;
   clearTimeout(versusTimer);
-  card.hidden = false;
+  const motion = matchMedia('(prefers-reduced-motion: reduce)').matches ||
+    document.documentElement.classList.contains('ch-reduce-motion');
   const duration = Number.parseFloat(getComputedStyle(card).getPropertyValue('--ch-motion-vs-max'));
-  versusTimer = setTimeout(() => { card.hidden = true; }, duration);
+  card.hidden = motion;
+  if (!motion) versusTimer = setTimeout(closeVersus, Number.isFinite(duration)?Math.min(900,Math.max(0,duration)):700);
 }
 
 function startLocalMatch(mode, preset, difficulty, side = 'w') {
@@ -374,7 +384,8 @@ function startLocalMatch(mode, preset, difficulty, side = 'w') {
   state = {...restoreGame(), mode, preset, difficulty, playerSide, clock: startClock(preset)};
   flipped = mode === 'computer' && playerSide === 'b';
   renderer?.setFlipped(flipped);
-  showVersus('White',mode === 'computer' ? 'Computer' : 'Black');
+  showVersus(mode === 'computer' && playerSide === 'b' ? 'Computer · White' : 'White',
+    mode === 'computer' && playerSide === 'w' ? 'Computer · Black' : 'Black');
   tickAt = performance.now();
   selected = undefined;
   save();
