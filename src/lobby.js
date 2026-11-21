@@ -75,7 +75,8 @@ export function bindLobby({startMatch, historyCount}) {
       persist();
     };
   }
-  element('result-open').onclick = () => result.showModal();
+  element('result-open').onclick = () =>
+    document.dispatchEvent(new Event('chess-open-result'));
   element('result-rematch').onclick = () => {result.close();element('rematch').click();};
   element('result-history').onclick = () => {result.close();element('history-button').click();};
   welcome.addEventListener('close', () => {
