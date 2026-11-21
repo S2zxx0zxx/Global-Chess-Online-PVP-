@@ -613,7 +613,19 @@ document.querySelector('#export-backup').onclick = () => {
     if (!corruptMatchRaw) save();
     downloadFile(exportBackup(gameStorage), corruptMatchRaw ? 'global-chess-recovery-unvalidated.json' : 'global-chess-backup.json', 'application/json');
   } catch {
-    backupStatus.textContent = 'Backup could not be exported.';
+    if (corruptMatchRaw) {
+      try {
+        downloadFile(JSON.stringify({
+          source:'raw-browser-storage',
+          warning:'Unvalidated recovery material. Do not import directly without repairing.',
+          match:corruptMatchRaw,
+          historyRaw:gameStorage.getItem(historyKey),
+        },null,2),'global-chess-raw-recovery.json','application/json');
+        backupStatus.textContent = 'Exported unvalidated raw recovery data. No saved match was overwritten.';
+        return;
+      } catch { /* Continue to explicit failure status below. */ }
+    }
+    backupStatus.textContent = 'Backup could not be exported. Existing storage was not cleared.';
   }
 };
 document.querySelector('#import-backup').onclick = () => {
