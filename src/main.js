@@ -439,6 +439,7 @@ online = bindOnline({
 });
 lobby = bindLobby({
   startMatch:startLocalMatch,
+  storagePersistent:gameStorage.durable,
   historyCount() {
     try { return summarizeMatches(readHistory(gameStorage)).completed; } catch { return null; }
   },
