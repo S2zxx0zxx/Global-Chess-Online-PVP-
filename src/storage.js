@@ -40,6 +40,9 @@ export function fallbackGameStorage(browserStorage) {
       }
       memory.set(key, text);
     },
+    async flush() {
+      if (!durable) throw new Error('Browser storage is not durable');
+    },
     removeItem(key) {
       if (durable) {
         try { browserStorage.removeItem(key); }
@@ -108,6 +111,7 @@ export async function openGameStorage() {
 
   let queued = false;
   const dirty = new Set();
+  const pendingWrites = new Set();
   function persist(key) {
     dirty.add(key);
     if (queued) return;
@@ -126,8 +130,16 @@ export async function openGameStorage() {
     };
     try {
       const transaction = db.transaction('saves', 'readwrite');
-      transaction.onabort = retryLater;
-      transaction.onerror = () => reportStorageError();
+      const completed = new Promise((resolve,reject) => {
+        transaction.oncomplete = resolve;
+        transaction.onabort = () => {
+          retryLater();
+          reject(new Error('Could not commit match save'));
+        };
+      });
+      pendingWrites.add(completed);
+      // A rejected transaction is observed even if no explicit flush is waiting.
+      void completed.then(() => pendingWrites.delete(completed), () => pendingWrites.delete(completed));
       const store = transaction.objectStore('saves');
       const read = store.get('snapshot');
       read.onsuccess = () => {
@@ -136,7 +148,8 @@ export async function openGameStorage() {
           if (value === undefined) delete snapshot[key];
           else snapshot[key] = value;
         }
-        store.put(snapshot, 'snapshot');
+        try { store.put(snapshot, 'snapshot'); }
+        catch { try { transaction.abort(); } catch {} }
       };
       read.onerror = () => { try { transaction.abort(); } catch {} };
     } catch {
@@ -149,6 +162,16 @@ export async function openGameStorage() {
     durable: true,
     kind: 'indexedDB',
     getItem: key => values.get(key) ?? null,
+    async flush() {
+      // Promise resolution here means the pending IDB transactions have committed,
+      // not merely that a save was queued in JavaScript.
+      await Promise.resolve();
+      while (queued || pendingWrites.size) {
+        if (queued) { await Promise.resolve(); continue; }
+        await Promise.all([...pendingWrites]);
+      }
+      if (dirty.size) throw new Error('Match changes could not be committed');
+    },
     setItem(key,value) { values.set(key,String(value)); persist(key); },
     removeItem(key) { values.delete(key); persist(key); },
   };
