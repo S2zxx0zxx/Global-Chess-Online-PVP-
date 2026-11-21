@@ -1,4 +1,5 @@
 import { renderPieceArt } from './piece-art.js';
+import { emitFeedback } from './feedback.js';
 import { Chess } from 'chess.js';
 import { extraLessons, extraPuzzles } from './learning-pack.js';
 
@@ -113,6 +114,7 @@ export function bindLearning(names) {
     try { localStorage.setItem(key,JSON.stringify([...completed])); }
     catch { message += ' Progress is available for this session.'; }
     get('lesson-feedback').textContent = message;
+    emitFeedback('success');
     updateProgress();
     render(square);
     const kind = lessons.some(item => item.id === exercise.id) ? 'lesson' : 'puzzle';
