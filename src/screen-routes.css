@@ -170,3 +170,17 @@
 
 /* Volatile guest mode: persistent, accessible disclosure above every screen. */
 .ch-volatile-warning{font:700 .85rem/1.5 system-ui;color:#fff1cc;background:#753b2c;border:2px solid #efbe7e;border-radius:14px;padding:12px 15px;margin:2px 0 12px;box-shadow:0 7px 20px #17080766}
+
+/* SCR-20 optional local avatar and frame gallery — all controls remain usable offline. */
+.ch-avatar-gallery,.ch-frame-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0 18px}
+.ch-avatar-card,.ch-frame-card{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;min-height:118px;padding:12px 8px;border:2px solid var(--ch-card-stroke);border-radius:15px;background:#452a25;color:#f9e5c8;font-size:.85rem;font-weight:800}
+.ch-avatar-card img{width:min(100%,90px);height:auto;aspect-ratio:1;object-fit:contain}
+.ch-avatar-card.ch-selected,.ch-frame-card.ch-selected{border-color:#f9cc7f;background:#67402a}
+.ch-frame-card{min-height:68px}
+.ch-frame-teal{border-color:#559c8a}
+.ch-frame-walnut{border-color:#996f53}
+.ch-profile-avatar img{width:100%;height:100%;object-fit:contain}
+.ch-profile-avatar[data-frame=gold]{border-color:#e9b86d}
+.ch-profile-avatar[data-frame=walnut]{border-color:#9b7053}
+.ch-profile-avatar[data-frame=teal]{border-color:#529e8d}
+@media(max-width:359px){.ch-avatar-gallery,.ch-frame-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}}
