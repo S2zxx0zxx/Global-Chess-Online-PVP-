@@ -1,4 +1,5 @@
 import { renderPieceArt } from './piece-art.js';
+import { emitFeedback } from './feedback.js';
 import { loadBrowserMateSolver } from './mate-solver.js';
 import { bindLearning } from './learning.js';
 import { bindLobby } from './lobby.js';
@@ -251,6 +252,7 @@ function commit(move) {
   selected = undefined;
   save();
   render(played);
+  emitFeedback(state.game.inCheck() ? 'check' : played.captured ? 'capture' : 'move');
   window.dispatchEvent(new CustomEvent('chess-move-committed', {detail:{color:played.color,from:played.from,to:played.to}}));
   playComputer();
 }
@@ -421,6 +423,7 @@ online = bindOnline({
     const played = match.moves.length === previousPly + 1
       ? state.game.history({verbose:true}).at(-1) : undefined;
     render(played);
+    if (played) emitFeedback(state.game.inCheck() ? 'check' : played.captured ? 'capture' : 'move');
     appShell?.go('match');
   },
   onLeave() {
