@@ -68,7 +68,7 @@ function updateClock() {
   const elapsed = wasVisible ? now - tickAt : 0;
   tickAt = now;
   wasVisible = !document.hidden;
-  if (online?.active) { displayClock(); return; }
+  if (online?.active || state.paused) { displayClock(); return; }
   const { clock, game } = state;
   if (clock && !outcome(game) && elapsed > 0) {
     state.clock = remainingClock(clock, game.turn(), elapsed);
@@ -103,7 +103,7 @@ function settleClaim(reason, move) {
 
 claim.onclick = () => {
   const {game} = state;
-  if (outcome(game) || (online?.active && !online.canMove(game.turn())) ||
+  if (state.paused || outcome(game) || (online?.active && !online.canMove(game.turn())) ||
       (state.mode === 'computer' && game.turn() === 'b')) return;
   const reason = claimableDraw(game);
   if (reason) return settleClaim(reason);
@@ -215,9 +215,9 @@ function render(move) {
     return cell;
   })));
   if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus();
-  status.textContent = [outcome(game) ?? (mode === 'computer' && game.turn() !== state.playerSide ? 'Computer thinking…' :
+  status.textContent = [state.paused ? 'Match paused · Open Pause screen to resume' : (outcome(game) ?? (mode === 'computer' && game.turn() !== state.playerSide ? 'Computer thinking…' :
     (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : '')), notice].filter(Boolean).join(' · ');
-  claim.hidden = (online?.active && !online.canMove(game.turn())) || Boolean(outcome(game)) || (mode === 'computer' && game.turn() !== state.playerSide);
+  claim.hidden = state.paused || (online?.active && !online.canMove(game.turn())) || Boolean(outcome(game)) || (mode === 'computer' && game.turn() !== state.playerSide);
   const moves = game.history();
   document.querySelector('#moves').replaceChildren(...moves.filter((_, index) => index % 2 === 0).map((move, index) => {
     const item = document.createElement('li');
@@ -229,7 +229,7 @@ function render(move) {
 function save() {
   if (online?.active) return;
   try {
-    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove, state.preset, state.playerSide, state.resignedBy);
+    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove, state.preset, state.playerSide, state.resignedBy, state.paused);
     gameStorage.setItem(key, snapshot);
     const completed = outcome(state.game);
     if (completed) recordMatch(gameStorage, completed, snapshot);
@@ -241,6 +241,7 @@ function save() {
 
 function commit(move) {
   if (online?.active) { online.move(move); return; }
+  if (state.paused) return;
   updateClock();
   if (outcome(state.game)) return;
   const played = state.game.move(move);
@@ -252,7 +253,7 @@ function commit(move) {
 
 function playComputer() {
   const {game, mode} = state;
-  if (worker || mode !== 'computer' || game.turn() === state.playerSide || outcome(game)) return;
+  if (worker || state.paused || mode !== 'computer' || game.turn() === state.playerSide || outcome(game)) return;
   let job;
   try {
     job = new Worker(new URL('./bot.js', import.meta.url), {type:'module'});
@@ -283,7 +284,7 @@ function playComputer() {
 async function selectSquare(square) {
   const {game, mode} = state;
   if (online?.active && !online.canMove(game.turn())) return;
-  if (!square || outcome(game) || (mode === 'computer' && game.turn() !== state.playerSide)) return;
+  if (!square || state.paused || outcome(game) || (mode === 'computer' && game.turn() !== state.playerSide)) return;
   const piece = game.get(square);
   if (piece?.color === game.turn()) {
     selected = selected === square ? undefined : square;
@@ -445,15 +446,26 @@ appShell = mountAppShell({
     const side=state.mode==='computer'?state.playerSide:state.game.turn();
     if(!confirm('Resign as '+(side==='w'?'White':'Black')+'? This will end your current match.'))return false;
     stopComputer();
+    state.paused=false;
     state.resignedBy=side;
     save();render();
     return true;
+  },
+  pauseCurrentMatch(){
+    updateClock();
+    if(online?.active || outcome(state.game) || (state.preset === undefined && !state.game.history().length))return false;
+    if(state.paused)return true;
+    stopComputer();state.paused=true;save();render();return true;
+  },
+  resumeCurrentMatch(){
+    if(online?.active || !state.paused)return false;
+    state.paused=false;tickAt=performance.now();save();render();playComputer();return true;
   },
   getMatchSummary(){
     return {
       outcome:outcome(state.game),mode:state.mode,
       online:Boolean(online?.active),difficulty:state.difficulty,
-      playerSide:state.playerSide,moves:state.game.history().length,
+      playerSide:state.playerSide,moves:state.game.history().length,paused:state.paused,
     };
   },
 });
