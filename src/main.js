@@ -650,6 +650,45 @@ window.addEventListener('chess-storage-error', () => {
   render();
 });
 }
-initialize().catch(() => {
-  document.querySelector('#status').textContent = 'The game could not start.';
-}).finally(() => { document.querySelector('#launch').hidden = true; });
+// SCR-00/27: never leave a silent blank screen when initialization fails.
+// This recovery surface uses plain DOM; it still works if the premium UI fails.
+initialize().then(() => {
+  document.querySelector('#launch').hidden = true;
+}).catch(() => {
+  document.querySelector('#launch').hidden = true;
+  const fallback=document.createElement('section');
+  fallback.id='ch-boot-recovery';
+  fallback.setAttribute('role','alert');
+  fallback.setAttribute('aria-labelledby','ch-boot-title');
+  const symbol=document.createElement('img');
+  symbol.src='/icon.svg';symbol.alt='';symbol.width=76;symbol.height=76;
+  const title=document.createElement('h1');
+  title.id='ch-boot-title';title.textContent='Your chess game could not open';
+  const description=document.createElement('p');
+  description.textContent='A local asset or saved-game initialization failed. Your existing browser data has not been erased.';
+  const retry=document.createElement('button');
+  retry.type='button';retry.textContent='Retry opening chess';
+  retry.onclick=()=>location.reload();
+  const rescue=document.createElement('button');
+  rescue.type='button';rescue.textContent='Export accessible raw match save';
+  const status=document.createElement('p');
+  status.setAttribute('role','status');
+  rescue.onclick=()=>{
+    try {
+      const raw=localStorage.getItem(key);
+      if (!raw) {status.textContent='No accessible localStorage match was found. IndexedDB data is not modified.';return;}
+      const file=new Blob([JSON.stringify({source:'localStorage',match:raw},null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(file);
+      const link=document.createElement('a');
+      link.href=url;link.download='global-chess-recovery-raw.json';
+      document.body.append(link);link.click();link.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),2000);
+      status.textContent='Raw localStorage match export requested. This is a recovery copy, not a validated import backup.';
+    } catch {
+      status.textContent='Browser storage is inaccessible. Do not clear site data before troubleshooting.';
+    }
+  };
+  fallback.append(symbol,title,description,retry,rescue,status);
+  document.body.append(fallback);
+  retry.focus();
+});
