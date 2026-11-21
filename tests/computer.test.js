@@ -30,3 +30,15 @@ test('standard and hard see a recapture missed by easy', () => {
     assert.notEqual(chooseComputerMove(fen,level).to,'d5');
   }
 });
+
+
+test('computer makes a legal opening move when player chooses Black', () => {
+  const game = new Chess();
+  const move = chooseComputerMove(game.fen(),'easy',{budgetMs:80});
+  assert.ok(move);
+  assert.doesNotThrow(()=>game.move(move));
+  assert.equal(game.turn(),'b');
+  const restored = restoreGame(serializeGame(game,'computer',undefined,null,'easy',undefined,'untimed','b'));
+  assert.equal(restored.playerSide,'b');
+  assert.equal(restored.game.turn(),'b');
+});
