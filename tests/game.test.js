@@ -80,3 +80,15 @@ test('a proven dead pawn position ends immediately', () => {
   game.load('4k3/8/8/p1p1p1p1/P1P1P1P1/8/8/4K3 w - - 0 1');
   assert.equal(result(game),'Draw by dead position');
 });
+
+
+test('player side survives save and legacy saves remain White by default', () => {
+  const {game} = restoreGame();
+  game.move('d4');
+  const raw = serializeGame(game,'computer',undefined,null,'hard',undefined,'untimed','b');
+  const restored = restoreGame(raw);
+  assert.equal(restored.playerSide,'b');
+  assert.equal(restored.game.fen(),game.fen());
+  assert.equal(restoreGame(serializeGame(game,'computer')).playerSide,'w');
+  assert.throws(() => restoreGame(raw.replace('"playerSide":"b"','"playerSide":"q"')));
+});
