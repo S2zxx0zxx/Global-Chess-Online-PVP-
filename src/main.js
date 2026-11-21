@@ -52,12 +52,14 @@ let tickAt = performance.now();
 let online;
 let lobby;
 let appShell;
-let flipped = false;
+let flipped = state.mode === 'computer' && state.playerSide === 'b';
+document.documentElement.classList.toggle('ch-board-flipped',flipped);
 let wasVisible = !document.hidden;
 const flip = document.querySelector('#flip-board');
 flip.onclick = () => {
   flipped = !flipped;
   flip.setAttribute('aria-pressed', String(flipped));
+  document.documentElement.classList.toggle('ch-board-flipped',flipped);
   renderer?.setFlipped(flipped);
   render();
 };
@@ -385,6 +387,8 @@ function startLocalMatch(mode, preset, difficulty, side = 'w') {
   const playerSide = side === 'b' ? 'b' : 'w';
   state = {...restoreGame(), mode, preset, difficulty, playerSide, clock: startClock(preset)};
   flipped = mode === 'computer' && playerSide === 'b';
+  document.documentElement.classList.toggle('ch-board-flipped',flipped);
+  flip.setAttribute('aria-pressed', String(flipped));
   renderer?.setFlipped(flipped);
   showVersus(mode === 'computer' && playerSide === 'b' ? 'Computer · White' : 'White',
     mode === 'computer' && playerSide === 'w' ? 'Computer · Black' : 'Black');
