@@ -12,6 +12,10 @@ function loadPreferences() {
 export function bindLobby({startMatch, historyCount}) {
   const element = id => document.getElementById(id);
   const preferences = loadPreferences();
+  window.addEventListener('chess-profile-changed',() => {
+    Object.assign(preferences,loadPreferences());
+    apply();
+  });
   const profile = element('profile-dialog');
   const settings = element('settings-dialog');
   const result = element('result-dialog');
