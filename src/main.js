@@ -509,6 +509,7 @@ appShell = mountAppShell({
       outcome:outcome(state.game),mode:state.mode,
       online:Boolean(online?.active),difficulty:state.difficulty,
       playerSide:state.playerSide,moves:state.game.history().length,paused:state.paused,
+      started:Boolean(online?.active) || state.preset !== undefined || state.game.history().length > 0,
     };
   },
 });
