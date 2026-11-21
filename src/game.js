@@ -64,6 +64,14 @@ export function serializeGame(game, mode, drawClaim, clock, difficulty, claimMov
   return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty, claimMove, preset, playerSide, resignedBy, paused });
 }
 
+export function savedMatchOutcome(state) {
+  if (!state || !state.game) return null;
+  if (state.drawClaim) return 'Draw by ' + state.drawClaim;
+  if (state.resignedBy) return (state.resignedBy === 'w' ? 'Black' : 'White') + ' wins by resignation';
+  return result(state.game) ?? (state.clock?.[state.game.turn()] === 0
+    ? timeoutResult(state.game, state.game.turn()) : null);
+}
+
 export function result(game) {
   if (game.isCheckmate()) return game.turn() === 'w' ? 'Black wins by checkmate' : 'White wins by checkmate';
   if (game.isStalemate()) return 'Draw by stalemate';
