@@ -79,6 +79,9 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   });
   toolbar.append(back,tools);
   match.prepend(toolbar);
+  const boardControls=element('div','ch-board-controls');
+  match.insertBefore(boardControls,byId('flip-board'));
+  boardControls.append(byId('flip-board'),byId('view'));
   document.querySelector('.layout>aside').id='ch-match-sidebar';
   const dock=element('section','ch-match-dock');
   dock.setAttribute('aria-label','Match status and controls');
