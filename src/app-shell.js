@@ -22,7 +22,7 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   let screenRoutes;
 
   const hero = element('div', 'ch-hero');
-  hero.innerHTML = '<div class="ch-hero-mark" aria-hidden="true">♞ <span>♚</span> ♜</div><p class="ch-eyebrow">THE CLASSIC GAME, REIMAGINED</p><h2>GLOBAL CHESS</h2><p>Play your way. Learn every game.</p>';
+  hero.innerHTML = '<div class="ch-hero-mark"><img class="ch-brand-art" src="/brand/global-chess-emblem.svg" alt="Global Chess emblem"></div><p class="ch-eyebrow">THE CLASSIC GAME, REIMAGINED</p><h2>GLOBAL CHESS</h2><p>Play your way. Learn every game.</p>';
   lobby.insertBefore(hero, lobby.firstChild);
 
   const play = element('section', 'ch-screen ch-play-hub');
