@@ -525,6 +525,7 @@ backupFile.onchange = async () => {
 };
 
 bindLearning(names);
+window.addEventListener('chess-appearance-changed', () => render());
 
 window.addEventListener('chess-storage-error', () => {
   notice = 'Could not write the game save.';
