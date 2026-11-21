@@ -146,6 +146,31 @@ try {
 
   const screenshot = await send('Page.captureScreenshot', {format:'png', captureBeyondViewport:false});
   await writeFile('artifacts/chess-3d-browser-smoke.png', Buffer.from(screenshot.data,'base64'));
+
+  // ZIP v3 screen-by-screen visual regression: these are route renders,
+  // not assertions that every release-gate behavior is finished.
+  const screenNames=['history','review','lessons','lesson','puzzles','puzzle','puzzle-result',
+    'daily','progress','achievements','appearance','settings','data','transfer','recovery',
+    'update','about','menu','pause','result'];
+  await mkdir('artifacts/screens',{recursive:true});
+  for (const name of screenNames) {
+    await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen='+encodeURIComponent(name)});
+    await waitUntil(()=>evaluate(
+      'document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-'+name+'") && document.querySelector("#ch-extra-screen:not([hidden]) h1")?.textContent?.length > 2'
+    ),20000);
+    const image=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+    await writeFile('artifacts/screens/'+name+'.png',Buffer.from(image.data,'base64'));
+  }
+  console.log('Rendered and captured all '+screenNames.length+' additional v3 routes in Chromium');
+  for(const width of [320,360,412,768]){
+    await send('Emulation.setDeviceMetricsOverride',{width,height:800,deviceScaleFactor:1,mobile:true});
+    await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=home'});
+    await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-home")'));
+    const overflow=await evaluate('document.documentElement.scrollWidth - document.documentElement.clientWidth');
+    if(overflow>2)throw new Error('Home horizontal overflow at '+width+'px: '+overflow);
+  }
+  console.log('Home screen horizontal overflow checks: 320,360,412,768px passed');
+  if(errors.length)throw new Error('Chromium runtime exceptions: '+errors.join(' | '));
 } catch (error) {
   throw new Error(error.message + (previewLog ? '\nPreview logs:\n' + previewLog.slice(-3000) : ''));
 } finally {
