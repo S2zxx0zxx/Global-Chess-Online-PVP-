@@ -203,7 +203,7 @@ try {
   // ZIP v3 screen-by-screen visual regression: these are route renders,
   // not assertions that every release-gate behavior is finished.
   const screenNames=['history','review','lessons','lesson','puzzles','puzzle','puzzle-result',
-    'daily','progress','achievements','appearance','settings','data','transfer','recovery',
+    'daily','progress','achievements','appearance','avatars','settings','data','transfer','recovery',
     'update','about','menu','pause','result'];
   await mkdir('artifacts/screens',{recursive:true});
   for (const name of screenNames) {
@@ -225,6 +225,14 @@ try {
   const crestShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/SCR-23-crest-piece-style.png',Buffer.from(crestShot.data,'base64'));
   console.log('Persistent original Crest chess pieces: passed');
+
+  // SCR-20 player customization uses actual locally persisted choices.
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=avatars'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelectorAll(".ch-avatar-card").length === 3'));
+  await evaluate('document.querySelectorAll(".ch-avatar-card")[1].click();document.querySelector(".ch-frame-teal").click();true');
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=profile'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#ch-profile-avatar img")?.src.includes("piece_white_rook.svg")===true && document.getElementById("ch-profile-avatar").dataset.frame === "teal"'));
+  console.log('Original avatar and decorative frame persist across reload: passed');
   for(const width of [320,360,412,768]){
     await send('Emulation.setDeviceMetricsOverride',{width,height:800,deviceScaleFactor:1,mobile:true});
     await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=home'});
