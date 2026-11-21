@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { restoreGame, serializeGame, result, intendedDraw, timeoutResult } from '../src/game.js';
+import { restoreGame, serializeGame, result, intendedDraw, timeoutResult, hasAvailableDrawClaim } from '../src/game.js';
 
 test('restores moves and opponent mode', () => {
   const {game} = restoreGame();
@@ -121,4 +121,13 @@ test('pause flag round trips through the v1 save without changing clocks or lega
   assert.throws(() => restoreGame(raw.replace('"paused":true','"paused":"yes"')));
   const both = JSON.parse(raw);both.resignedBy='w';
   assert.throws(() => restoreGame(JSON.stringify(both)));
+});
+
+test('draw action is absent in opening but available for legitimate intended repetition', () => {
+  const {game}=restoreGame();
+  assert.equal(hasAvailableDrawClaim(game),false);
+  for(const move of ['Nf3','Nf6','Ng1','Ng8','Nf3','Nf6','Ng1'])game.move(move);
+  assert.equal(hasAvailableDrawClaim(game),true);
+  game.move('Ng8');
+  assert.equal(hasAvailableDrawClaim(game),true);
 });
