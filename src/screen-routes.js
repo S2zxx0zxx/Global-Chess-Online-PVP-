@@ -349,8 +349,9 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
       const grid=mk('div','ch-theme-grid');section.append(grid);
       for(const [name,title,detail] of [['maple','Classic Maple','Original warm maple'],['walnut','Royal Walnut','Deep brown for evening play'],['forest','Forest Teal','Green and warm ivory']]){
         const tile=mk('button','ch-theme-card'+(ls('global-chess.appearance.v1','maple')===name?' ch-selected':''));tile.type='button';
+        tile.setAttribute('aria-pressed',String(ls('global-chess.appearance.v1','maple')===name));
         tile.append(mk('span','ch-theme-preview ch-preview-'+name),mk('strong','',title),mk('small','',detail));
-        tile.onclick=()=>{appearance(name);if(!save('global-chess.appearance.v1',name))paragraph(section,'Theme is temporary because local storage is unavailable.','ch-inline-notice ch-notice-warning');for(const child of grid.children)child.classList.toggle('ch-selected',child===tile);};
+        tile.onclick=()=>{appearance(name);if(!save('global-chess.appearance.v1',name))paragraph(section,'Theme is temporary because local storage is unavailable.','ch-inline-notice ch-notice-warning');for(const child of grid.children){child.classList.toggle('ch-selected',child===tile);child.setAttribute('aria-pressed',String(child===tile));}};
         grid.append(tile);
       }
       section.append(mk('h2','ch-section-title','Piece collection'));
@@ -358,7 +359,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
       const pieceGrid=mk('div','ch-piece-grid');section.append(pieceGrid);
       for(const [name,label,detail] of [['classic','Classic Finish','Soft ivory treatment of original vectors'],['crest','Royal Crest','Richer original SVG gold and oxblood finish']]){
         const item=mk('button','ch-piece-card'+(ls('global-chess.pieces.v1','classic')===name?' ch-selected':''));
-        item.type='button';
+        item.type='button';item.setAttribute('aria-pressed',String(ls('global-chess.pieces.v1','classic')===name));
         const preview=mk('img','ch-piece-example '+(name==='crest'?'ch-piece-crest':'ch-piece-classic'));preview.src='/brand/pieces/piece_white_knight.svg';
         preview.alt='';
         item.append(preview,mk('strong','',label),mk('small','',detail));
@@ -366,7 +367,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
           if(!save('global-chess.pieces.v1',name))paragraph(section,'The piece choice will only last this session.','ch-inline-notice ch-notice-warning');
           document.documentElement.dataset.chPieces=name;
           window.dispatchEvent(new Event('chess-appearance-changed'));
-          for(const child of pieceGrid.children)child.classList.toggle('ch-selected',child===item);
+          for(const child of pieceGrid.children){child.classList.toggle('ch-selected',child===item);child.setAttribute('aria-pressed',String(child===item));}
         };
         pieceGrid.append(item);
       }
