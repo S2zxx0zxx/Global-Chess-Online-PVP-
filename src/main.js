@@ -34,10 +34,13 @@ const promotion = document.querySelector('#promotion');
 const names = { k:'King', q:'Queen', r:'Rook', b:'Bishop', n:'Knight', p:'Pawn' };
 let state = restoreGame();
 let notice = '';
+let corruptMatchRaw;
 try {
   state = restoreGame(gameStorage.getItem(key));
 } catch {
-  notice = 'Saved game could not be restored.';
+  // Do not overwrite potentially recoverable bytes without user consent.
+  corruptMatchRaw = gameStorage.getItem(key);
+  notice = 'Saved game could not be restored. Export it from Recovery before replacing the match.';
 }
 if (state.mode === 'computer') document.querySelector('#difficulty').value = state.difficulty;
 let selected;
@@ -387,6 +390,8 @@ function showVersus(white,black) {
 
 function startLocalMatch(mode, preset, difficulty, side = 'w') {
   if (online?.active) return;
+  if (corruptMatchRaw && !confirm('The saved match cannot be restored. Starting a new game will replace its stored bytes. Export your raw recovery copy first if needed. Continue?')) return;
+  corruptMatchRaw = undefined;
   if (state.game.history().length && !outcome(state.game) && !confirm('Replace this match?')) return;
   stopComputer();
   const playerSide = side === 'b' ? 'b' : 'w';
@@ -450,6 +455,7 @@ appShell = mountAppShell({
     try { return summarizeMatches(readHistory(gameStorage)).completed; } catch { return null; }
   },
   storagePersistent: gameStorage.durable,
+  hasCorruptMatch(){return Boolean(corruptMatchRaw);},
   async preparePwaUpdate(){
     if (online?.active && !online.match.outcome) {
       return {ok:false,reason:'Finish your private online match before applying an update.'};
@@ -506,6 +512,7 @@ appShell = mountAppShell({
     };
   },
 });
+if (corruptMatchRaw) appShell.go('recovery');
 render();
 playComputer();
 
@@ -603,8 +610,8 @@ const backupStatus = document.querySelector('#backup-status');
 document.querySelector('#export-backup').onclick = () => {
   try {
     if (state.clock) updateClock();
-    save();
-    downloadFile(exportBackup(gameStorage), 'global-chess-backup.json', 'application/json');
+    if (!corruptMatchRaw) save();
+    downloadFile(exportBackup(gameStorage), corruptMatchRaw ? 'global-chess-recovery-unvalidated.json' : 'global-chess-backup.json', 'application/json');
   } catch {
     backupStatus.textContent = 'Backup could not be exported.';
   }
@@ -632,6 +639,7 @@ backupFile.onchange = async () => {
     const restored = importBackup(gameStorage, contents);
     stopComputer();
     state = restored;
+    corruptMatchRaw = undefined;
     selected = undefined;
     tickAt = performance.now();
     notice = 'Backup restored.';
