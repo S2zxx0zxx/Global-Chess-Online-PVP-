@@ -233,6 +233,32 @@ try {
     if(overflow>2)throw new Error('Home horizontal overflow at '+width+'px: '+overflow);
   }
   console.log('Home screen horizontal overflow checks: 320,360,412,768px passed');
+
+  // Real browser Back must navigate the game shell without clearing saved moves.
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=home'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-home")'));
+  await evaluate('document.querySelector("[data-ch-view=play]").click();true');
+  await evaluate('document.querySelector("[data-ch-view=learn]").click();true');
+  await evaluate('history.back();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-play")'));
+  console.log('Browser Back returns from Learn to Play: passed');
+
+  // Screen contracts SCR-00/01: denied browser storage must not crash the app,
+  // and the UI may NOT claim a durable save for temporary guest play.
+  await send('Page.addScriptToEvaluateOnNewDocument',{source:
+    'Object.defineProperty(window,"indexedDB",{configurable:true,get(){throw new Error("IndexedDB denied")}});'+
+    'Object.defineProperty(window,"localStorage",{configurable:true,get(){throw new Error("localStorage denied")}});'
+  });
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=home'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector(".ch-volatile-warning") !== null'));
+  await evaluate('if(document.querySelector("#welcome-dialog[open]"))document.querySelector("#welcome-dialog button").click();true');
+  await evaluate('document.getElementById("local").click();true');
+  await evaluate('document.querySelector("#board [data-square=e2]").click();true');
+  await evaluate('document.querySelector("#board [data-square=e4]").click();true');
+  await waitUntil(()=>evaluate('document.querySelector("#moves li")?.textContent?.includes("e4") === true'));
+  const volatileShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/SCR-27-volatile-storage.png',Buffer.from(volatileShot.data,'base64'));
+  console.log('Blocked browser storage: offline play and honest session-only warning passed');
   if(errors.length)throw new Error('Chromium runtime exceptions: '+errors.join(' | '));
 } catch (error) {
   throw new Error(error.message + (previewLog ? '\nPreview logs:\n' + previewLog.slice(-3000) : ''));
