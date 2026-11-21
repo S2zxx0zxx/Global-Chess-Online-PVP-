@@ -30,7 +30,7 @@ const appearance=name=>{
 };
 export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','settings','data','transfer','recovery','update','about']);
 
-export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise}){
+export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise,getMatchSummary}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
   main.insertBefore(screen,el('ch-tab-bar'));
@@ -62,12 +62,18 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise
       card(items,'Settings','Accessibility and board preferences',()=>go('settings'));
     }
     if(route==='result'){
-      const outcome=el('result-copy').textContent.trim();
-      title('Match complete',outcome||'Match still in progress','This is the actual game-engine result, not an estimated rating.');
+      const match=getMatchSummary();
+      const outcome=match?.outcome||el('result-copy').textContent.trim();
+      title('Match complete',outcome||'Match still in progress','Exact adjudication from the chess game engine.');
       if(outcome){
         const image=mk('img','ch-celebration');image.src='/brand/victory-confetti.svg';image.alt='';section.append(image);
+        const info=mk('div','ch-stats-grid');section.append(info);
+        for(const [label,value] of [['Moves',Math.ceil((match?.moves||0)/2)],['Opponent',match?.online?'Private online player':match?.mode==='computer'?'Computer':'Local friend']]){
+          const tile=mk('div','ch-stat');tile.append(mk('strong','',String(value)),mk('span','',label));info.append(tile);
+        }
         const items=stack();
-        items.append(btn('Rematch',()=>{go('match');el('rematch').click();},'primary'),btn('Review saved matches',()=>go('history')),btn('Home',()=>go('home')));
+        if(!match?.online)items.append(btn('Rematch',()=>{go('match');el('rematch').click();},'primary'));
+        items.append(btn('Review saved matches',()=>go('history')),btn('Home',()=>go('home')));
       }else section.append(btn('Continue match',()=>go('match'),'primary'));
     }
     if(route==='history'){
