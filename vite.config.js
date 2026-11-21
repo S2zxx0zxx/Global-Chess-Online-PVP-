@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, rmSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { defineConfig } from 'vite';
 
@@ -6,13 +6,16 @@ export default defineConfig({
   plugins: [{
     name: 'offline-game-shell',
     apply: 'build',
+    // Vite copies public/ verbatim. Remove old unverified source bitmaps from
+    // the DISTRIBUTION output even though they remain quarantined in Git
+    // pending author/ownership review. They are neither loaded nor cached.
+    writeBundle() {
+      rmSync(new URL('dist/chess-assets/',import.meta.url), {recursive:true,force:true});
+    },
     generateBundle(_, bundle) {
-      const assetDirectory = new URL('public/chess-assets/pieces/',import.meta.url);
       const brandDirectory = new URL('public/brand/',import.meta.url);
       const crestDirectory = new URL('public/brand/pieces/',import.meta.url);
       const artwork = [
-        'chess-assets/board/maple-walnut.webp',
-        ...readdirSync(assetDirectory).filter(file => file.endsWith('.webp')).map(file => 'chess-assets/pieces/' + file),
         ...readdirSync(brandDirectory).filter(file => file.endsWith('.svg')).map(file => 'brand/' + file),
         ...readdirSync(crestDirectory).filter(file => file.endsWith('.svg')).map(file => 'brand/pieces/' + file),
       ];

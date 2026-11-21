@@ -459,6 +459,21 @@ appShell = mountAppShell({
     try { return summarizeMatches(readHistory(gameStorage)).completed; } catch { return null; }
   },
   storagePersistent: gameStorage.durable,
+  async onNativeBackground(){
+    updateClock();
+    if(online?.active)return;
+    if(!save()||gameStorage.durable===false)return;
+    try{await gameStorage.flush();}catch{
+      window.dispatchEvent(new Event('chess-storage-error'));
+    }
+  },
+  onNativeForeground(){
+    // Android onStop/onResume is independent of visibilitychange timing.
+    // Local clocks are intentionally paused while the Activity is backgrounded.
+    tickAt=performance.now();
+    wasVisible=true;
+    render();
+  },
   hasCorruptMatch(){return Boolean(corruptMatchRaw);},
   saveAndExitCurrentMatch(){
     return finalizeOfflineExit({
@@ -503,9 +518,9 @@ appShell = mountAppShell({
   readSavedHistory(){ return readHistory(gameStorage); },
   writeSavedHistory(entries){ return commitHistoryReplacement(gameStorage,historyKey,entries); },
   async clearCompletedHistory(){
-    gameStorage.setItem(historyKey,'[]');
-    if(gameStorage.durable !== false)await gameStorage.flush?.();
-    return {durable:gameStorage.durable !== false};
+    // Use the same abort-aware transaction boundary as per-record deletion.
+    await commitHistoryReplacement(gameStorage,historyKey,[]);
+    return {durable:true};
   },
   resignCurrentMatch(){
     updateClock();

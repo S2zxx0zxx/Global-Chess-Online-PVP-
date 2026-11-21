@@ -86,13 +86,18 @@ dialog form{margin-top:8px}
 
 /* The supplied board has a 24 px frame around a 448 px playing area. */
 .board{position:relative;border:0;padding:4.83871%;background:none;isolation:isolate}
-.board::before{content:'';position:absolute;inset:0;background:url('/chess-assets/board/maple-walnut.webp') center/100% 100% no-repeat;z-index:-1;pointer-events:none}
+.board::before{content:'';position:absolute;inset:0;background:url('/brand/board-maple-walnut.svg') center/100% 100% no-repeat;z-index:-1;pointer-events:none}
 .board.flipped::before{transform:rotate(180deg)}
 .board .light,.board .dark{background:transparent}
 .board button[aria-pressed=true]{background:color-mix(in srgb,var(--ch-color-board-select) 57%,transparent)}
 .high-contrast .board .light{background:#fff1ce}
 .high-contrast .board .dark{background:#ae8969}
 .piece-art{display:block;width:94%;height:94%;object-fit:contain;margin:auto;pointer-events:none;user-select:none}
+.piece-art.ch-piece-classic{filter:sepia(.13) saturate(.83) drop-shadow(0 2px 2px #1209098c)}
+.piece-art.ch-piece-crest{filter:drop-shadow(0 3px 3px #120909aa)}
+html[data-ch-theme="walnut"] .board::before{filter:brightness(.82) saturate(.9)}
+html[data-ch-theme="forest"] .board::before{filter:sepia(.22) hue-rotate(64deg) saturate(.78)}
+@media(prefers-contrast:more){.piece-art{filter:none!important}.board button:focus-visible{outline:4px solid #65cfff!important}}
 
 /* CH-01 v3 / SCR-03 + SCR-07: responsive mobile foundation.
    Keep original game controls available while dedicated screens are built. */

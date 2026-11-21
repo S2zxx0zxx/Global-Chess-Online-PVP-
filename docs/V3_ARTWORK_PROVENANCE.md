@@ -27,3 +27,27 @@ All above SVG assets were newly authored for this game in this development wave.
   self-hosted licensed fonts and native PNG/adaptive assets are not certified in this repo.
 - The commercial license/ownership declaration must be reviewed by the product owner.
 Do not describe the full v3 asset registry as complete merely because the original SVG family exists.
+
+
+## 2026-11-22 M-02B — active runtime provenance hardening
+- Newly authored `public/brand/board-maple-walnut.svg` contains an original 8×8
+  496px SVG maple/walnut board (64 vector squares and matching border/grain).
+  The CSS 2D board and Babylon 3D diffuse texture now load that *same* board.
+- Both `Classic Finish` and `Royal Crest` now use the 12 original
+  `public/brand/pieces/` SVG files, with separate CSS finishes; neither
+  preset loads an unlicensed WebP image. UI copy no longer implies a separate
+  unverified piece family is cleared for commercial use.
+- The old `public/chess-assets/` WebP masters remain **quarantined in Git
+  history/source for ownership review** and are intentionally removed from
+  packaged `dist/` by the Vite build hook. They are absent from the service
+  worker precache and excluded from browser/Android shipped runtime.
+- `tests/original-art.test.js` and `scripts/check-original-art.mjs` now fail
+  CI if the 2D/3D board, 12 SVGs or legacy-distribution exclusion regresses.
+- Native icon PNG variants and adaptive foreground/background/monochrome assets
+  are generated locally from the same original `icon.svg` and
+  `maskable.svg`; Android debug/signing jobs exercise the output.
+
+**Limits:** This is a code-level provenance and distribution safeguard, **not**
+a signed artist assignment or comprehensive commercial legal clearance of every
+third-party font, texture, sound and dependency. Physical device preview,
+store-listing artwork and owner legal/licensing acceptance remain open.

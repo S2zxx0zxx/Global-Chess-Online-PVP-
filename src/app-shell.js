@@ -1,5 +1,6 @@
 import { lessons, puzzles, dailyExercise } from './learning.js';
 import { mountScreenRoutes } from './screen-routes.js';
+import { bindNativeLifecycle } from './native-lifecycle.js';
 
 const byId = id => document.getElementById(id);
 
@@ -12,7 +13,7 @@ function element(tag, className, text) {
 
 // The v3 M0 shell intentionally calls existing, tested game commands rather
 // than keeping a separate copy of chess state in the presentation layer.
-export function mountAppShell({startMatch, historyCount, readSavedHistory, writeSavedHistory, clearCompletedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, saveAndExitCurrentMatch, preparePwaUpdate,hasCorruptMatch, storagePersistent = true}) {
+export function mountAppShell({startMatch, historyCount, readSavedHistory, writeSavedHistory, clearCompletedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, saveAndExitCurrentMatch, preparePwaUpdate,hasCorruptMatch, onNativeBackground, onNativeForeground, storagePersistent = true}) {
   const main = document.querySelector('main');
   const lobby = byId('lobby');
   const match = byId('match-area');
@@ -251,6 +252,9 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
         history[replace ? 'replaceState' : 'pushState']({ ...history.state, chessView: next }, '', target);
       } catch { /* Standalone/browser-restricted environments keep local navigation. */ }
     }
+    // Navigating away via browser/Android Back must never leave a local timer
+    // counting down behind a hidden match. Private PvP remains server-timed.
+    if(view==='match' && next!=='match')pauseCurrentMatch();
     // Back/Resume from either game menu or Pause clears any temporary local
     // pause left by a cancelled or failed Save & Exit attempt.
     if((view==='pause'||view==='menu') && next==='match')resumeCurrentMatch();
@@ -321,6 +325,15 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
     go(views.has(target) ? target : 'home', {fromHistory:true});
   });
   go(invite ? 'match' : (views.has(requested) ? requested : 'home'), {replace:true});
+  // Capacitor injects its App plugin in the Android WebView. Web/PWA builds
+  // remain browser-only and do not import any native runtime dependency.
+  void bindNativeLifecycle({
+    plugin:globalThis.Capacitor?.Plugins?.App,
+    getRoute:()=>view,go,
+    getOpenDialog:()=>document.querySelector('dialog[open]'),
+    onBackground:onNativeBackground,
+    onForeground:onNativeForeground,
+  }).catch(()=>{ /* Native bridge unavailable: browser history remains usable. */ });
   return {
     go,openSetup,
     onNewMatch(){go('match');startTutorial();},
