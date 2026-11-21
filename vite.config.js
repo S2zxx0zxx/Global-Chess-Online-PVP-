@@ -16,9 +16,9 @@ export default defineConfig({
         ...readdirSync(brandDirectory).filter(file => file.endsWith('.svg')).map(file => 'brand/' + file),
         ...readdirSync(crestDirectory).filter(file => file.endsWith('.svg')).map(file => 'brand/pieces/' + file),
       ];
-      const files = [...artwork,'index.html', 'manifest.webmanifest', 'icon.svg', 'solver/cha.wasm.gz', 'solver/LICENSE.txt', ...Object.keys(bundle).filter(file => file !== 'index.html')];
+      const files = [...artwork,'index.html', 'manifest.webmanifest', 'icon.svg', 'maskable.svg', 'solver/cha.wasm.gz', 'solver/LICENSE.txt', ...Object.keys(bundle).filter(file => file !== 'index.html')];
       const hash = createHash('sha256').update(JSON.stringify(files));
-      for (const file of ['index.html', 'public/manifest.webmanifest', 'public/icon.svg', 'public/solver/cha.wasm.gz', 'public/solver/LICENSE.txt', ...artwork.map(file => 'public/' + file)]) {
+      for (const file of ['index.html', 'public/manifest.webmanifest', 'public/icon.svg', 'public/maskable.svg', 'public/solver/cha.wasm.gz', 'public/solver/LICENSE.txt', ...artwork.map(file => 'public/' + file)]) {
         hash.update(readFileSync(new URL(file, import.meta.url)));
       }
       const revision = hash.digest('hex').slice(0,16);
