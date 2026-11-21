@@ -13,6 +13,7 @@ export function restoreGame(raw) {
   let preset;
   let playerSide = 'w';
   let resignedBy;
+  let paused = false;
   if (raw) {
     const save = JSON.parse(raw);
     if (save.version !== 1 || !Array.isArray(save.moves) || !['local', 'computer'].includes(save.mode)) {
@@ -22,6 +23,8 @@ export function restoreGame(raw) {
     if (save.playerSide !== undefined && !['w','b'].includes(save.playerSide)) throw new Error('Invalid saved player side');
     playerSide = save.playerSide ?? 'w';
     if (save.resignedBy !== undefined && !['w','b'].includes(save.resignedBy)) throw new Error('Invalid resignation side');
+    if (save.paused !== undefined && typeof save.paused !== 'boolean') throw new Error('Invalid pause state');
+    paused = save.paused === true;
     if (['easy', 'standard', 'hard'].includes(save.difficulty)) difficulty = save.difficulty;
     if (save.clock !== undefined) {
       if (!validClock(save.clock)) throw new Error('Invalid saved clock');
@@ -41,6 +44,7 @@ export function restoreGame(raw) {
       if (outcome && outcome !== 'Draw by dead position') throw new Error('Move after match ended');
       game.move(move);
     }
+    if (paused && (result(game) || save.resignedBy !== undefined || save.drawClaim !== undefined)) throw new Error('Cannot pause completed match');
     if (save.resignedBy !== undefined) {
       if (result(game) || save.drawClaim !== undefined) throw new Error('Resignation after completed match');
       resignedBy = save.resignedBy;
@@ -52,12 +56,12 @@ export function restoreGame(raw) {
       drawClaim = save.drawClaim;
     }
   }
-  return { game, mode, drawClaim, clock, difficulty, claimMove, preset, playerSide, resignedBy };
+  return { game, mode, drawClaim, clock, difficulty, claimMove, preset, playerSide, resignedBy, paused };
 }
 
-export function serializeGame(game, mode, drawClaim, clock, difficulty, claimMove, preset, playerSide = 'w', resignedBy) {
+export function serializeGame(game, mode, drawClaim, clock, difficulty, claimMove, preset, playerSide = 'w', resignedBy, paused = false) {
   const moves = game.history({ verbose: true }).map(({from, to, promotion}) => ({from, to, promotion}));
-  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty, claimMove, preset, playerSide, resignedBy });
+  return JSON.stringify({ version: 1, mode, moves, drawClaim, clock, difficulty, claimMove, preset, playerSide, resignedBy, paused });
 }
 
 export function result(game) {
