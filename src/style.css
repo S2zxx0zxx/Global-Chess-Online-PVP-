@@ -68,8 +68,11 @@ dialog form{margin-top:8px}
 #launch{position:fixed;inset:0;z-index:20;display:grid;place-content:center;justify-items:center;gap:12px;background:radial-gradient(ellipse at center,#602735,#220f17 70%);color:var(--ch-color-brand-gold)}
 #launch strong{font:700 2rem var(--ch-font-display)}
 #launch span{font-size:.85rem;color:var(--ch-color-brand-sand)}
-#versus{position:fixed;z-index:10;left:50%;top:18%;transform:translateX(-50%);width:min(360px,90vw);display:flex;align-items:center;justify-content:space-around;gap:16px;padding:18px;border:1px solid var(--ch-color-brand-gold);border-radius:14px;background:var(--ch-color-brand-mahogany);box-shadow:0 12px 30px #1b0a13b0;color:var(--ch-color-brand-cream);pointer-events:none;animation:versus-appear var(--ch-motion-tap) ease-out}
+#versus{position:fixed;z-index:10;left:50%;top:18%;transform:translateX(-50%);width:min(360px,90vw);display:flex;align-items:center;justify-content:space-around;gap:16px;padding:18px;border:1px solid var(--ch-color-brand-gold);border-radius:14px;background:var(--ch-color-brand-mahogany);box-shadow:0 12px 30px #1b0a13b0;color:var(--ch-color-brand-cream);pointer-events:auto;flex-wrap:wrap;animation:versus-appear var(--ch-motion-tap) ease-out}
 #versus strong{color:var(--ch-color-brand-gold);font:700 1.4rem var(--ch-font-display)}
+/* The visible Skip control must receive real touch/pointer events during VS. */
+#versus-skip{pointer-events:auto;min-width:54px;min-height:44px;padding:8px 12px;border:1px solid var(--ch-color-brand-gold);border-radius:10px;background:var(--ch-color-brand-goldStrong);color:var(--ch-color-brand-espresso);font-weight:800}
+#versus-skip:focus-visible{outline:3px solid var(--ch-color-a11y-focus);outline-offset:3px}
 @keyframes versus-appear{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
 @media(prefers-reduced-motion:reduce){#versus{animation:none}}
 #learn-dialog{width:min(440px,94vw)}
