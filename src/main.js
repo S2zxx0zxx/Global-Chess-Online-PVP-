@@ -24,7 +24,7 @@ const board = document.querySelector('#board');
 const status = document.querySelector('#status');
 const rematch = document.querySelector('#rematch');
 rematch.onclick = () => {
-  if (startLocalMatch(state.mode, state.preset ?? document.querySelector('#preset').value, state.difficulty)) {
+  if (startLocalMatch(state.mode, state.preset ?? document.querySelector('#preset').value, state.difficulty, state.playerSide)) {
     document.querySelector('#match-area').focus();
   }
 };
@@ -171,7 +171,7 @@ function render(move) {
   rematch.hidden = Boolean(online?.active) || !outcome(state.game);
   displayClock();
   const {game, mode} = state;
-  lobby?.render({outcome:outcome(game),turn:game.turn(),mode,online:Boolean(online?.active),
+  lobby?.render({outcome:outcome(game),turn:game.turn(),mode,playerSide:state.playerSide,online:Boolean(online?.active),
     started:online?.active ? online.match.turnStartedAt !== null : state.preset !== undefined || game.history().length > 0 || Boolean(state.clock)});
   const activeSquare = document.activeElement?.dataset.square;
   const targets = selected ? game.moves({square: selected, verbose: true}).map(move => move.to) : [];
@@ -214,9 +214,9 @@ function render(move) {
     return cell;
   })));
   if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus();
-  status.textContent = [outcome(game) ?? (mode === 'computer' && game.turn() === 'b' ? 'Computer thinking…' :
+  status.textContent = [outcome(game) ?? (mode === 'computer' && game.turn() !== state.playerSide ? 'Computer thinking…' :
     (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : '')), notice].filter(Boolean).join(' · ');
-  claim.hidden = (online?.active && !online.canMove(game.turn())) || Boolean(outcome(game)) || (mode === 'computer' && game.turn() === 'b');
+  claim.hidden = (online?.active && !online.canMove(game.turn())) || Boolean(outcome(game)) || (mode === 'computer' && game.turn() !== state.playerSide);
   const moves = game.history();
   document.querySelector('#moves').replaceChildren(...moves.filter((_, index) => index % 2 === 0).map((move, index) => {
     const item = document.createElement('li');
@@ -228,7 +228,7 @@ function render(move) {
 function save() {
   if (online?.active) return;
   try {
-    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove, state.preset);
+    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove, state.preset, state.playerSide);
     gameStorage.setItem(key, snapshot);
     const completed = outcome(state.game);
     if (completed) recordMatch(gameStorage, completed, snapshot);
@@ -251,7 +251,7 @@ function commit(move) {
 
 function playComputer() {
   const {game, mode} = state;
-  if (worker || mode !== 'computer' || game.turn() !== 'b' || outcome(game)) return;
+  if (worker || mode !== 'computer' || game.turn() === state.playerSide || outcome(game)) return;
   let job;
   try {
     job = new Worker(new URL('./bot.js', import.meta.url), {type:'module'});
@@ -282,7 +282,7 @@ function playComputer() {
 async function selectSquare(square) {
   const {game, mode} = state;
   if (online?.active && !online.canMove(game.turn())) return;
-  if (!square || outcome(game) || (mode === 'computer' && game.turn() === 'b')) return;
+  if (!square || outcome(game) || (mode === 'computer' && game.turn() !== state.playerSide)) return;
   const piece = game.get(square);
   if (piece?.color === game.turn()) {
     selected = selected === square ? undefined : square;
@@ -334,17 +334,21 @@ function showVersus(white,black) {
   versusTimer = setTimeout(() => { card.hidden = true; }, duration);
 }
 
-function startLocalMatch(mode, preset, difficulty) {
+function startLocalMatch(mode, preset, difficulty, side = 'w') {
   if (online?.active) return;
   if (state.game.history().length && !outcome(state.game) && !confirm('Replace this match?')) return;
   stopComputer();
-  state = {...restoreGame(), mode, preset, difficulty, clock: startClock(preset)};
+  const playerSide = side === 'b' ? 'b' : 'w';
+  state = {...restoreGame(), mode, preset, difficulty, playerSide, clock: startClock(preset)};
+  flipped = mode === 'computer' && playerSide === 'b';
+  renderer?.setFlipped(flipped);
   showVersus('White',mode === 'computer' ? 'Computer' : 'Black');
   tickAt = performance.now();
   selected = undefined;
   save();
   render();
   appShell?.onNewMatch();
+  playComputer();
   return true;
 }
 for (const mode of ['local', 'computer']) {
