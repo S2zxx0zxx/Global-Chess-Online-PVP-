@@ -345,6 +345,9 @@ try {
   await waitUntil(()=>evaluate('document.getElementById("ch-save-exit-status")?.textContent?.includes("Session-only storage") === true'));
   if(!(await evaluate('document.documentElement.classList.contains("ch-view-menu") && !Array.from(document.querySelectorAll("#ch-extra-screen button")).find(x=>x.textContent==="Leave without saving").hidden')))
     throw new Error('Volatile Save & Exit navigated away without explicit warning or opt-in');
+  await evaluate('document.querySelector("#ch-extra-screen .ch-back-button").click();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-match") && !document.getElementById("status").textContent.includes("Match paused")'));
+  console.log('Failed Save & Exit returns to a resumable game: passed');
   console.log('Volatile Save & Exit correctly blocks unsafe navigation: passed');
   if(errors.length)throw new Error('Chromium runtime exceptions: '+errors.join(' | '));
 } catch (error) {
