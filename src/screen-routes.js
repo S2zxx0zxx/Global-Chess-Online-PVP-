@@ -11,7 +11,7 @@ const save=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));ret
 const mk=(tag,cls='',content)=>{const x=document.createElement(tag);if(cls)x.className=cls;if(content!==undefined)x.textContent=content;return x;};
 const btn=(title,fn,cls='')=>{const x=mk('button','ch-action '+cls,title);x.type='button';x.addEventListener('click',fn);return x;};
 const paragraph=(parent,content,cls='ch-support')=>{const x=mk('p',cls,content);parent.append(x);return x;};
-const heading=(parent,group,title,summary,fn)=>{parent.append(btn('← Back',fn,'ch-back-button'));paragraph(parent,group.toUpperCase(),'ch-eyebrow');parent.append(mk('h1','',title));if(summary)paragraph(parent,summary);};
+const heading=(parent,group,title,summary,fn)=>{parent.append(btn('← Back',fn,'ch-back-button'));paragraph(parent,group.toUpperCase(),'ch-eyebrow');const h=mk('h1','',title);h.id='ch-extra-screen-title';h.tabIndex=-1;parent.append(h);if(summary)paragraph(parent,summary);};
 const card=(parent,title,detail,fn,cls='')=>{const x=btn('',fn,'ch-feature-card '+cls);x.append(mk('strong','',title),mk('small','',detail));parent.append(x);return x;};
 const ALL=[...lessons,...puzzles];
 const KNOWN=new Set(ALL.map(x=>x.id));
@@ -32,9 +32,10 @@ const appearance=name=>{
 };
 export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','settings','data','transfer','recovery','update','about']);
 
-export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
+export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,saveAndExitCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
+  screen.setAttribute('aria-labelledby','ch-extra-screen-title');
   main.insertBefore(screen,el('ch-tab-bar'));
   let selected=0,exercise=lessons[0],lastSolved=null,fault=false,ply=0;
   appearance(ls('global-chess.appearance.v1','maple'));
@@ -55,9 +56,14 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
 
     if(route==='menu'||route==='pause'){
       const details=getMatchSummary();
-      const paused=route==='pause'&&!details?.online&&pauseCurrentMatch();
+      // The offline clock and bot must not keep running behind a menu.
+      // Online room clocks stay server-authoritative and cannot be paused.
+      const paused=!details?.online && pauseCurrentMatch();
       title('Game session',route==='pause'?(paused?'Match paused':'Pause unavailable'):'Match menu','Your chessboard and moves remain owned by the game engine.');
-      if(route==='pause')paragraph(section,paused?'Local clock and opponent processing are frozen until you resume.':details?.online?'Online matches cannot be paused; server clocks continue.':'No active offline match is available to pause.','ch-inline-notice');
+      if(route==='pause'||route==='menu')paragraph(section,
+        details?.online?'Private online clocks continue while this screen is open.':
+        paused?'Local clock and computer are paused until you resume the match.':
+        'No active offline match is available to pause.','ch-inline-notice');
       if (!details?.started) {
         const empty=group();
         card(empty,'Choose a game mode','Start a new offline chess match',()=>go('play'));
@@ -67,11 +73,43 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
       const items=group();
       card(items,'Resume match','Return to the chessboard',()=>{resumeCurrentMatch();go('match');});
       card(items,'Flip board','Rotate the viewpoint only',()=>{el('flip-board').click();go('match');});
-      card(items,'Save & exit','Return Home without replacing this game',()=>go('home'));
+      if(details.online){
+        card(items,'Return Home','Your private-room match remains active and its server clock continues',()=>go('home'));
+      } else {
+        // Button remains disabled until IndexedDB confirms the last snapshot
+        // was committed. An exception or storage downgrade must not navigate.
+        const feedback=paragraph(section,'','ch-inline-notice ch-notice-warning');
+        feedback.id='ch-save-exit-status';
+        feedback.setAttribute('role','status');
+        feedback.hidden=true;
+        const saveButton=card(items,'Save & exit','Pause, commit the latest move, then return Home',async()=>{
+          saveButton.disabled=true;
+          feedback.hidden=false;
+          feedback.textContent='Saving the latest match…';
+          try {
+            const result=await saveAndExitCurrentMatch();
+            if(result?.ok){go('home');return;}
+            feedback.setAttribute('role','alert');
+            feedback.textContent=result?.reason||'Could not verify the saved match. Stay in this session.';
+            leave.hidden=false;
+          } catch {
+            feedback.setAttribute('role','alert');
+            feedback.textContent='Saving failed unexpectedly. No navigation happened; retry or open Recovery.';
+            leave.hidden=false;
+          } finally {
+            saveButton.disabled=false;
+          }
+        });
+        const leave=btn('Leave without saving',()=>{
+          if(confirm('The latest game may not be saved. Return Home anyway?'))go('home');
+        },'ch-danger-card');
+        leave.hidden=true;
+        section.append(leave);
+      }
       card(items,'Restart match','Existing confirmation protects unfinished games',()=>{go('match');el('rematch').click();});
       card(items,'Settings','Accessibility and board preferences',()=>go('settings'));
       if(route==='menu' && !getMatchSummary()?.online && !getMatchSummary()?.outcome){
-        card(items,'Pause match','Freeze the local clock and computer until resumed',()=>go('pause'));
+        card(items,'Pause details','Review local clock and pause behavior',()=>go('pause'));
       }
       const match=getMatchSummary();
       if(!match?.online && !match?.outcome){
@@ -106,7 +144,10 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
       section.append(filters);
       const result=mk('div','ch-history-rows');section.append(result);
       const pager=mk('div','ch-pager');section.append(pager);
-      let page=0;
+      const feedback=paragraph(section,'','ch-inline-notice');
+      feedback.id='ch-history-feedback';
+      feedback.setAttribute('role','status');feedback.hidden=true;
+      let page=0,mutationBusy=false;
       function redraw(){
         const full=records()||[];
         const filtered=full.map((item,i)=>({item,i})).filter(({item})=>{
@@ -122,11 +163,32 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
             const x=restoreGame(item.snapshot);
             copy.append(mk('small','',x.mode==='computer'?'Vs computer':'Local friend'),mk('small','',x.game.history().length+' half-moves'));
           }catch{copy.append(mk('small','ch-error','Unable to load this save'));}
-          buttons.append(btn('Review',()=>{selected=i;go('review');}),btn('Delete',()=>{
-            if(!confirm('Permanently delete only this recorded match?'))return;
-            try{writeHistory(full.filter((_,index)=>index!==i));redraw();}
-            catch{paragraph(section,'Delete failed. Existing records were preserved.','ch-inline-notice ch-notice-warning');}
-          }));
+          const review=btn('Review',()=>{selected=i;go('review');});
+          const remove=btn('Delete',async()=>{
+            if(mutationBusy||!confirm('Permanently delete only this recorded match?'))return;
+            mutationBusy=true;
+            const controls=[...result.querySelectorAll('button'),...pager.querySelectorAll('button')];
+            controls.forEach(control=>{control.disabled=true;});
+            filters.disabled=true;
+            feedback.hidden=false;feedback.textContent='Saving the updated match history…';
+            try{
+              // Do not delete from an already stale/changed local history view.
+              const latest=records();
+              if(!latest || JSON.stringify(latest)!==JSON.stringify(full))throw Error('History changed; reload the screen first');
+              await writeHistory(full.filter((_,index)=>index!==i));
+              feedback.setAttribute('role','status');
+              feedback.textContent='Match deleted and updated history saved on this device.';
+              redraw();
+              (result.querySelector('button')||filters).focus({preventScroll:true});
+            }catch{
+              feedback.setAttribute('role','alert');
+              feedback.textContent='Deletion could not be confirmed. Existing history was restored when possible. Export a backup and retry.';
+            }finally{
+              mutationBusy=false;filters.disabled=false;
+              controls.filter(control=>control.isConnected).forEach(control=>{control.disabled=false;});
+            }
+          });
+          buttons.append(review,remove);
           row.append(copy,buttons);result.append(row);
         }
         const prev=btn('Previous',()=>{if(page>0){page--;redraw();}});
@@ -165,6 +227,9 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         controls.children[2].disabled=ply===moves.length;controls.lastChild.disabled=ply===moves.length;
       }
       controls.append(btn('⏮',()=>{ply=0;frame();}),btn('←',()=>{if(ply>0)ply--;frame();}),btn('→',()=>{if(ply<moves.length)ply++;frame();}),btn('⏭',()=>{ply=moves.length;frame();}));
+      for(const [index,name] of ['First move','Previous move','Next move','Last move'].entries()){
+        controls.children[index].setAttribute('aria-label',name);
+      }
       const result=entry.outcome.startsWith('White wins')?'1-0':entry.outcome.startsWith('Black wins')?'0-1':'1/2-1/2';
       game.setHeader('Result',result);
       section.append(btn('Export PGN',()=>EXPORT(game.pgn(),'global-chess-match.pgn','application/x-chess-pgn'),'primary'));
@@ -397,6 +462,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
     if(route==='update'){
       title('Match-safe upgrades','PWA update','New assets are staged offline. A downloaded update never replaces your active match without asking.');
       const status=paragraph(section,'Check for a downloaded update when you are ready.','ch-inline-notice');
+      status.setAttribute('role','status');
       const check=btn('Check for update',async()=>{
         if(!('serviceWorker' in navigator)){
           status.textContent='Service workers are unavailable in this browser. Browser refreshes are managed manually.';return;

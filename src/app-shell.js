@@ -12,7 +12,7 @@ function element(tag, className, text) {
 
 // The v3 M0 shell intentionally calls existing, tested game commands rather
 // than keeping a separate copy of chess state in the presentation layer.
-export function mountAppShell({startMatch, historyCount, readSavedHistory, writeSavedHistory, clearCompletedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, preparePwaUpdate,hasCorruptMatch, storagePersistent = true}) {
+export function mountAppShell({startMatch, historyCount, readSavedHistory, writeSavedHistory, clearCompletedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, saveAndExitCurrentMatch, preparePwaUpdate,hasCorruptMatch, storagePersistent = true}) {
   const main = document.querySelector('main');
   const lobby = byId('lobby');
   const match = byId('match-area');
@@ -68,10 +68,11 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   main.append(nav);
 
   const toolbar=element('div','ch-match-toolbar');
-  const back = element('button','ch-match-home','← Home');
+  const back = element('button','ch-match-home','← Menu');
   back.id='ch-match-home';
   back.type='button';
-  back.addEventListener('click',()=>go('home'));
+  // Opening the match menu first prevents an accidental exit before the final save.
+  back.addEventListener('click',()=>go('menu'));
   const tools=element('button','ch-match-tools','More options');
   tools.id='ch-match-tools';
   tools.type='button';
@@ -250,7 +251,9 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
         history[replace ? 'replaceState' : 'pushState']({ ...history.state, chessView: next }, '', target);
       } catch { /* Standalone/browser-restricted environments keep local navigation. */ }
     }
-    if(view==='pause' && next==='match')resumeCurrentMatch();
+    // Back/Resume from either game menu or Pause clears any temporary local
+    // pause left by a cancelled or failed Save & Exit attempt.
+    if((view==='pause'||view==='menu') && next==='match')resumeCurrentMatch();
     view=next;
     const root=document.documentElement;
     for(const item of views) root.classList.toggle('ch-view-'+item,item===next);
@@ -269,13 +272,26 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
       tools.setAttribute('aria-expanded','false');
       window.scrollTo({top:0,behavior:'instant'});
     }
-    if(next==='match') match.focus({preventScroll:true});
+    if(next==='match') {
+      match.focus({preventScroll:true});
+    } else if(!options.replace) {
+      // Route changes replace large sections of DOM. Move the keyboard/AT
+      // focus to the new destination heading instead of stranding it on a
+      // navigation element that is now hidden. Initial welcome is exempt.
+      const target=next==='home'?lobby:next==='play'?play:next==='learn'?learn:
+        next==='profile'?profile:document.getElementById('ch-extra-screen');
+      const heading=target?.querySelector('h1');
+      if(heading){
+        heading.tabIndex=-1;
+        heading.focus({preventScroll:true});
+      }
+    }
   }
   byId('lobby-resume').addEventListener('click',()=>{resumeCurrentMatch();go('match');});
   byId('lobby-online').addEventListener('click',()=>go('match'));
   byId('online-leave').addEventListener('click',()=>go('home'));
   screenRoutes=mountScreenRoutes({
-    main,go,readHistory:readSavedHistory,writeHistory:writeSavedHistory,clearCompletedHistory,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch,
+    main,go,readHistory:readSavedHistory,writeHistory:writeSavedHistory,clearCompletedHistory,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,saveAndExitCurrentMatch,preparePwaUpdate,hasCorruptMatch,
     openExercise(exercise){
       byId('learn').click();
       const list=[...lessons,...puzzles,dailyExercise()];
