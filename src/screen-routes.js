@@ -32,7 +32,7 @@ const appearance=name=>{
 };
 export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','settings','data','transfer','recovery','update','about']);
 
-export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate}){
+export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
   main.insertBefore(screen,el('ch-tab-bar'));
@@ -358,8 +358,23 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise
       paragraph(section,'Global Chess currently stores your local chess progress on this device. No automatic cloud backup or account synchronization is promised.','ch-inline-notice');
       const nav=stack();
       nav.append(btn('Export JSON backup',()=>el('export-backup')?.click(),'primary'),btn('Import JSON backup',()=>el('import-backup')?.click()),btn('View saved games',()=>go('history')));
-      if(route==='data')nav.append(btn('More backup information',()=>go('transfer')));
-      else paragraph(section,'Import validates match moves and the backup format before replacing the current offline match and history.','ch-inline-notice');
+      if(route==='data'){
+        nav.append(btn('More backup information',()=>go('transfer')));
+        const count=records()?.length;
+        section.append(btn('Delete completed-match history',async()=>{
+          if(count===null || count===undefined){
+            paragraph(section,'History is unreadable. Export a backup before attempting recovery.','ch-inline-notice ch-notice-warning');return;
+          }
+          if(!count){paragraph(section,'There are no completed matches to delete.','ch-inline-notice');return;}
+          if(!confirm('Delete '+count+' completed games from this device? This action cannot be undone. Export a backup first if you want to keep them.'))return;
+          try{
+            const result=await clearCompletedHistory();
+            paragraph(section,result.durable?'Completed match history deleted and saved. Your active chess match remains unchanged.':'History cleared for this temporary session only.','ch-inline-notice');
+          }catch{
+            paragraph(section,'History deletion could not be confirmed on storage. Do not clear browser data.','ch-inline-notice ch-notice-warning');
+          }
+        },'ch-danger-card'));
+      } else paragraph(section,'Import validates match moves and the backup format before replacing the current offline match and history.','ch-inline-notice');
     }
     if(route==='recovery'){
       title('Keep your data safe','Recovery',fault?'The last match save could not be written.':'If a save or asset fails, recover without clearing your board.');
