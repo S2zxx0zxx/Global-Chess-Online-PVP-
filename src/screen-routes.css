@@ -106,3 +106,7 @@
 #board.ch-dragging{cursor:grabbing}
 #board.ch-dragging button[aria-pressed=true]{outline:3px solid #f5ce83;outline-offset:-4px;z-index:2}
 #board button{touch-action:none}
+
+/* SCR-06: honest, skippable 900ms-max introduction */
+#versus{pointer-events:auto;flex-wrap:wrap;max-width:90vw;gap:7px}
+#versus #versus-skip{position:absolute;right:8px;bottom:6px;min-height:32px;padding:5px 9px;color:#fff0dc;background:#57342b;border:1px solid #c79a67;border-radius:8px;font-size:.74rem}
