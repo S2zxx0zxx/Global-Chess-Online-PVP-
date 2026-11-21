@@ -146,6 +146,8 @@ try {
   await evaluate('document.querySelector("#board [data-square=e2]").click(); true');
   await evaluate('document.querySelector("#board [data-square=e4]").click(); true');
   await waitUntil(() => evaluate('document.querySelector("#moves li")?.textContent?.includes("e4") === true'));
+  if (!(await evaluate('document.getElementById("claim").hidden === true')))
+    throw new Error('A draw-claim button appeared without an eligible position');
   console.log('Mobile v3 Home, Play, Setup, Learn, Profile, local match: passed');
   console.log('Browser local chess move: passed');
 
@@ -241,6 +243,18 @@ try {
     if(overflow>2)throw new Error('Home horizontal overflow at '+width+'px: '+overflow);
   }
   console.log('Home screen horizontal overflow checks: 320,360,412,768px passed');
+  await send('Emulation.setDeviceMetricsOverride',{width:360,height:800,deviceScaleFactor:1,mobile:true});
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=home'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-home")'));
+  const largeTypeOverflow=await evaluate('document.documentElement.style.fontSize="200%"; document.documentElement.scrollWidth-document.documentElement.clientWidth');
+  if(largeTypeOverflow>2)throw new Error('Home horizontally overflowed at 200% text size: '+largeTypeOverflow);
+  await evaluate('document.documentElement.style.fontSize="";true');
+  await send('Emulation.setDeviceMetricsOverride',{width:740,height:360,deviceScaleFactor:1,mobile:true});
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=play'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-play")'));
+  const landscapeOverflow=await evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth');
+  if(landscapeOverflow>2)throw new Error('Play Hub overflows landscape viewport: '+landscapeOverflow);
+  console.log('200% text size and landscape browser layout: passed');
 
   // Real browser Back must navigate the game shell without clearing saved moves.
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=home'});
