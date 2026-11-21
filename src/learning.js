@@ -50,7 +50,7 @@ export function bindLearning(names) {
     const saved = JSON.parse(localStorage.getItem(key) ?? '[]');
     if (Array.isArray(saved)) completed = new Set(saved.filter(id => typeof id === 'string'));
   } catch { /* Learning still works for this session. */ }
-  let exercises, exercise, game, selected, solved;
+  let exercises, exercise, game, selected, solved, hintStep = 0;
   let focusSquare;
   function mergeProgress() {
     try {
@@ -126,7 +126,10 @@ export function bindLearning(names) {
     selected = undefined;
     solved = false;
     get('lesson-promotion').hidden = true;
+    hintStep = 0;
+    get('lesson-hint-text').textContent = '';
     focusSquare = game.turn() === 'w' ? 'e2' : 'e7';
+    dialog.querySelector('h2').textContent = lessons.some(item => item.id === exercise.id) ? 'Chess lesson' : 'Tactical puzzle';
     get('lesson-title').textContent = exercise.title;
     get('lesson-prompt').textContent = exercise.prompt;
     get('lesson-feedback').textContent = completed.has(exercise.id) ? 'Previously solved.' : '';
@@ -150,6 +153,17 @@ export function bindLearning(names) {
   });
   picker.onchange = () => load(Number(picker.value));
   get('lesson-reset').onclick = () => load(Number(picker.value));
+  get('lesson-hint').onclick = () => {
+    if (solved) { get('lesson-hint-text').textContent = 'Completed. ' + exercise.explanation; return; }
+    const move = game.moves({verbose:true}).find(candidate =>
+      solveExercise(game,exercise,candidate.from,candidate.to,candidate.promotion));
+    if (!move) { get('lesson-hint-text').textContent = 'No hint available for this position.'; return; }
+    hintStep = Math.min(3,hintStep+1);
+    get('lesson-hint-text').textContent = hintStep === 1
+      ? 'Look for a move from ' + move.from + '.'
+      : hintStep === 2 ? 'The destination is ' + move.to + '.'
+      : 'Try ' + move.san + '. ' + exercise.explanation;
+  };
   get('learn').onclick = () => {
     mergeProgress();
     exercises = [...lessons,...puzzles,dailyExercise()];
