@@ -21,8 +21,10 @@ export function exerciseGame(exercise) {
   return game;
 }
 export function dailyExercise(date = new Date()) {
-  const day = date.toISOString().slice(0,10);
-  const index = Math.floor(Date.parse(day)/86400000) % puzzles.length;
+  // ZIP v3 SCR-19: a local-day challenge must not switch at UTC midnight.
+  const day = date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') +
+    '-' + String(date.getDate()).padStart(2,'0');
+  const index = Math.floor(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())/86400000) % puzzles.length;
   return {...puzzles[index], id:'daily-'+day, title:'Daily · '+puzzles[index].title};
 }
 export function solveExercise(game, exercise, from, to, promotion) {
