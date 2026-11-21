@@ -43,6 +43,7 @@ const claim = document.querySelector('#claim');
 const outcome = game => {
   if (online?.active) return online.match.outcome;
   if (state.drawClaim) return 'Draw by ' + state.drawClaim;
+  if (state.resignedBy) return (state.resignedBy === 'w' ? 'Black' : 'White') + ' wins by resignation';
   return result(game) ?? (state.clock?.[game.turn()] === 0
     ? timeoutResult(game, game.turn()) : null);
 };
@@ -228,7 +229,7 @@ function render(move) {
 function save() {
   if (online?.active) return;
   try {
-    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove, state.preset, state.playerSide);
+    const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove, state.preset, state.playerSide, state.resignedBy);
     gameStorage.setItem(key, snapshot);
     const completed = outcome(state.game);
     if (completed) recordMatch(gameStorage, completed, snapshot);
@@ -438,6 +439,16 @@ appShell = mountAppShell({
   },
   readSavedHistory(){ return readHistory(gameStorage); },
   writeSavedHistory(entries){ gameStorage.setItem(historyKey,JSON.stringify(entries)); },
+  resignCurrentMatch(){
+    updateClock();
+    if(online?.active || outcome(state.game) || (state.preset === undefined && !state.game.history().length))return false;
+    const side=state.mode==='computer'?state.playerSide:state.game.turn();
+    if(!confirm('Resign as '+(side==='w'?'White':'Black')+'? This will end your current match.'))return false;
+    stopComputer();
+    state.resignedBy=side;
+    save();render();
+    return true;
+  },
   getMatchSummary(){
     return {
       outcome:outcome(state.game),mode:state.mode,
