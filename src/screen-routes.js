@@ -30,7 +30,7 @@ const appearance=name=>{
 };
 export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','settings','data','transfer','recovery','update','about']);
 
-export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise,getMatchSummary}){
+export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise,getMatchSummary,resignCurrentMatch}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
   main.insertBefore(screen,el('ch-tab-bar'));
@@ -60,6 +60,12 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise
       card(items,'Save & exit','Return Home without replacing this game',()=>go('home'));
       card(items,'Restart match','Existing confirmation protects unfinished games',()=>{go('match');el('rematch').click();});
       card(items,'Settings','Accessibility and board preferences',()=>go('settings'));
+      const match=getMatchSummary();
+      if(!match?.online && !match?.outcome){
+        card(items,'Resign game','Ends the current offline match after confirmation',()=>{
+          if(resignCurrentMatch())go('result');
+        },'ch-danger-card');
+      }
     }
     if(route==='result'){
       const match=getMatchSummary();
