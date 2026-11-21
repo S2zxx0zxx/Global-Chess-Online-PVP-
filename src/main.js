@@ -518,9 +518,9 @@ appShell = mountAppShell({
   readSavedHistory(){ return readHistory(gameStorage); },
   writeSavedHistory(entries){ return commitHistoryReplacement(gameStorage,historyKey,entries); },
   async clearCompletedHistory(){
-    gameStorage.setItem(historyKey,'[]');
-    if(gameStorage.durable !== false)await gameStorage.flush?.();
-    return {durable:gameStorage.durable !== false};
+    // Use the same abort-aware transaction boundary as per-record deletion.
+    await commitHistoryReplacement(gameStorage,historyKey,[]);
+    return {durable:true};
   },
   resignCurrentMatch(){
     updateClock();
