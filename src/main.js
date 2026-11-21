@@ -13,6 +13,7 @@ import './style.css';
 import './app-shell.css';
 import './screen-routes.css';
 import { mountAppShell } from './app-shell.js';
+import { finalizeOfflineExit } from './session-exit.js';
 import { restoreGame, serializeGame, savedMatchOutcome, claimableDraw, intendedDraw, hasAvailableDrawClaim } from './game.js';
 
 import { matchKey as key, historyKey, exportBackup, importBackup, previewBackup } from './backup.js';
@@ -235,15 +236,17 @@ function render(move) {
 }
 
 function save() {
-  if (online?.active) return;
+  if (online?.active) return false;
   try {
     const snapshot = serializeGame(state.game, state.mode, state.drawClaim, state.clock, state.difficulty, state.claimMove, state.preset, state.playerSide, state.resignedBy, state.paused);
     gameStorage.setItem(key, snapshot);
     const completed = outcome(state.game);
     if (completed) recordMatch(gameStorage, completed, snapshot);
     notice = '';
+    return true;
   } catch {
     notice = 'Storage unavailable. This match may not resume after closing.';
+    return false;
   }
 }
 
@@ -456,6 +459,26 @@ appShell = mountAppShell({
   },
   storagePersistent: gameStorage.durable,
   hasCorruptMatch(){return Boolean(corruptMatchRaw);},
+  saveAndExitCurrentMatch(){
+    return finalizeOfflineExit({
+      isOnline:()=>Boolean(online?.active),
+      isDurable:()=>gameStorage.durable !== false,
+      prepare(){
+        updateClock();
+        const started=state.preset !== undefined || state.game.history().length > 0;
+        if(started && !outcome(state.game)){
+          stopComputer();
+          state.paused=true;
+        }
+      },
+      persist(){
+        const saved=save();
+        render();
+        return saved;
+      },
+      flush:()=>gameStorage.flush(),
+    });
+  },
   async preparePwaUpdate(){
     if (online?.active && !online.match.outcome) {
       return {ok:false,reason:'Finish your private online match before applying an update.'};
