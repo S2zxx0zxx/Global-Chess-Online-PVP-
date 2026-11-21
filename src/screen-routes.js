@@ -205,6 +205,23 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,openExercise
         tile.onclick=()=>{appearance(name);if(!save('global-chess.appearance.v1',name))paragraph(section,'Theme is temporary because local storage is unavailable.','ch-inline-notice ch-notice-warning');for(const child of grid.children)child.classList.toggle('ch-selected',child===tile);};
         grid.append(tile);
       }
+      section.append(mk('h2','ch-section-title','Piece collection'));
+      paragraph(section,'Choose between the existing classic artwork and the original SVG Crest set. Both are free.');
+      const pieceGrid=mk('div','ch-piece-grid');section.append(pieceGrid);
+      for(const [name,label,detail] of [['classic','Classic','Traditional dimensional pieces'],['crest','Royal Crest','Original ivory and oxblood SVG family']]){
+        const item=mk('button','ch-piece-card'+(ls('global-chess.pieces.v1','classic')===name?' ch-selected':''));
+        item.type='button';
+        const preview=mk('img','ch-piece-example');preview.src=name==='crest'?'/brand/pieces/piece_white_knight.svg':'/chess-assets/pieces/white-knight.webp';
+        preview.alt='';
+        item.append(preview,mk('strong','',label),mk('small','',detail));
+        item.onclick=()=>{
+          if(!save('global-chess.pieces.v1',name))paragraph(section,'The piece choice will only last this session.','ch-inline-notice ch-notice-warning');
+          document.documentElement.dataset.chPieces=name;
+          window.dispatchEvent(new Event('chess-appearance-changed'));
+          for(const child of pieceGrid.children)child.classList.toggle('ch-selected',child===item);
+        };
+        pieceGrid.append(item);
+      }
       section.append(btn('Return to match',()=>go('match'),'primary'));
     }
     if(route==='settings'){
