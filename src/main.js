@@ -9,6 +9,7 @@ import { readHistory, recordMatch } from './history.js';
 import { startClock, remainingClock } from './clock.js';
 import './style.css';
 import './app-shell.css';
+import './screen-routes.css';
 import { mountAppShell } from './app-shell.js';
 import { restoreGame, serializeGame, result, claimableDraw, intendedDraw, timeoutResult } from './game.js';
 
