@@ -8,9 +8,13 @@ export default defineConfig({
     apply: 'build',
     generateBundle(_, bundle) {
       const assetDirectory = new URL('public/chess-assets/pieces/',import.meta.url);
+      const brandDirectory = new URL('public/brand/',import.meta.url);
+      const crestDirectory = new URL('public/brand/pieces/',import.meta.url);
       const artwork = [
         'chess-assets/board/maple-walnut.webp',
         ...readdirSync(assetDirectory).filter(file => file.endsWith('.webp')).map(file => 'chess-assets/pieces/' + file),
+        ...readdirSync(brandDirectory).filter(file => file.endsWith('.svg')).map(file => 'brand/' + file),
+        ...readdirSync(crestDirectory).filter(file => file.endsWith('.svg')).map(file => 'brand/pieces/' + file),
       ];
       const files = [...artwork,'index.html', 'manifest.webmanifest', 'icon.svg', 'solver/cha.wasm.gz', 'solver/LICENSE.txt', ...Object.keys(bundle).filter(file => file !== 'index.html')];
       const hash = createHash('sha256').update(JSON.stringify(files));
