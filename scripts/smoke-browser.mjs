@@ -164,7 +164,7 @@ try {
   // UI navigation must go through a real match menu and wait for a committed
   // IndexedDB write before claiming the move was saved.
   await evaluate('document.getElementById("ch-match-home").click();true');
-  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-menu")'));
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-menu") && document.getElementById("status").textContent.includes("Match paused")'));
   if(!(await evaluate('document.activeElement?.tagName === "H1" && document.activeElement === document.querySelector("#ch-extra-screen h1")')))
     throw new Error('Match menu does not restore route heading focus');
   await evaluate('Array.from(document.querySelectorAll("#ch-extra-screen .ch-feature-card")).find(x=>x.textContent.includes("Save & exit")).click();true');
