@@ -13,7 +13,7 @@ import './screen-routes.css';
 import { mountAppShell } from './app-shell.js';
 import { restoreGame, serializeGame, result, claimableDraw, intendedDraw, timeoutResult } from './game.js';
 
-import { matchKey as key, historyKey, exportBackup, importBackup } from './backup.js';
+import { matchKey as key, historyKey, exportBackup, importBackup, previewBackup } from './backup.js';
 async function initialize() {
 // The optional WASM mating solver must not delay guest-first gameplay.
 const gameStorage = await openGameStorage();
@@ -589,11 +589,16 @@ document.querySelector('#import-backup').onclick = () => {
 backupFile.onchange = async () => {
   const file = backupFile.files[0];
   backupFile.value = '';
-  if (!file || !confirm('Replace the active match and local match history with this backup?')) return;
+  if (!file) return;
   try {
     if (file.size > 2_000_000) throw new Error('Backup too large');
     const contents = await file.text();
     if (online?.active) throw new Error('Online match in progress');
+    const {summary} = previewBackup(contents);
+    const summaryText = 'Validated backup: ' + summary.historyCount + ' completed games, ' +
+      summary.activePly + ' half-moves in ' + summary.activeMode + ' mode.\\n\\n' +
+      'Replace this device’s current match and local history? Export a copy first if needed.';
+    if (!confirm(summaryText)) { backupStatus.textContent = 'Import cancelled. Existing games were not changed.'; return; }
     const restored = importBackup(gameStorage, contents);
     stopComputer();
     state = restored;
