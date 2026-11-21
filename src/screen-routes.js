@@ -56,9 +56,14 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
 
     if(route==='menu'||route==='pause'){
       const details=getMatchSummary();
-      const paused=route==='pause'&&!details?.online&&pauseCurrentMatch();
+      // The offline clock and bot must not keep running behind a menu.
+      // Online room clocks stay server-authoritative and cannot be paused.
+      const paused=!details?.online && pauseCurrentMatch();
       title('Game session',route==='pause'?(paused?'Match paused':'Pause unavailable'):'Match menu','Your chessboard and moves remain owned by the game engine.');
-      if(route==='pause')paragraph(section,paused?'Local clock and opponent processing are frozen until you resume.':details?.online?'Online matches cannot be paused; server clocks continue.':'No active offline match is available to pause.','ch-inline-notice');
+      if(route==='pause'||route==='menu')paragraph(section,
+        details?.online?'Private online clocks continue while this screen is open.':
+        paused?'Local clock and computer are paused until you resume the match.':
+        'No active offline match is available to pause.','ch-inline-notice');
       if (!details?.started) {
         const empty=group();
         card(empty,'Choose a game mode','Start a new offline chess match',()=>go('play'));
@@ -104,7 +109,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
       card(items,'Restart match','Existing confirmation protects unfinished games',()=>{go('match');el('rematch').click();});
       card(items,'Settings','Accessibility and board preferences',()=>go('settings'));
       if(route==='menu' && !getMatchSummary()?.online && !getMatchSummary()?.outcome){
-        card(items,'Pause match','Freeze the local clock and computer until resumed',()=>go('pause'));
+        card(items,'Pause details','Review local clock and pause behavior',()=>go('pause'));
       }
       const match=getMatchSummary();
       if(!match?.online && !match?.outcome){
