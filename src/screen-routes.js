@@ -11,7 +11,7 @@ const save=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));ret
 const mk=(tag,cls='',content)=>{const x=document.createElement(tag);if(cls)x.className=cls;if(content!==undefined)x.textContent=content;return x;};
 const btn=(title,fn,cls='')=>{const x=mk('button','ch-action '+cls,title);x.type='button';x.addEventListener('click',fn);return x;};
 const paragraph=(parent,content,cls='ch-support')=>{const x=mk('p',cls,content);parent.append(x);return x;};
-const heading=(parent,group,title,summary,fn)=>{parent.append(btn('← Back',fn,'ch-back-button'));paragraph(parent,group.toUpperCase(),'ch-eyebrow');parent.append(mk('h1','',title));if(summary)paragraph(parent,summary);};
+const heading=(parent,group,title,summary,fn)=>{parent.append(btn('← Back',fn,'ch-back-button'));paragraph(parent,group.toUpperCase(),'ch-eyebrow');const h=mk('h1','',title);h.id='ch-extra-screen-title';h.tabIndex=-1;parent.append(h);if(summary)paragraph(parent,summary);};
 const card=(parent,title,detail,fn,cls='')=>{const x=btn('',fn,'ch-feature-card '+cls);x.append(mk('strong','',title),mk('small','',detail));parent.append(x);return x;};
 const ALL=[...lessons,...puzzles];
 const KNOWN=new Set(ALL.map(x=>x.id));
@@ -35,6 +35,7 @@ export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','histo
 export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,saveAndExitCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
+  screen.setAttribute('aria-labelledby','ch-extra-screen-title');
   main.insertBefore(screen,el('ch-tab-bar'));
   let selected=0,exercise=lessons[0],lastSolved=null,fault=false,ply=0;
   appearance(ls('global-chess.appearance.v1','maple'));
@@ -197,6 +198,9 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         controls.children[2].disabled=ply===moves.length;controls.lastChild.disabled=ply===moves.length;
       }
       controls.append(btn('⏮',()=>{ply=0;frame();}),btn('←',()=>{if(ply>0)ply--;frame();}),btn('→',()=>{if(ply<moves.length)ply++;frame();}),btn('⏭',()=>{ply=moves.length;frame();}));
+      for(const [index,name] of ['First move','Previous move','Next move','Last move'].entries()){
+        controls.children[index].setAttribute('aria-label',name);
+      }
       const result=entry.outcome.startsWith('White wins')?'1-0':entry.outcome.startsWith('Black wins')?'0-1':'1/2-1/2';
       game.setHeader('Result',result);
       section.append(btn('Export PGN',()=>EXPORT(game.pgn(),'global-chess-match.pgn','application/x-chess-pgn'),'primary'));
@@ -429,6 +433,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
     if(route==='update'){
       title('Match-safe upgrades','PWA update','New assets are staged offline. A downloaded update never replaces your active match without asking.');
       const status=paragraph(section,'Check for a downloaded update when you are ready.','ch-inline-notice');
+      status.setAttribute('role','status');
       const check=btn('Check for update',async()=>{
         if(!('serviceWorker' in navigator)){
           status.textContent='Service workers are unavailable in this browser. Browser refreshes are managed manually.';return;
