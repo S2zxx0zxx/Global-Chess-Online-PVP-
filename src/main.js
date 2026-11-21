@@ -106,7 +106,7 @@ function settleClaim(reason, move) {
 claim.onclick = () => {
   const {game} = state;
   if (state.paused || outcome(game) || (online?.active && !online.canMove(game.turn())) ||
-      (state.mode === 'computer' && game.turn() === 'b')) return;
+      (state.mode === 'computer' && game.turn() !== state.playerSide)) return;
   const reason = claimableDraw(game);
   if (reason) return settleClaim(reason);
   const dialog = document.querySelector('#claim-dialog');
@@ -217,8 +217,9 @@ function render(move) {
     return cell;
   })));
   if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus();
+  const storageNote = gameStorage.durable === false ? 'Session only · Progress will not be saved after closing' : '';
   status.textContent = [state.paused ? 'Match paused · Open Pause screen to resume' : (outcome(game) ?? (mode === 'computer' && game.turn() !== state.playerSide ? 'Computer thinking…' :
-    (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : ''))), notice].filter(Boolean).join(' · ');
+    (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : ''))), notice, storageNote].filter(Boolean).join(' · ');
   claim.hidden = state.paused || (online?.active && !online.canMove(game.turn())) || Boolean(outcome(game)) || (mode === 'computer' && game.turn() !== state.playerSide);
   const moves = game.history();
   document.querySelector('#moves').replaceChildren(...moves.filter((_, index) => index % 2 === 0).map((move, index) => {
@@ -310,7 +311,7 @@ let suppressClickUntil = 0;
 board.addEventListener('pointerdown', event => {
   if (!event.isPrimary || event.button !== 0 || outcome(state.game)) return;
   const square = event.target.closest('[data-square]')?.dataset.square;
-  if (!square || (online?.active && !online.canMove(state.game.turn())) ||
+  if (!square || state.paused || (online?.active && !online.canMove(state.game.turn())) ||
       (state.mode === 'computer' && state.game.turn() !== state.playerSide)) return;
   if (state.game.get(square)?.color !== state.game.turn()) return;
   dragStart = {square, x:event.clientX, y:event.clientY, pointerId:event.pointerId, dragging:false};
@@ -442,6 +443,7 @@ appShell = mountAppShell({
   historyCount() {
     try { return readHistory(gameStorage).length; } catch { return null; }
   },
+  storagePersistent: gameStorage.durable,
   readSavedHistory(){ return readHistory(gameStorage); },
   writeSavedHistory(entries){ gameStorage.setItem(historyKey,JSON.stringify(entries)); },
   resignCurrentMatch(){
