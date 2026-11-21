@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feat/playable-chess-foundation
+      - feat/chess-v3-m02a-safe-exit-navigation-qa
   push:
     branches:
       - main
@@ -24,8 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -40,11 +41,13 @@ jobs:
         run: npm run build
       - name: Enforce 3D bundle performance budget
         run: node scripts/check-bundle-budget.js
+      - name: Enforce original artwork release gate
+        run: node scripts/check-original-art.mjs
       - name: Smoke-test playable 2D and mounted 3D in Chromium
         run: node scripts/smoke-browser.mjs
       - name: Upload Chromium evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: chess-browser-smoke
           path: artifacts/
