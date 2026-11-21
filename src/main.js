@@ -445,6 +445,26 @@ appShell = mountAppShell({
     try { return readHistory(gameStorage).length; } catch { return null; }
   },
   storagePersistent: gameStorage.durable,
+  async preparePwaUpdate(){
+    if (online?.active && !online.match.outcome) {
+      return {ok:false,reason:'Finish your private online match before applying an update.'};
+    }
+    const started = state.preset !== undefined || state.game.history().length > 0;
+    if (started && !outcome(state.game)) {
+      return {ok:false,reason:'Finish or resign the active local match before updating. Your game remains safe.'};
+    }
+    if (gameStorage.durable === false) {
+      return {ok:false,reason:'This browser cannot persist local games. Finish this temporary session before reloading.'};
+    }
+    updateClock();
+    save();
+    try {
+      await gameStorage.flush?.();
+      return {ok:true};
+    } catch {
+      return {ok:false,reason:'The latest game save was not committed. Do not reload; export a backup and retry.'};
+    }
+  },
   readSavedHistory(){ return readHistory(gameStorage); },
   writeSavedHistory(entries){ gameStorage.setItem(historyKey,JSON.stringify(entries)); },
   resignCurrentMatch(){
