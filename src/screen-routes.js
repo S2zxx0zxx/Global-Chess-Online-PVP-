@@ -32,7 +32,7 @@ const appearance=name=>{
 };
 export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','settings','data','transfer','recovery','update','about']);
 
-export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate}){
+export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
   main.insertBefore(screen,el('ch-tab-bar'));
@@ -377,9 +377,16 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
       } else paragraph(section,'Import validates match moves and the backup format before replacing the current offline match and history.','ch-inline-notice');
     }
     if(route==='recovery'){
-      title('Keep your data safe','Recovery',fault?'The last match save could not be written.':'If a save or asset fails, recover without clearing your board.');
-      paragraph(section,'Do not clear browser data before exporting a backup. This screen does not delete or overwrite your saved game.','ch-inline-notice ch-notice-warning');
-      const nav=stack();nav.append(btn('Export a backup',()=>el('export-backup')?.click(),'primary'),btn('Return to board',()=>go('match')),btn('Home',()=>go('home')));
+      const damaged=hasCorruptMatch();
+      title('Keep your data safe',damaged?'Unrestorable saved match':'Recovery',
+        damaged?'The original match bytes remain stored. They will not be overwritten until you explicitly confirm replacement.':
+        fault?'The last match save could not be written.':'Recover from a storage or asset error without clearing your board.');
+      paragraph(section,damaged?
+        'Export the unvalidated JSON recovery copy first. Do not import it as a verified backup or clear browser data before inspecting it.':
+        'Do not clear browser data before exporting a backup. This screen does not delete or overwrite your saved game.','ch-inline-notice ch-notice-warning');
+      const nav=stack();
+      nav.append(btn(damaged?'Export unvalidated recovery copy':'Export a backup',()=>el('export-backup')?.click(),'primary'),
+        btn('Return to board',()=>go('match')),btn('Home',()=>go('home')));
     }
     if(route==='update'){
       title('Match-safe upgrades','PWA update','New assets are staged offline. A downloaded update never replaces your active match without asking.');
