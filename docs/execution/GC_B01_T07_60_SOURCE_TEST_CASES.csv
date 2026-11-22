@@ -1,0 +1,61 @@
+test_id,category,requirement_id,scenario,expected,platform,gate,status,evidence_link,verification_state,independent_acceptance_evidence,release_gate_signoff
+UX-00,UX,PRD-001,"Visit /boot from App icon, activate Complete bootstrap","No network block, not fake timer",BOTH,G2,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-01,UX,PRD-001,"Visit /welcome from No local profile, activate Play as Guest","Saves local guest, returns not repeat",BOTH,G2,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-02,UX,PRD-001,"Visit /tutorial from First game/help, activate Try first move",Nonblocking and legally accurate,BOTH,G2,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-03,UX,PRD-002,"Visit /home from Guest/profile exists, activate Classic Chess",Primary cards above fold; no fake social,BOTH,G2,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-04,UX,PRD-004,"Visit /play from Bottom tab, activate Select match",Format and opponent separated,BOTH,G2,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-05,UX,PRD-003,"Visit /play/setup from Choose mode, activate Start Match",Validated config and saved default,BOTH,G2,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-06,UX,PRD-003,"Visit /play/versus from Match configured, activate Start/Skip",No fake human opponent; <=900ms,BOTH,G2,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-07,UX,PRD-003,"Visit /match/:id from Start/Resume, activate Submit legal move","Big board, h1 light, state correct",BOTH,G2,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-08,UX,PRD-003,"Visit /match/:id/promotion from Last rank pawn move, activate Choose Q/R/B/N",All underpromotions work,BOTH,G2,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-09,UX,PRD-003,"Visit /match/:id/menu from Menu/back, activate Resume",Back never kills unsaved game,BOTH,G2,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-10,UX,PRD-006,"Visit /match/:id/pause from Paused, activate Resume",Clock policy exact,BOTH,G2,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-11,UX,PRD-003,"Visit /result/:id from Terminal state, activate Rematch",Outcome reason exact/XP once,BOTH,G2,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-12,UX,PRD-008,"Visit /review/:id from History/result, activate Step next",No unverified best-move label,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-13,UX,PRD-008,"Visit /history from Profile/Result, activate Open match",Scalable list and safe delete,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-14,UX,PRD-009,"Visit /learn from Learn tab, activate Continue lesson",Curriculum clear,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-15,UX,PRD-009,"Visit /learn/lesson/:id from Lesson selected, activate Play example",FEN+teaching verified,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-16,UX,PRD-010,"Visit /learn/puzzles from Learn/lobby, activate Start puzzle",Valid content packs,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-17,UX,PRD-010,"Visit /puzzle/:id from Puzzle selected, activate Play move",Alternative line validated,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-18,UX,PRD-010,"Visit /puzzle/:id/result from Puzzle resolved, activate Next",No fake IQ uplift,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-19,UX,PRD-012,"Visit /daily from Lobby/learn, activate Solve daily",Single daily award / offline,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-20,UX,PRD-001,"Visit /profile from Profile tab, activate View progress",Clearly local profile,BOTH,G2,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-21,UX,PRD-011,"Visit /profile/progress from Profile, activate Inspect progress",No fake Elo/global rank,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-22,UX,PRD-011,"Visit /profile/achievements from Profile, activate View award",XP event idempotent,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-23,UX,PRD-013,"Visit /profile/appearance from Profile, activate Preview theme",Accessible original asset sets,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-24,UX,PRD-001,"Visit /settings from Header/profile, activate Save preferences",Preferences persist and apply,BOTH,G2,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-25,UX,PRD-008,"Visit /privacy-data from Settings, activate Export or delete",Data ownership truthful,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-26,UX,PRD-008,"Visit /data/import-export from Settings/history, activate Export PGN/JSON",No unvalidated import stored,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-27,UX,PRD-007,"Visit /recovery from Corruption/quota error, activate Try recovery",Original data preserved on fault,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-28,UX,PRD-007,"Visit /update from PWA new assets ready, activate Update after game",No mid-game data loss,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+UX-29,UX,PRD-008,"Visit /about from Settings, activate View licenses",Notices and build info,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-001,CHESS,PRD-003,Opening position legal moves,Exactly 20 legal moves,BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-002,CHESS,PRD-003,Start position perft depth 2,400 nodes,BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-003,CHESS,PRD-003,Start position perft depth 3,8902 nodes,BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-004,CHESS,PRD-003,Start position perft depth 4,197281 nodes,BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-005,CHESS,PRD-003,Castle through check,Rejected,BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-006,CHESS,PRD-003,Castle after rook captured,Rights removed,BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-007,CHESS,PRD-003,En-passant only immediate,Delayed attempt rejected,BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-008,CHESS,PRD-003,En-passant exposing king,Rejected,BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-009,CHESS,PRD-003,Underpromote to knight,Legal and correct SAN/FEN,BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-010,CHESS,PRD-003,Promotion to all Q/R/B/N,Four options,BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-011,CHESS,PRD-003,Mate versus stalemate,Correct distinct outcomes,BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-012,CHESS,PRD-003,Threefold repetition,"Claim option, no premature auto end",BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-013,CHESS,PRD-003,Fifty-move,Claim option when eligible,BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-014,CHESS,PRD-003,Fivefold repetition,Automatic draw,BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-015,CHESS,PRD-003,Seventy-five move,Automatic draw with mate priority,BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-016,CHESS,PRD-003,Undo after promotion,Entire state restored,BOTH,G5,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-017,CHESS,PRD-003,Undo during bot think,Stale response ignored,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-018,CHESS,PRD-003,Restart during bot think,Stale response ignored,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-019,CHESS,PRD-003,Rapid double tap,One event committed,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-020,CHESS,PRD-003,Two browser tabs same game,Conflict/no overwritten history,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-021,CHESS,PRD-003,OS process kill after move,Correct recovery,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-022,CHESS,PRD-003,Corrupt saved game,Quarantine + recovery,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-023,CHESS,PRD-003,Malformed PGN with script markup,Escaped/rejected without execution,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-024,CHESS,PRD-003,Clock background policy,Pause works and time consistent,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-025,CHESS,PRD-003,Timeout with insufficient mating material,Draw as policy requires,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-026,CHESS,PRD-003,PGN roundtrip,Replay reconstructs initial and final positions,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-027,CHESS,PRD-003,AI worker slow/aborted,Bounded and user can continue,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-028,CHESS,PRD-003,Puzzle mate-in-two verification,All defensive branches verified,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-029,CHESS,PRD-003,Device dark wood pieces,Both sides visible,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED
+RULE-030,CHESS,PRD-003,Android app in airplane mode,Can launch and finish game,BOTH,G16,NOT_RUN,,NOT_VERIFIED,,NOT_APPROVED

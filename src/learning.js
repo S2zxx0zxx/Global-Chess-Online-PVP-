@@ -1,0 +1,198 @@
+import { renderPieceArt } from './piece-art.js';
+import { emitFeedback } from './feedback.js';
+import { Chess } from 'chess.js';
+import { extraLessons, extraPuzzles } from './learning-pack.js';
+import { currentProgressReport, recordExerciseCommitted } from './progression.js';
+
+export const lessons = [
+  {id:'center',title:'Control the center',prompt:'As White, move the king’s pawn two squares to claim the center.',answer:'e4',explanation:'The pawn controls d5 and opens lines for the queen and bishop.'},
+  {id:'development',title:'Develop a knight',setup:['e4','e5'],prompt:'Develop the kingside knight and attack Black’s e5 pawn.',answer:'Nf3',explanation:'The knight develops toward the center and attacks e5.'},
+  {id:'castle',title:'Castle kingside',setup:['e4','e5','Nf3','Nc6','Be2','Nf6'],prompt:'Move the white king to g1 to castle.',answer:'O-O',explanation:'The king moves to g1 and the rook moves to f1 in the same turn.'},
+  ...extraLessons,
+];
+export const puzzles = [
+  {id:'fools-mate',title:'Diagonal mate',setup:['f3','e5','g4'],prompt:'Find checkmate in one for Black.',mate:true,explanation:'The queen uses the open diagonal to checkmate White.'},
+  {id:'back-rank',title:'Back-rank mate',fen:'6k1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1',prompt:'Find checkmate in one for White.',mate:true,explanation:'The rook seals the back rank and Black’s pawns block the king’s escape.'},
+  {id:'win-queen',title:'Find the winning capture',fen:'4k3/8/8/3q4/4P3/8/8/4K3 w - - 0 1',prompt:'Win Black’s queen with a pawn.',answer:'exd5',explanation:'The white pawn captures diagonally on d5.'},
+  {id:'en-passant',title:'En passant',setup:['e4','a6','e5','d5'],prompt:'Capture the pawn that just advanced two squares.',answer:'exd6',explanation:'The capture must happen immediately. The white pawn lands on d6.'},
+  ...extraPuzzles,
+];
+export function exerciseGame(exercise) {
+  const game = new Chess(exercise.fen);
+  for (const move of exercise.setup ?? []) game.move(move);
+  return game;
+}
+export function dailyExercise(date = new Date()) {
+  // ZIP v3 SCR-19: a local-day challenge must not switch at UTC midnight.
+  const day = date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') +
+    '-' + String(date.getDate()).padStart(2,'0');
+  const index = Math.floor(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())/86400000) % puzzles.length;
+  return {...puzzles[index], id:'daily-'+day, title:'Daily · '+puzzles[index].title};
+}
+export function solveExercise(game, exercise, from, to, promotion) {
+  const candidates = game.moves({square:from,verbose:true}).filter(move => move.to === to && (promotion === undefined || move.promotion === promotion));
+  for (const move of candidates) {
+    if (exercise.mate) {
+      game.move(move);
+      const mate = game.isCheckmate();
+      game.undo();
+      if (mate) return move;
+    } else if (move.san === exercise.answer) return move;
+  }
+  return null;
+}
+export function bindLearning(names, progressStorage) {
+  const get = id => document.getElementById(id);
+  const dialog = get('learn-dialog');
+  const picker = get('lesson-picker');
+  const board = get('lesson-board');
+  let completed = new Set();
+  let journalInvalid = false;
+  let exercises, exercise, game, selected, solved, hintStep = 0;
+  let focusSquare;
+
+  function mergeProgress() {
+    try {
+      const summary = currentProgressReport(progressStorage, lessons, puzzles);
+      completed = new Set([...summary.completed, ...summary.daily]);
+      journalInvalid = false;
+    } catch {
+      // Never erase a corrupted journal or pretend earned XP became zero.
+      journalInvalid = true;
+    }
+  }
+  function updateProgress() {
+    mergeProgress();
+    const status=get('lesson-progress');
+    if(journalInvalid) {
+      status.textContent='Progress unavailable: saved journal needs recovery. No records were overwritten.';
+      return;
+    }
+    const summary=currentProgressReport(progressStorage,lessons,puzzles);
+    const count=summary.lessonsSolved+summary.puzzlesSolved;
+    status.textContent=count+' / '+(lessons.length+puzzles.length)+' exercises · '+
+      summary.xp+' local XP'+(summary.persisted?'':' (this session only)')+
+      (summary.achievements.length?' · '+summary.achievements.join(', '):'');
+  }
+  mergeProgress();
+  function render(focus) {
+    board.replaceChildren();
+    for (const [rank,row] of game.board().entries()) {
+      for (const [file,piece] of row.entries()) {
+        const square = 'abcdefgh'[file] + (8-rank);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.square = square;
+        button.tabIndex = square === focusSquare ? 0 : -1;
+        button.className = (rank+file)%2 ? 'dark' : 'light';
+        button.setAttribute('aria-label', square + (piece ? ', ' + (piece.color === 'w' ? 'White ' : 'Black ') + names[piece.type] : ''));
+        button.setAttribute('aria-pressed', String(square === selected));
+        renderPieceArt(button,piece,names);
+        button.onclick = () => { void tap(square); };
+        board.append(button);
+        if (square === focus) button.focus();
+      }
+    }
+  }
+  async function tap(square, promotion) {
+    if (solved) return;
+    const piece = game.get(square);
+    if (piece?.color === game.turn()) {
+      get('lesson-promotion').hidden=true;
+      selected=square;
+      render(square);
+      return;
+    }
+    if (!selected) return;
+    const choices=get('lesson-promotion');
+    if(promotion===undefined && game.moves({square:selected,verbose:true}).some(move=>move.to===square&&move.promotion)){
+      choices.hidden=false;
+      for(const button of choices.querySelectorAll('button'))button.onclick=()=>{void tap(square,button.value);};
+      choices.querySelector('button').focus();
+      return;
+    }
+    choices.hidden=true;
+    const move=solveExercise(game,exercise,selected,square,promotion);
+    if(!move){get('lesson-feedback').textContent='Try a different move.';return;}
+    const completedExercise=exercise;
+    const kind=completedExercise.id.startsWith('daily-')?'daily':
+      lessons.some(item=>item.id===completedExercise.id)?'lesson':'puzzle';
+    game.move(move);
+    solved=true;
+    selected=undefined;
+    render(square);
+    get('lesson-feedback').textContent='Correct move. Checking and saving local progression…';
+    let message='Correct. '+completedExercise.explanation;
+    let credited=false;
+    try {
+      const result=await recordExerciseCommitted(progressStorage,{kind,exerciseId:completedExercise.id});
+      credited=result.awarded;
+      if(!result.persisted)message+=' This exercise is available in this session only; browser storage is disabled.';
+      else if(!result.awarded)message+=' Already completed; replay does not award XP twice.';
+      mergeProgress();
+    } catch {
+      message+=' Progress could not be confirmed saved. Your existing journal was not intentionally replaced. Use Data & Privacy to export a recovery copy.';
+      mergeProgress();
+    }
+    get('lesson-feedback').textContent=message;
+    emitFeedback('success');
+    updateProgress();
+    window.dispatchEvent(new Event('chess-progress-changed'));
+    queueMicrotask(()=>window.dispatchEvent(new CustomEvent('chess-exercise-solved',{
+      detail:{id:completedExercise.id,title:completedExercise.title,
+        explanation:completedExercise.explanation,kind,credited},
+    })));
+  }
+  function load(index) {
+    exercise = exercises[index];
+    game = exerciseGame(exercise);
+    selected = undefined;
+    solved = false;
+    get('lesson-promotion').hidden = true;
+    hintStep = 0;
+    get('lesson-hint-text').textContent = '';
+    focusSquare = game.turn() === 'w' ? 'e2' : 'e7';
+    dialog.querySelector('h2').textContent = lessons.some(item => item.id === exercise.id) ? 'Chess lesson' : 'Tactical puzzle';
+    get('lesson-title').textContent = exercise.title;
+    get('lesson-prompt').textContent = exercise.prompt;
+    get('lesson-feedback').textContent = completed.has(exercise.id) ? 'Previously solved.' : '';
+    render();
+  }
+  board.addEventListener('focusin', event => {
+    if (!event.target.dataset.square) return;
+    focusSquare = event.target.dataset.square;
+    for (const button of board.children) button.tabIndex = button === event.target ? 0 : -1;
+  });
+  board.addEventListener('keydown', event => {
+    const delta = {ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,1],ArrowDown:[0,-1]}[event.key];
+    if (!delta || !event.target.dataset.square) return;
+    event.preventDefault();
+    const [file,rank] = event.target.dataset.square;
+    const nextFile = 'abcdefgh'['abcdefgh'.indexOf(file)+delta[0]];
+    const nextRank = Number(rank)+delta[1];
+    if (nextFile && nextRank >= 1 && nextRank <= 8) {
+      board.querySelector(`[data-square="${nextFile}${nextRank}"]`)?.focus();
+    }
+  });
+  picker.onchange = () => load(Number(picker.value));
+  get('lesson-reset').onclick = () => load(Number(picker.value));
+  get('lesson-hint').onclick = () => {
+    if (solved) { get('lesson-hint-text').textContent = 'Completed. ' + exercise.explanation; return; }
+    const move = game.moves({verbose:true}).find(candidate =>
+      solveExercise(game,exercise,candidate.from,candidate.to,candidate.promotion));
+    if (!move) { get('lesson-hint-text').textContent = 'No hint available for this position.'; return; }
+    hintStep = Math.min(3,hintStep+1);
+    get('lesson-hint-text').textContent = hintStep === 1
+      ? 'Look for a move from ' + move.from + '.'
+      : hintStep === 2 ? 'The destination is ' + move.to + '.'
+      : 'Try ' + move.san + '. ' + exercise.explanation;
+  };
+  get('learn').onclick = () => {
+    mergeProgress();
+    exercises = [...lessons,...puzzles,dailyExercise()];
+    picker.replaceChildren(...exercises.map((item,index) => new Option(item.title,index)));
+    load(0);
+    updateProgress();
+    dialog.showModal();
+  };
+}

@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://global-chess.invalid/contracts/current-private-room-state.schema.json",
+  "title": "Current Cloudflare private-room match response shape (not a remote account)",
+  "description": "match.version is a mutable optimistic concurrency counter, NOT a schema version or verified rating. Server chooses actual allowed actions.",
+  "type": "object",
+  "required": [
+    "id",
+    "seat",
+    "match",
+    "serverNow"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "seat": {
+      "enum": [
+        "w",
+        "b"
+      ]
+    },
+    "serverNow": {
+      "type": "number",
+      "minimum": 0
+    },
+    "match": {
+      "type": "object",
+      "required": [
+        "version",
+        "moves",
+        "clock",
+        "turnStartedAt",
+        "outcome"
+      ],
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "moves": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "from",
+              "to"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "pattern": "^[a-h][1-8]$"
+              },
+              "to": {
+                "type": "string",
+                "pattern": "^[a-h][1-8]$"
+              },
+              "promotion": {
+                "enum": [
+                  "q",
+                  "r",
+                  "b",
+                  "n"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "clock": {
+          "type": "object",
+          "required": [
+            "w",
+            "b"
+          ],
+          "properties": {
+            "w": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 900000
+            },
+            "b": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 900000
+            }
+          },
+          "additionalProperties": false
+        },
+        "turnStartedAt": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "outcome": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "credential": {
+      "type": "string",
+      "minLength": 1
+    },
+    "invite": {
+      "type": "string",
+      "minLength": 1
+    },
+    "error": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

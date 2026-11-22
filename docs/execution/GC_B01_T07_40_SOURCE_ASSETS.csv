@@ -1,0 +1,41 @@
+asset_group,filename,purpose,target_quantity,export_format,usage,ownership_and_qa,status,source_license,checksum,verification_state,independent_acceptance_evidence,release_gate_signoff
+BRAND,brand_emblem.svg,Original stylized chess emblem,1,SVG,All screens,Create original; do not trace ref,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+BRAND,wordmark.svg,Distinct game wordmark,1,SVG,"Splash,lobby",Name clearance needed,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+BRAND,launcher_foreground.svg,Android adaptive foreground,1,SVG,Android,Mask safe area,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+BRAND,launcher_background.svg,Android adaptive background,1,SVG,Android,Original,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+BRAND,splash_bg.webp,Warm wine low-noise gradient,1,WebP,Boot,Nonblocking,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+BRAND,og_poster.webp,Web social media card,1,WebP,Web,Only actual art,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+BOARD,board_walnut_light.webp,Original light board wood tile,1,WebP,Game,Readable,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+BOARD,board_walnut_dark.webp,Original dark board wood tile,1,WebP,Game,Contrast,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+BOARD,board_frame.svg,Thin antique gold frame,1,SVG,Game,Minimize space,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+BOARD,board_markers.svg,Selection/last/check hints,1,SVG,Game,Non-color only,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+PIECES,piece_white_king.svg,Original white king,1,SVG,Game,Contrast/a11y,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+PIECES,piece_white_queen.svg,Original white queen,1,SVG,Game,Contrast/a11y,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+PIECES,piece_white_rook.svg,Original white rook,1,SVG,Game,Contrast/a11y,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+PIECES,piece_white_bishop.svg,Original white bishop,1,SVG,Game,Contrast/a11y,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+PIECES,piece_white_knight.svg,Original white knight,1,SVG,Game,Contrast/a11y,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+PIECES,piece_white_pawn.svg,Original white pawn,1,SVG,Game,Contrast/a11y,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+PIECES,piece_black_king.svg,Original black king,1,SVG,Game,Contrast/a11y,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+PIECES,piece_black_queen.svg,Original black queen,1,SVG,Game,Contrast/a11y,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+PIECES,piece_black_rook.svg,Original black rook,1,SVG,Game,Contrast/a11y,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+PIECES,piece_black_bishop.svg,Original black bishop,1,SVG,Game,Contrast/a11y,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+PIECES,piece_black_knight.svg,Original black knight,1,SVG,Game,Contrast/a11y,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+PIECES,piece_black_pawn.svg,Original black pawn,1,SVG,Game,Contrast/a11y,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+LOBBY,lobby_bg.webp,Original subtle mahogany noise,1,WebP,Lobby,Low texture opacity,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+LOBBY,classic_chess_tile.webp,Original chess scene for hero card,1,WebP,Lobby,Not copied,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+LOBBY,quick_chess_tile.webp,Timer art for quick mode,1,WebP,Lobby,Different image,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+LOBBY,local_friend_tile.webp,Local two-player game illustration,1,WebP,Lobby,No portraits,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+LOBBY,puzzle_tile.webp,Tactical board art,1,WebP,Lobby,Original,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+AVATAR,guest_avatar_01.svg,Local default guest avatar,1,SVG,Profile,No real human,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+AVATAR,computer_avatar_01.svg,Distinct AI opponent avatar,1,SVG,VS/Game,Bot clearly labelled,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+UX,vs_sparkle.webp,Lightweight VS reveal particles,1,WebP,VS,Reduced motion off,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+UX,victory_confetti.svg,Original victory celebration,1,SVG,Result,Non-flashing,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+AUDIO,move_soft.ogg,Soft original piece placement,1,OGG,Game,No autoplay,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+AUDIO,capture_soft.ogg,Short original capture,1,OGG,Game,License,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+AUDIO,check_alert.ogg,Short nonstartling check,1,OGG,Game,Mute available,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+AUDIO,win_chime.ogg,Short celebration,1,OGG,Result,Mute available,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+FONTS,font_inter_subset,OFL Inter file added at implementation,1,woff2,All,Do not include font file here,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+FONTS,font_cinzel_subset,Optional OFL decorative type,1,woff2,Lobby,Avoid on small text,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+STORE,play_feature_graphic.webp,Actual brand feature card,1,WebP,Play Store,Original,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+STORE,play_phone_screenshot_01.png,Actual game screenshot,1,PNG,Play Store,Capture from real build,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED
+STORE,play_phone_screenshot_02.png,Actual game screenshot,1,PNG,Play Store,Capture from real build,NOT_CREATED,,,NOT_VERIFIED,,NOT_APPROVED

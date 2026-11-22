@@ -1,0 +1,61 @@
+name: Android debug smoke build
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/android-debug.yml'
+      - 'scripts/build-android-debug.sh'
+      - 'capacitor.config.json'
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'package*.json'
+      - 'vite.config.js'
+  push:
+    branches:
+      - feat/chess-v3-android-debug-shell
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: global-chess-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android-debug:
+    name: Android API 36 debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Verify regression + source contract before Android packaging
+        run: |
+          npm ci --no-audit --no-fund
+          npm run check:architecture
+          node scripts/verify-source-tracker.mjs
+          npm run check:regressions
+          npm test
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Android SDK availability
+        run: |
+          test -n "${ANDROID_HOME:-}"
+          yes | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Build offline Android debug APK
+        run: bash scripts/build-android-debug.sh
+      - name: Upload debug-key signed development APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: global-chess-android-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7

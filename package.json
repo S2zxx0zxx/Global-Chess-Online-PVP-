@@ -1,0 +1,29 @@
+{
+  "name": "global-chess",
+  "version": "1.0.0",
+  "description": "Commercial Global Chess web and Android game",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "node --test",
+    "dev": "vite",
+    "build": "vite build",
+    "check:architecture": "node scripts/check-architecture-contract.mjs",
+    "check:regressions": "node scripts/check-regression-baseline.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "@babylonjs/core": "^9.37.0",
+    "@babylonjs/havok": "^1.3.14",
+    "chess.js": "^1.4.0",
+    "vite": "^8.3.8"
+  },
+  "private": true,
+  "devDependencies": {
+    "wrangler": "4.166.0"
+  }
+}

@@ -1,0 +1,59 @@
+name: Android production AAB (manual, externally approved)
+
+on:
+  workflow_dispatch:
+    inputs:
+      permanent_app_id:
+        description: 'Approved permanent Android application ID (NOT preview)'
+        required: true
+        type: string
+      version_code:
+        description: 'Play Console unique positive versionCode'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  signed-aab:
+    environment: android-production-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GAME_ANDROID_APP_ID: ${{ inputs.permanent_app_id }}
+      GAME_ANDROID_VERSION_CODE: ${{ inputs.version_code }}
+      GAME_UPLOAD_KEYSTORE_B64: ${{ secrets.GAME_ANDROID_UPLOAD_KEYSTORE_B64 }}
+      GAME_UPLOAD_STORE_PASSWORD: ${{ secrets.GAME_ANDROID_UPLOAD_STORE_PASSWORD }}
+      GAME_UPLOAD_KEY_ALIAS: ${{ secrets.GAME_ANDROID_UPLOAD_KEY_ALIAS }}
+      GAME_UPLOAD_KEY_PASSWORD: ${{ secrets.GAME_ANDROID_UPLOAD_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Fail before build if any required signing secret is absent
+        run: |
+          : "${GAME_UPLOAD_KEYSTORE_B64:?Missing keystore secret}"
+          : "${GAME_UPLOAD_STORE_PASSWORD:?Missing store password}"
+          : "${GAME_UPLOAD_KEY_ALIAS:?Missing key alias}"
+          : "${GAME_UPLOAD_KEY_PASSWORD:?Missing key password}"
+          : "${GAME_ANDROID_APP_ID:?Missing approved application ID}"
+          : "${GAME_ANDROID_VERSION_CODE:?Missing versionCode}"
+      - name: Prepare Android SDK 36
+        run: |
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Generate and verify upload-signed AAB
+        run: bash scripts/build-android-release.sh
+      - name: Upload private signed bundle
+        uses: actions/upload-artifact@v6
+        with:
+          name: global-chess-upload-signed-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 1

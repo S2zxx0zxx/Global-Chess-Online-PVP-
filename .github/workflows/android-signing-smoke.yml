@@ -1,0 +1,66 @@
+name: Android signing smoke (ephemeral CI key)
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/android-signing-smoke.yml'
+      - 'scripts/build-android-release.sh'
+      - 'capacitor.config.json'
+      - 'src/**'
+      - 'public/**'
+      - 'package*.json'
+      - 'vite.config.js'
+  push:
+    branches:
+      - feat/chess-v3-android-release-gate
+
+permissions:
+  contents: read
+
+jobs:
+  signing-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Verify regression + source contract before Android packaging
+        run: |
+          npm ci --no-audit --no-fund
+          npm run check:architecture
+          node scripts/verify-source-tracker.mjs
+          npm run check:regressions
+          npm test
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Prepare Android SDK 36
+        run: |
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Generate one-off disposable signing certificate
+        shell: bash
+        run: |
+          keytool -genkeypair -alias ci-upload -keyalg RSA -keysize 3072 -validity 1 \
+            -keystore "${RUNNER_TEMP}/ephemeral.jks" -storepass testpass000 \
+            -keypass testpass000 -dname 'CN=Test CI Only,O=Global Chess' -noprompt
+          {
+            echo "GAME_UPLOAD_KEYSTORE_B64=$(base64 -w0 "${RUNNER_TEMP}/ephemeral.jks")"
+            echo "GAME_UPLOAD_STORE_PASSWORD=testpass000"
+            echo "GAME_UPLOAD_KEY_ALIAS=ci-upload"
+            echo "GAME_UPLOAD_KEY_PASSWORD=testpass000"
+            echo "GAME_ANDROID_APP_ID=dev.globalchess.releaseci"
+            echo "GAME_ANDROID_VERSION_CODE=1"
+          } >> "${GITHUB_ENV}"
+      - name: Build test-signed Android App Bundle
+        run: bash scripts/build-android-release.sh
+      - name: Upload disposable test-signed AAB
+        uses: actions/upload-artifact@v6
+        with:
+          name: ci-test-signed-aab-NOT-FOR-PLAY
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 3

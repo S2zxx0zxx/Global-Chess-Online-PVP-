@@ -1,0 +1,47 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#231310"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg"><title>Global Chess Online PvP</title></head><body><div id="launch" role="status"><img src="/brand/global-chess-emblem.svg" alt="" width="74" height="74"><strong>Global Chess</strong><span>Opening your game</span></div><main><div id="versus" hidden role="status" aria-live="polite"><span id="versus-white"></span><strong>VS</strong><span id="versus-black"></span><button type="button" id="versus-skip" aria-label="Skip match introduction">Skip</button></div><header class="masthead">
+  <a class="brand" href="./"><img src="/brand/global-chess-emblem.svg" alt="" width="40" height="40"><span><strong>GLOBAL CHESS</strong><small>Online PvP</small></span></a>
+  <nav aria-label="Game navigation"><button id="settings-open" type="button">Settings</button></nav>
+</header>
+<section id="lobby" class="lobby" aria-labelledby="lobby-title">
+  <div><h1 id="lobby-title">Take your seat</h1><p id="guest-greeting"></p></div>
+  <div class="mode-cards"><button id="lobby-classic" type="button"><strong>Classic</strong><small>15 min · Local friend</small></button>
+  <button id="lobby-quick" type="button"><strong>Quick</strong><small>5 min · Local friend</small></button>
+  <button id="lobby-computer" type="button"><strong>Computer</strong><small>Practice on your own</small></button>
+  <button id="lobby-online" type="button"><strong>Private PvP</strong><small>Invite a friend</small></button></div>
+  <button id="lobby-resume" type="button" hidden>Resume match</button>
+</section><section class="layout"><aside><h2>Match setup</h2><button id="learn" type="button">Learn chess</button><label class="time-control">Time control <select id="preset"><option value="untimed">Untimed</option><option value="quick">Quick · 5 min</option><option value="classic">Classic · 15 min</option></select></label><details><summary>Clock and draw rules</summary><p>Local clocks pause when the app is hidden. Private room clocks keep running. Choose a promotion piece before your clock reaches zero. At zero, the opponent wins unless the game recognizes that they have no mating material.</p><p>Claim a draw after threefold repetition or 50 moves per side without a pawn move or capture. A qualifying intended move can be selected without playing it. Fivefold repetition and 75 moves per side end the game automatically unless the final move delivers checkmate.</p></details><label class="time-control">Computer difficulty <select id="difficulty"><option value="standard">Standard</option><option value="easy">Easy</option><option value="hard">Hard</option></select></label><div class="actions"><button id="local">Local friend</button><button id="computer">Vs computer</button></div><div id="clocks" hidden></div><button id="history-button" type="button">Match history</button><section class="actions"><button id="online-create">Create private room</button><button id="online-rejoin" hidden>Reconnect to room</button><button id="online-leave" hidden>Return to offline game</button><a id="online-invite" hidden>Open invite link</a><button id="online-copy" hidden>Copy invite link</button><p id="online-status" role="status"></p></section><p id="status" role="status"></p><button id="result-open" type="button" hidden>View result</button><button id="rematch" type="button" hidden>Play rematch</button><button id="claim" hidden>Claim draw</button></aside><section id="match-area" tabindex="-1" aria-label="Match">
+<div class="player-panel" id="black-panel"><span aria-hidden="true">♚</span><strong id="black-player">Black</strong><small id="black-turn"></small></div>
+<button id="flip-board" type="button" aria-pressed="false">Flip board</button><div id="board" class="board" aria-label="Chessboard"></div>
+<canvas id="scene" hidden tabindex="0" aria-label="3D chessboard" aria-describedby="scene-keyboard-help"></canvas>
+<span id="scene-keyboard-help" hidden>Use the arrow keys to navigate squares. Press Enter or Space to select a piece or play a move.</span>
+<p id="scene-square" role="status" aria-atomic="true"></p>
+<div class="player-panel" id="white-panel"><span aria-hidden="true">♔</span><strong id="white-player">White</strong><small id="white-turn"></small></div>
+</section></section><dialog id="welcome-dialog" aria-labelledby="welcome-title"><img src="/brand/global-chess-emblem.svg" alt="" width="84" height="84"><h2 id="welcome-title">Play chess. Learn every game.</h2><p>No account required. Your chess progress is saved locally on this device when storage is available.</p><details><summary>How your progress is saved</summary><p>Matches and learning progress stay in browser storage. Clearing this site's data may remove them. You can export your match backup later.</p></details><form method="dialog"><button value="guest">Play as Guest</button></form><p class="ch-welcome-disclaimer">No social login, online ranking or purchases are required to start.</p><div class="ch-welcome-links"><a href="?screen=data" id="ch-welcome-data">Data &amp; privacy</a><a href="?screen=about" id="ch-welcome-about">Licenses &amp; notices</a></div></dialog>
+<dialog id="profile-dialog" aria-labelledby="profile-title"><h2 id="profile-title">Your profile</h2>
+<form id="profile-form"><label>Display name <input id="guest-name" maxlength="24" autocomplete="off"></label>
+<label>Avatar <select id="guest-avatar"><option value="♞">Knight</option><option value="♜">Rook</option><option value="♛">Queen</option></select></label>
+<p id="profile-stats"></p><button type="submit">Save profile</button></form><form method="dialog"><button>Close</button></form></dialog>
+<dialog id="settings-dialog" aria-labelledby="settings-title"><h2 id="settings-title">Settings</h2>
+<label><input id="coordinate-setting" type="checkbox"> Show 2D board coordinates</label>
+<label><input id="contrast-setting" type="checkbox"> High contrast 2D board</label>
+<form method="dialog"><button>Done</button></form></dialog>
+<dialog id="result-dialog" aria-labelledby="result-title"><h2 id="result-title">Match result</h2><p id="result-copy"></p><button id="result-rematch" type="button">Rematch</button><button id="result-history" type="button">Match history</button><form method="dialog"><button>Close</button></form></dialog>
+<dialog id="history-dialog"><form method="dialog"><button>Close</button></form><h2>Match history</h2><div class="backup-actions"><button id="export-backup" type="button">Export backup</button><button id="import-backup" type="button">Import backup</button><input id="backup-file" type="file" accept=".json,application/json" hidden><p id="backup-status" role="status"></p></div><div id="history-list"></div><section id="replay" hidden><h3>Replay</h3><p id="replay-position"></p><div id="replay-board" class="board"></div><button id="previous" type="button">Previous</button><button id="export-pgn" type="button">Export PGN</button><button id="next" type="button">Next</button></section></dialog><dialog id="learn-dialog" aria-labelledby="learn-title"><h2 id="learn-title">Learn chess</h2>
+<label>Exercise <select id="lesson-picker"></select></label><p id="lesson-progress"></p>
+<h3 id="lesson-title"></h3><p id="lesson-prompt"></p>
+<div id="lesson-board" class="board" aria-label="Exercise board"></div>
+<div id="lesson-promotion" hidden aria-label="Choose promotion piece"><button type="button" value="q">Queen</button><button type="button" value="r">Rook</button><button type="button" value="b">Bishop</button><button type="button" value="n">Knight</button></div><p id="lesson-feedback" role="status"></p><div class="ch-lesson-controls"><button id="lesson-hint" type="button">Get a hint</button><button id="lesson-reset" type="button">Reset exercise</button></div><p id="lesson-hint-text" aria-live="polite"></p>
+<form method="dialog"><button>Close</button></form></dialog><dialog id="claim-dialog"><h2>Claim a draw</h2><div id="claim-options"></div><form method="dialog"><button>Cancel</button></form></dialog>
+<dialog id="promotion" class="ch-promotion" aria-labelledby="promotion-title" aria-describedby="promotion-help">
+  <form method="dialog">
+    <h2 id="promotion-title">Promote pawn</h2>
+    <p id="promotion-help">Choose the piece for this move.</p>
+    <div class="ch-promotion-pieces">
+      <button value="q" autofocus><span class="ch-promotion-icon" aria-hidden="true"></span>Queen</button>
+      <button value="r"><span class="ch-promotion-icon" aria-hidden="true"></span>Rook</button>
+      <button value="b"><span class="ch-promotion-icon" aria-hidden="true"></span>Bishop</button>
+      <button value="n"><span class="ch-promotion-icon" aria-hidden="true"></span>Knight</button>
+    </div>
+    <button class="ch-promotion-cancel" value="">Cancel</button>
+  </form>
+</dialog></main><script type="module" src="/src/main.js"></script></body></html>

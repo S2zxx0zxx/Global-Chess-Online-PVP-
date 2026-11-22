@@ -1,0 +1,24 @@
+gate_id,mandatory_for_first_release,description,status,evidence_link,owner,notes,verification_state,independent_acceptance_evidence,release_gate_signoff
+G0,YES - as applicable to milestone,Charter + non-goals + ADR preflight,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G1,YES - as applicable to milestone,Brand and content licensing,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G2,YES - as applicable to milestone,Requirement/UX/design freeze,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G3,YES - as applicable to milestone,Reproducible Web+Android build,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G4,YES - as applicable to milestone,Clean architecture ports,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G5,YES - as applicable to milestone,Chess rules and FIDE-like policy,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G6,YES - as applicable to milestone,Game controller/concurrency,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G7,YES - as applicable to milestone,Safe local storage and migrations,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G8,YES - as applicable to milestone,Accessible playable board,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G9,YES - as applicable to milestone,Clock/result policy,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G10,YES - as applicable to milestone,Bounded AI Worker,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G11,YES - as applicable to milestone,Validated lessons and puzzles,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G12,YES - as applicable to milestone,History/PGN/JSON recovery,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G13,YES - as applicable to milestone,PWA offline and static deploy,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G14,YES - as applicable to milestone,Android device lifecycle,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G15,YES - as applicable to milestone,Security/privacy/license,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G16,YES - as applicable to milestone,System QA and performance,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G17,YES - as applicable to milestone,Real public Web beta,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G18,YES - as applicable to milestone,Play Console/closed-testing approval,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G19,YES - as applicable to milestone,Production release and ops,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G20-P2,NO - optional,Verified strong analysis,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G21-P2,NO - optional,Ad consent and SDK release,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED
+G22-P3,NO - optional,Authoritative online multiplayer approval,NOT_STARTED,,Solo developer,,NOT_VERIFIED,,NOT_APPROVED

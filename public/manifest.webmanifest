@@ -1,0 +1,24 @@
+{
+  "id": "./",
+  "name": "Global Chess Online PvP",
+  "short_name": "Global Chess",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#231310",
+  "theme_color": "#231310",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
