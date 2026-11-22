@@ -195,3 +195,36 @@
 }
 .ch-shell-ready #lobby #lobby-computer { background: linear-gradient(#954b40,#602620); }
 .ch-shell-ready #lobby #lobby-online { background: linear-gradient(#42745d,#244539); }
+
+#lobby .ch-home-shortcut {
+  --shortcut-tint: #372412;
+  min-height: 76px;
+  padding: 12px;
+  border-color: #9d774d;
+  background:
+    linear-gradient(90deg, #100d0af5, var(--shortcut-tint) 58%, #1d141155),
+    var(--shortcut-art, none) right center / cover no-repeat,
+    var(--shortcut-piece) right 12px center / 54px no-repeat,
+    #211811;
+  font-size: clamp(.88rem, 3.5vw, 1rem);
+}
+#lobby .ch-home-shortcut[data-shortcut=daily] { --shortcut-piece: url('/chess-assets/pieces/white-king.webp'); }
+#lobby .ch-home-shortcut[data-shortcut=puzzles] { --shortcut-piece: url('/chess-assets/pieces/white-knight.webp'); --shortcut-tint: #102b25dd; }
+#lobby .ch-home-shortcut[data-shortcut=achievements] { --shortcut-piece: url('/chess-assets/pieces/white-queen.webp'); --shortcut-tint: #39213add; }
+#lobby .ch-home-shortcut[data-shortcut=appearance] { --shortcut-piece: url('/chess-assets/pieces/white-bishop.webp'); --shortcut-tint: #1d293cdd; }
+#lobby .ch-home-shortcut:hover { border-color: #ffd18a; }
+#lobby .ch-home-shortcut::after { filter: drop-shadow(0 1px 2px #000); }
+
+#lobby .ch-home-shortcuts {
+  padding: 8px;
+  border: 1px solid #765638;
+  border-radius: 18px;
+  background: #19110c url('/brand/home-shortcuts.png') right center / cover no-repeat;
+}
+#lobby .ch-home-shortcut {
+  padding-right: 26px;
+  background:
+    linear-gradient(90deg, #100d0af2, var(--shortcut-tint) 82%, #100d0a80),
+    var(--shortcut-piece) right 11px center / 46px no-repeat;
+}
+#lobby .ch-home-shortcut::after { margin-right: -13px; }

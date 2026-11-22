@@ -247,7 +247,7 @@ export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, 
   byId('ch-open-puzzles').addEventListener('click',()=>go('puzzles'));
   byId('ch-open-daily').addEventListener('click',()=>go('daily'));
 
-  byId('ch-edit-profile').addEventListener('click',()=>byId('profile-open').click());
+  byId('ch-edit-profile').addEventListener('click',()=>document.dispatchEvent(new Event('chess-edit-profile')));
   byId('ch-profile-history').addEventListener('click',()=>go('history'));
   byId('ch-profile-avatars').addEventListener('click',()=>go('avatars'));
   byId('ch-profile-frames').addEventListener('click',()=>go('frames'));
@@ -348,7 +348,7 @@ export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, 
   }
   const more=element('div','ch-home-shortcuts');
   for(const [label,route] of [['Daily Challenge','daily'],['Puzzles','puzzles'],['Achievements','achievements'],['Appearance','appearance']]){
-    const link=element('button','ch-home-shortcut',label);link.type='button';link.addEventListener('click',()=>go(route));more.append(link);
+    const link=element('button','ch-home-shortcut',label);link.type='button';link.dataset.shortcut=route;link.addEventListener('click',()=>go(route));more.append(link);
   }
   more.setAttribute('role','group');
   more.setAttribute('aria-label','Explore Global Chess');
