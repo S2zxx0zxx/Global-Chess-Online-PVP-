@@ -279,7 +279,7 @@ export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMo
     let prefs={};
     try{prefs=JSON.parse(localStorage.getItem('global-chess.preferences.v1')||'{}')||{};}catch{}
     byId('ch-profile-name').textContent=typeof prefs.name==='string'&&prefs.name.trim()?prefs.name.trim().slice(0,24):'Guest player';
-    const icons={'♞':'/brand/guest-avatar.svg','♜':'/brand/pieces/piece_white_rook.svg','♛':'/brand/pieces/piece_white_queen.svg'};
+    const icons={'♞':'/brand/royal-avatar-guardian.svg','♜':'/brand/royal-avatar-scholar.svg','♛':'/brand/royal-avatar-traveler.svg'};
     const avatar=byId('ch-profile-avatar');
     const icon=document.createElement('img');
     icon.src=icons[prefs.avatar]||icons['♞'];icon.alt='';
