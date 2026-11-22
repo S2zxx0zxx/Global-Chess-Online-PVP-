@@ -254,3 +254,44 @@
   --play-base: #412328;
   --play-art: url('/chess-assets/pieces/white-knight.webp');
 }
+
+/* Bottom navigation feedback stays inside each button. */
+.ch-tab {
+  transition: background-color 180ms ease, color 180ms ease, transform 150ms ease;
+}
+.ch-tab:active { transform: scale(.95); }
+.ch-tab .ch-tab-icon { transform-origin: 50% 82%; }
+.ch-tab[aria-current=page] .ch-tab-icon {
+  animation: var(--tab-motion) 360ms cubic-bezier(.25,.8,.35,1) both;
+}
+.ch-tab[data-ch-view=home] { --tab-motion: tab-home-rise; }
+.ch-tab[data-ch-view=play] { --tab-motion: tab-knight-hop; }
+.ch-tab[data-ch-view=learn] { --tab-motion: tab-learn-turn; }
+.ch-tab[data-ch-view=profile] { --tab-motion: tab-profile-pop; }
+
+@keyframes tab-home-rise {
+  0% { transform: translateY(4px) scale(.89); }
+  55% { transform: translateY(-4px) scale(1.08); }
+  100% { transform: none; }
+}
+@keyframes tab-knight-hop {
+  0% { transform: rotate(-9deg); }
+  48% { transform: translate(3px,-6px) rotate(8deg); }
+  100% { transform: none; }
+}
+@keyframes tab-learn-turn {
+  0% { transform: perspective(60px) rotateY(-38deg); }
+  62% { transform: perspective(60px) rotateY(12deg); }
+  100% { transform: none; }
+}
+@keyframes tab-profile-pop {
+  0% { transform: scale(.85); }
+  58% { transform: scale(1.15); }
+  100% { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ch-tab, .ch-tab[aria-current=page] .ch-tab-icon { animation: none; transition: none; }
+  .ch-tab:active { transform: none; }
+}
+.ch-reduce-motion .ch-tab:active { transform: none; }
+.ch-reduce-motion .ch-tab[aria-current=page] .ch-tab-icon { animation: none; }
