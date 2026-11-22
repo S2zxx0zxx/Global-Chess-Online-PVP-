@@ -23,7 +23,7 @@ export function resolveMonetizationConfig(env={},platform='web'){
     return {mode:'disabled',reason:'Ad privacy, audience and policy approvals have not all been recorded'};
   }
   const privacyUrl=env.VITE_CHESS_AD_PRIVACY_URL??'';
-  if(!/^https:\/\/[^\\s/?#]+\\.[^\\s/?#]+\\S*$/.test(privacyUrl))
+  if(!/^https:\/\/[^\s/?#]+\.[^\s/?#]+\S*$/.test(privacyUrl))
     return {mode:'disabled',reason:'Approved HTTPS advertising privacy-policy link is missing'};
   const rewardedId=env.VITE_CHESS_ADS_REWARDED_ID??'';
   if(!liveUnitPattern.test(rewardedId)||rewardedId===M4_TEST_REWARDED_ID)
