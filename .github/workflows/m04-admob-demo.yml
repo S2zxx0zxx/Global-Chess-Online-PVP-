@@ -1,0 +1,54 @@
+name: M04 native Google demo rewarded ads build
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/m04-admob-demo.yml'
+      - 'scripts/build-android-debug.sh'
+      - 'scripts/configure-android-admob.mjs'
+      - 'src/monetization*.js'
+      - 'src/screen-routes.js'
+      - 'src/app-shell.js'
+      - 'src/main.js'
+      - 'capacitor.config.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: global-chess-m04-demo-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  demo-sdk:
+    name: Android API36 + AdMob/UMP test-only native SDK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CHESS_M4_ADS_TEST: 'true'
+      CHESS_M4_ADS_LIVE: 'false'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Android SDK 36
+        run: |
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Compile native demo-only consent and rewarded integration
+        run: bash scripts/build-android-debug.sh
+      - name: Verify native AdMob plugin, manifest and test-only metadata
+        run: node scripts/check-m04-native-demo.mjs
+      - name: Upload TEST-ONLY APK (not for Play)
+        uses: actions/upload-artifact@v6
+        with:
+          name: global-chess-m04-native-demo-ONLY-NOT-FOR-PLAY
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 5

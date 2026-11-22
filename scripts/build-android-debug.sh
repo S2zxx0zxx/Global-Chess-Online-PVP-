@@ -3,12 +3,26 @@ set -euo pipefail
 # Debug-only Android build. Does NOT produce a signed Play Store AAB.
 # The preview app ID is intentionally NOT the product's final Play identifier.
 npm ci --no-audit --no-fund
+# Debug ads are compiled only by an explicitly opted-in TEST build.
+if [[ "${CHESS_M4_ADS_TEST:-false}" == 'true' ]]; then
+  export VITE_CHESS_ADS_MODE=test
+  extra_plugins=('@capacitor-community/admob@8.2.1')
+else
+  export VITE_CHESS_ADS_MODE=disabled
+  extra_plugins=()
+fi
 npm run build
 # Pin all Capacitor components to a verified matching stable patch.
-npm install --no-save --package-lock=false --no-audit --no-fund \
-  @capacitor/core@8.6.2 @capacitor/android@8.6.2 @capacitor/cli@8.6.2 @capacitor/app@8.1.0 @resvg/resvg-js@2.6.2
+# Save the native dependency set to the TEMPORARY runner package.json so
+# Capacitor discovery registers native plugins. The source repo stays unchanged.
+npm install --save-exact --package-lock=false --no-audit --no-fund \
+  @capacitor/core@8.6.2 @capacitor/android@8.6.2 @capacitor/cli@8.6.2 @capacitor/app@8.1.0 @resvg/resvg-js@2.6.2 "${extra_plugins[@]}"
 npx cap add android
 npx cap sync android
+node scripts/check-android-native-plugins.mjs
+if [[ "${CHESS_M4_ADS_TEST:-false}" == 'true' ]]; then
+  node scripts/configure-android-admob.mjs
+fi
 node scripts/generate-android-assets.mjs
 # Google's Play submission target API is 36+ as of Nov 2026.
 grep -q 'targetSdkVersion = 36' android/variables.gradle || {

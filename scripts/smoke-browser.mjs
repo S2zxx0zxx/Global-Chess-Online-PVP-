@@ -278,6 +278,11 @@ try {
     await writeFile('artifacts/screens/'+name+'.png',Buffer.from(image.data,'base64'));
   }
   console.log('Rendered, overflow-checked and captured all '+screenNames.length+' additional v3 routes in Chromium');
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=settings'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-settings")'));
+  const adsOff=await evaluate('(() => {const root=document.getElementById("ch-extra-screen");return root.querySelector("#ch-ads-status")?.textContent?.includes("Monetization is disabled")===true && !root.querySelector("#ch-ads-opt-in") && !root.textContent.includes("Watch optional ad");})()');
+  if(!adsOff)throw new Error('Default web/PWA build exposed active ad controls or misleading monetization');
+  console.log('M04 Browser/PWA: no native ad SDK, no ad requests or enabled ad controls: passed');
   // Critical screens must remain usable across compact phones, tablets,
   // large text and landscape. These are bounded browser acceptance samples,
   // not a substitute for physical device, TalkBack or visual signoff.

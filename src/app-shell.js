@@ -13,7 +13,7 @@ function element(tag, className, text) {
 
 // The v3 M0 shell intentionally calls existing, tested game commands rather
 // than keeping a separate copy of chess state in the presentation layer.
-export function mountAppShell({startMatch, historyCount, readSavedHistory, writeSavedHistory, clearCompletedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, saveAndExitCurrentMatch, preparePwaUpdate,hasCorruptMatch, onNativeBackground, onNativeForeground, getProgressReport, storagePersistent = true}) {
+export function mountAppShell({startMatch, historyCount, readSavedHistory, writeSavedHistory, clearCompletedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, saveAndExitCurrentMatch, preparePwaUpdate,hasCorruptMatch, onNativeBackground, onNativeForeground, getProgressReport, monetization, storagePersistent = true}) {
   const main = document.querySelector('main');
   const lobby = byId('lobby');
   const match = byId('match-area');
@@ -236,9 +236,20 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
     avatar.dataset.frame=['gold','walnut','teal'].includes(frame)?frame:'gold';
     const total=historyCount();
     byId('ch-history-total').textContent=total===null?'Unavailable':String(total);
+    // One optional cosmetic recognition; never an Elo, currency or chess buff.
+    const badge=profile.querySelector('#ch-supporter-crest');
+    if(monetization?.status().earned){
+      if(!badge){
+        const mark=element('span','ch-supporter-mark','✦ Supporter Crest');
+        mark.id='ch-supporter-crest';
+        mark.setAttribute('aria-label','Optional supporter crest earned on this device');
+        profile.querySelector('.ch-profile-card')?.append(mark);
+      }
+    }else badge?.remove();
   }
   byId('profile-form').addEventListener('submit',()=>queueMicrotask(refreshProfile));
   window.addEventListener('chess-profile-changed',refreshProfile);
+  window.addEventListener('chess-monetization-changed',refreshProfile);
   function go(next, options = {}) {
     if (!views.has(next)) throw new Error('Unknown chess view: '+next);
     if (!options.fromHistory) {
@@ -295,7 +306,7 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   byId('lobby-online').addEventListener('click',()=>go('match'));
   byId('online-leave').addEventListener('click',()=>go('home'));
   screenRoutes=mountScreenRoutes({
-    main,go,readHistory:readSavedHistory,writeHistory:writeSavedHistory,clearCompletedHistory,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,saveAndExitCurrentMatch,preparePwaUpdate,hasCorruptMatch,getProgressReport,
+    main,go,readHistory:readSavedHistory,writeHistory:writeSavedHistory,clearCompletedHistory,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,saveAndExitCurrentMatch,preparePwaUpdate,hasCorruptMatch,getProgressReport,monetization,
     openExercise(exercise){
       byId('learn').click();
       const list=[...lessons,...puzzles,dailyExercise()];
@@ -316,6 +327,9 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   }
   lobby.append(more);
   document.documentElement.classList.add('ch-shell-ready');
+  // UMP refresh is mandatory on each launch only for a previously opted-in
+  // native session. This never initializes or loads an ad on its own.
+  void monetization?.onLaunch?.().catch(()=>{});
   // Read-only deep links let QA visit each ZIP v3 screen without modifying
   // active game state. Invite hashes always take precedence.
   const requested = new URL(location.href).searchParams.get('screen');

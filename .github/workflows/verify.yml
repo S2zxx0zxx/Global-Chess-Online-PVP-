@@ -7,6 +7,7 @@ on:
       - feat/playable-chess-foundation
       - feat/chess-v3-m02a-safe-exit-navigation-qa
       - feat/chess-v3-m02b-original-art-android-a11y
+      - feat/chess-v3-m03-progression-integrated-release-gates
   push:
     branches:
       - main

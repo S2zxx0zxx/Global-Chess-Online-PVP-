@@ -205,3 +205,11 @@
 .ch-welcome-links{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:16px 0 0}
 .ch-welcome-links a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;color:#f6d493;font-size:.84rem;text-decoration:underline;text-underline-offset:4px}
 .ch-welcome-links a:focus-visible{outline:3px solid #80ccff;outline-offset:3px}
+
+/* M-04: no ad banner occupies, overlays or obscures the playable chessboard.
+   This panel appears only AFTER a verified offline match ends. */
+.ch-ads-panel{margin-block:14px 6px;padding:12px;border:1px solid var(--ch-color-brand-gold,#cba368);border-radius:14px;background:rgba(39,20,21,.45)}
+.ch-ads-panel .ch-inline-notice{margin:0 0 10px;line-height:1.45}
+.ch-ads-panel .ch-action{width:100%;min-height:44px;margin-top:8px}
+.ch-ads-panel .ch-action:disabled{opacity:.65;cursor:not-allowed}
+.ch-supporter-mark{display:inline-flex;align-items:center;justify-content:center;min-height:28px;border:1px solid var(--ch-color-brand-gold,#cba368);padding:3px 10px;border-radius:999px;color:var(--ch-color-brand-gold,#e1b976);font-size:.78rem;font-weight:700;letter-spacing:.03em}

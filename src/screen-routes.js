@@ -24,7 +24,7 @@ const appearance=name=>{
 };
 export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','settings','data','transfer','recovery','update','about']);
 
-export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,saveAndExitCurrentMatch,preparePwaUpdate,hasCorruptMatch,getProgressReport}){
+export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,saveAndExitCurrentMatch,preparePwaUpdate,hasCorruptMatch,getProgressReport,monetization}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
   screen.setAttribute('aria-labelledby','ch-extra-screen-title');
@@ -124,6 +124,38 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         const items=stack();
         if(!match?.online)items.append(btn('Rematch',()=>{go('match');el('rematch').click();},'primary'));
         items.append(btn('Review saved matches',()=>go('history')),btn('Home',()=>go('home')));
+        // M-04: only on a completed OFFLINE result screen, and only after an
+        // explicit opt-in. No banners, autoplay, forced interstitial or XP.
+        const m4=monetization?.status();
+        if(!match?.online&&m4?.available){
+          const adArea=mk('div','ch-feature-list ch-ads-panel');
+          section.append(adArea);
+          const message=paragraph(adArea,'','ch-inline-notice');
+          message.setAttribute('role','status');
+          if(m4.earned){
+            message.textContent='Supporter Crest already earned on this device. Your chess rules and difficulty are unchanged.';
+          }else if(!m4.optedIn){
+            message.textContent='Optional game-support ad is OFF. Chess and every free board theme work without ads.';
+            adArea.append(btn('Optional ads settings',()=>go('settings')));
+          }else{
+            message.textContent=m4.mode==='test'?'Google demo rewarded ad (test only; no real revenue).':'Optional supporter ad. Never required to play.';
+            const watch=btn('Watch optional ad for Supporter Crest',async()=>{
+              watch.disabled=true;
+              message.textContent='Checking native privacy permission and ad availability…';
+              const result=await monetization.rewarded();
+              message.textContent=result.reason;
+              message.setAttribute('role',result.ok?'status':'alert');
+              watch.disabled=Boolean(monetization.status().earned);
+              watch.hidden=Boolean(monetization.status().earned);
+            },'primary');
+            watch.disabled=m4.busy;
+            adArea.append(watch);
+            adArea.append(btn('Review native privacy choices',async()=>{
+              const result=await monetization.privacyOptions();
+              message.textContent=result.reason;
+            }));
+          }
+        }
       }else section.append(btn('Continue match',()=>go('match'),'primary'));
     }
     if(route==='history'){
@@ -413,6 +445,48 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         item.append(descriptionBox,checkbox);options.append(item);
       }
       paragraph(section,'Language: English (currently supported). Additional translations will be added only when verified.','ch-inline-notice');
+      const monetizationStatus=monetization?.status();
+      section.append(mk('h2','ch-section-title','Optional ads & privacy'));
+      const adDescription=paragraph(section,
+        'Ads are optional and OFF by default. Never on the board, clock, lessons or during a move. No account, ad, purchase or reward is needed for chess.');
+      adDescription.id='ch-ads-description';
+      const adFeedback=paragraph(section,
+        monetizationStatus?.available?
+          monetizationStatus.mode==='test'?'Native Google demo ads: test only, no revenue.':
+          'Native rewarded ads may be offered only after provider and privacy approval.':
+          'Monetization is disabled in this build. There are no ad requests.',
+        'ch-inline-notice');
+      adFeedback.id='ch-ads-status';
+      adFeedback.setAttribute('role','status');
+      if(monetizationStatus?.available){
+        const adRow=mk('label','ch-setting-row'),adText=mk('span');
+        adText.append(mk('strong','','Allow optional supporter ads'),
+          mk('small','','This is only a local preference; Google UMP separately manages required privacy consent.'));
+        const adToggle=mk('input');adToggle.type='checkbox';
+        adToggle.id='ch-ads-opt-in';adToggle.checked=Boolean(monetizationStatus.optedIn);
+        adToggle.setAttribute('aria-describedby','ch-ads-description ch-ads-status');
+        adToggle.addEventListener('change',()=>{
+          const result=monetization.optIn(adToggle.checked);
+          if(!result.ok)adToggle.checked=!adToggle.checked;
+          adFeedback.textContent=result.reason;
+        });
+        adRow.append(adText,adToggle);section.append(adRow);
+        const privacy=btn('Manage ad privacy choices',async()=>{
+          privacy.disabled=true;
+          const response=await monetization.privacyOptions();
+          adFeedback.textContent=response.reason;
+          privacy.disabled=false;
+        });
+        section.append(privacy);
+        if(monetizationStatus.privacyUrl){
+          const link=mk('a','ch-privacy-link','Read advertising privacy policy');
+          link.href=monetizationStatus.privacyUrl;
+          link.target='_blank';link.rel='noopener noreferrer';
+          section.append(link);
+        }
+        if(monetizationStatus.earned)
+          paragraph(section,'Supporter Crest earned locally · purely decorative, no extra moves, chess hints, XP or competitive benefit.','ch-inline-notice');
+      }
       const nav=group();
       card(nav,'Appearance','Choose a board style',()=>go('appearance'));
       card(nav,'Data & privacy','Backups and local saves',()=>go('data'));
@@ -428,6 +502,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
     if(route==='data'||route==='transfer'){
       title('Private device storage',route==='data'?'Data & privacy':'Import & export','Clearing your browser data can permanently remove unsynced matches and lessons.');
       paragraph(section,'Global Chess currently stores your local chess progress on this device. No automatic cloud backup or account synchronization is promised.','ch-inline-notice');
+      paragraph(section,'Optional ads remain off in browser/PWA and ad-free Android builds. In a separately approved ad-enabled Android build, Google AdMob and UMP may process device and ad data only according to the published privacy disclosures and native privacy choices. No ad-supported competitive advantage is offered.','ch-inline-notice');
       const nav=stack();
       nav.append(btn('Export JSON backup',()=>el('export-backup')?.click(),'primary'),btn('Import JSON backup',()=>el('import-backup')?.click()),btn('View saved games',()=>go('history')));
       if(route==='data'){
