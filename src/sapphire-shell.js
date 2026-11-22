@@ -200,6 +200,8 @@ export function mountSapphireShell({lobby,play,learn,profile,match,main,nav,go,o
   const stage=make('section','gs-board-stage');
   const originalCopy=hero.querySelector('.ch-hero-copy');
   originalCopy.hidden=true;
+  // Keep legacy guest-greeting and lobby-title IDs connected for the tested profile controller.
+  stage.append(originalCopy);
   const stageStars=make('span','gs-stage-orbit','');
   stage.append(stageStars);
   if(showcase)stage.append(showcase);

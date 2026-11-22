@@ -161,6 +161,27 @@ try {
   await mkdir('artifacts', {recursive:true});
   const homeShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/chess-v3-mobile-home.png',Buffer.from(homeShot.data,'base64'));
+  // Midnight Sapphire's actual controls must work, not just appear in a screenshot.
+  if(!await evaluate('document.querySelectorAll(".gs-nav-tab").length===5 && !!document.querySelector(".gs-board-stage .gc-preview-board") && !!document.querySelector(".gs-play-button") && !!document.querySelector("#lobby-title") && !!document.querySelector("#guest-greeting")')) {
+    throw new Error('Sapphire Home controls, saved legacy IDs or board illustration missing');
+  }
+  await evaluate('document.querySelector(".gs-user-chip").click(); true');
+  await waitUntil(()=>evaluate('document.querySelector("#gs-profile-popup[open]")?.querySelectorAll(".gs-stat").length===6'));
+  const profilePopupShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/sapphire-profile-popup.png',Buffer.from(profilePopupShot.data,'base64'));
+  await evaluate('document.querySelector("#gs-profile-popup .gs-popup-close").click();true');
+  await evaluate('document.querySelector(".gs-settings-trigger").click();true');
+  await waitUntil(()=>evaluate('document.querySelector("#settings-dialog[open]")?.querySelectorAll("input[data-gs-preference]").length===2'));
+  const settingsPopupShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/sapphire-settings-popup.png',Buffer.from(settingsPopupShot.data,'base64'));
+  await evaluate('document.querySelector("#settings-dialog form[method=dialog] button").click();true');
+  await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=appearance]").click();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-appearance") && !document.querySelector("#ch-extra-screen").hidden'));
+  await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=home]").click();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-home")'));
+  const sapphireShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/sapphire-home-360.png',Buffer.from(sapphireShot.data,'base64'));
+  console.log('Sapphire profile, settings, artwork, original guest IDs and 5-tab navigation: passed');
   await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=play]").click(); true');
   if (!(await evaluate('document.getElementById("ch-play-hub").hidden === false'))) {
     throw new Error('Play hub did not open');

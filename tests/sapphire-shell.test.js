@@ -39,5 +39,5 @@ test('original sapphire art and independent style rules exist',()=>{
   assert.match(css,/max-width:320px/);
   assert.match(read('public/brand/sapphire-horizon.svg'),/viewBox="0 0 768 1366"/);
   assert.match(read('public/brand/sapphire-global-chess.svg'),/GLOBAL/);
-  assert.doesNotMatch(read('public/brand/sapphire-horizon.svg'),/<image\b|<script\b|https?:\/\//);
+  assert.doesNotMatch(read('public/brand/sapphire-horizon.svg'),/<image\b|<script\b|(?:href|xlink:href)=["'](?:https?:|data:)/);
 });
