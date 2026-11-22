@@ -5,10 +5,12 @@ on:
     branches:
       - main
       - feat/playable-chess-foundation
+      - integration/global-chess-v3
   push:
     branches:
       - main
       - feat/playable-chess-foundation
+      - integration/global-chess-v3
   workflow_dispatch:
 
 permissions:
