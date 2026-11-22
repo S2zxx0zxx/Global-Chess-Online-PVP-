@@ -127,3 +127,92 @@
 @media(prefers-reduced-motion:reduce){
   .board::after,.ch-theme-preview::after,.ch-theme-preview-piece,.ch-piece-card .ch-piece-example,.ch-piece-aura::before,.ch-piece-aura::after{animation:none!important}
 }
+
+/* Neutral surroundings let the board and controls supply the color. */
+:root.ch-shell-ready,
+.ch-shell-ready body,
+.ch-shell-ready :is(.lobby,.ch-screen,.ch-tab-bar,.ch-match-dock,.player-panel),
+.ch-shell-ready.ch-view-match .layout > aside {
+  background: #000;
+}
+
+.ch-appearance-categories {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-block: 12px 4px;
+}
+.ch-appearance-categories button[aria-pressed=true] {
+  border-color: #ffd18a;
+  background: #553622;
+}
+.ch-animated-pieces .board:not(.ch-review-board) button.has-piece .piece-art {
+  filter: drop-shadow(0 2px 2px #000c);
+}
+.ch-piece-card .ch-piece-example {
+  filter: drop-shadow(0 3px 3px #000a);
+}
+
+/* Spawn the plume at the foot of the piece and let it expand above the head. */
+.ch-piece-aura {
+  inset: 0;
+}
+.ch-piece-aura::before {
+  inset: auto 12% 14%;
+  height: 84%;
+  border-radius: 0;
+  clip-path: none;
+  background: var(--plume, radial-gradient(ellipse at 50% 88%, var(--piece-glow), transparent 67%));
+  filter: blur(2px);
+  transform-origin: 50% 93%;
+  opacity: .22;
+  animation: royal-plume-rise 2.4s ease-out infinite paused;
+}
+.ch-piece-aura::after {
+  inset: auto 13% 19%;
+  height: 80%;
+  transform-origin: 50% 90%;
+  animation: royal-plume-rise 2.4s ease-out -.95s infinite paused;
+}
+:is(.ch-animated-pieces .board button,.ch-piece-card) .ch-piece-aura::before,
+:is(.ch-animated-pieces .board button,.ch-piece-card) .ch-piece-aura::after {
+  animation-name: royal-plume-rise;
+}
+:is(.ch-piece-card,.ch-animated-pieces .board button:is(.piece-k,.piece-q,.last-move,:hover,:focus-visible,[aria-pressed=true])) .ch-piece-aura::before,
+:is(.ch-piece-card,.ch-animated-pieces .board button:is(.piece-k,.piece-q,.last-move,:hover,:focus-visible,[aria-pressed=true])) .ch-piece-aura::after {
+  animation-play-state: running;
+}
+:is(:root[data-ch-pieces=mist] .board,.ch-piece-card[data-piece-style=mist]) .ch-piece-aura::before,
+:is(:root[data-ch-pieces=mist] .board,.ch-piece-card[data-piece-style=mist]) .ch-piece-aura::after {
+  inset: auto 3% 13%;
+  height: 91%;
+  clip-path: none;
+  filter: blur(2px);
+  background:
+    radial-gradient(ellipse at 24% 32%, #becfe3a6, transparent 31%),
+    radial-gradient(ellipse at 71% 51%, #b1bdcde0, transparent 34%),
+    radial-gradient(ellipse at 38% 71%, #dce7f3ef, transparent 32%),
+    radial-gradient(ellipse at 55% 92%, #8794aaa8, transparent 49%);
+  animation-duration: 3.1s;
+}
+:is(:root[data-ch-pieces=ember] .board,.ch-piece-card[data-piece-style=ember]) .ch-piece-aura::before {
+  clip-path: none;
+  border-radius: 0;
+  --plume:
+    radial-gradient(ellipse at 28% 62%, #ff9d36, transparent 25%),
+    radial-gradient(ellipse at 70% 49%, #ff5c27, transparent 28%),
+    radial-gradient(ellipse at 53% 80%, #fff0a6, #ff8628 29%, transparent 62%);
+}
+@keyframes royal-plume-rise {
+  0% { transform: translateY(9%) scale(.58, .52); opacity: .12; }
+  27% { opacity: .92; }
+  68% { opacity: .61; }
+  100% { transform: translate(-7%, -52%) rotate(-11deg) scale(1.26, 1.32); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.ch-animated-pieces .board button,.ch-piece-card) .ch-piece-aura::before,
+  :is(.ch-animated-pieces .board button,.ch-piece-card) .ch-piece-aura::after {
+    animation: none !important;
+  }
+}
+.ch-reduce-motion .ch-piece-aura { display: none; }

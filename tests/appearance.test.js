@@ -42,7 +42,7 @@ test('selection applies safely and adds an aura only for animated artwork',()=>{
     const fire=makeCell();renderPieceArt(fire,{color:'w',type:'n'},names);
     assert.deepEqual([...fire.classes],['has-piece','piece-white','piece-n']);
     assert.deepEqual(fire.children.map(x=>x.tag),['span','img']);
-    assert.match(fire.children[1].src,/piece_white_knight\.svg$/);
+    assert.match(fire.children[1].src,/white-knight\.webp$/);
     assert.equal(fire.children[0].attributes['aria-hidden'],'true');
 
     applyBoardTheme('unknown');applyPieceTheme('classic');

@@ -280,15 +280,26 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
     }
     if(route==='appearance'){
       title('Royal visual collection','Appearance','Choose your board and pieces independently. Every look is free and works offline.');
-      section.append(mk('h2','ch-section-title','Chessboard collection'));
-      paragraph(section,'Five animated royal worlds plus three original boards. Effects are decorative and never hide legal moves.');
-      const grid=mk('div','ch-theme-grid');section.append(grid);
+      const categories=mk('div','ch-appearance-categories');
+      const grid=mk('div','ch-theme-grid');
+      const pieceGrid=mk('div','ch-piece-grid');
+      const boardsButton=btn('Chessboards',()=>showCollection(false));
+      const piecesButton=btn('Chess pieces',()=>showCollection(true));
+      function showCollection(showPieces){
+        grid.hidden=showPieces;
+        pieceGrid.hidden=!showPieces;
+        boardsButton.setAttribute('aria-pressed',String(!showPieces));
+        piecesButton.setAttribute('aria-pressed',String(showPieces));
+      }
+      categories.append(boardsButton,piecesButton);
+      section.append(categories,grid,pieceGrid);
+      showCollection(false);
       for(const {id:name,name:title,detail} of BOARD_THEMES){
         const tile=mk('button','ch-theme-card'+(ls('global-chess.appearance.v1','maple')===name?' ch-selected':''));tile.type='button';
         tile.setAttribute('aria-pressed',String(ls('global-chess.appearance.v1','maple')===name));
         const preview=mk('span','ch-theme-preview ch-preview-'+name);
         if(ANIMATED_THEMES.includes(name)){
-          const mark=mk('img','ch-theme-preview-piece');mark.src='/brand/pieces/piece_white_king.svg';mark.alt='';
+          const mark=mk('img','ch-theme-preview-piece');mark.src='/chess-assets/pieces/white-king.webp';mark.alt='';
           preview.append(mark);
         }
         tile.append(preview,mk('strong','',title),mk('small','',detail));
@@ -299,9 +310,6 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         };
         grid.append(tile);
       }
-      section.append(mk('h2','ch-section-title','Piece collection'));
-      paragraph(section,'Five animated royal piece styles plus the original Classic and Crest sets. Tap a style to see it on your match.');
-      const pieceGrid=mk('div','ch-piece-grid');section.append(pieceGrid);
       for(const {id:name,name:label,detail} of PIECE_THEMES){
         const item=mk('button','ch-piece-card'+(ls('global-chess.pieces.v1','classic')===name?' ch-selected':''));
         item.type='button';
@@ -311,7 +319,6 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         if(ANIMATED_THEMES.includes(name))display.append(mk('span','ch-piece-aura'));
         const preview=mk('img','ch-piece-example');preview.src=name==='crest'?'/brand/pieces/piece_white_knight.svg':'/chess-assets/pieces/white-knight.webp';
         preview.alt='';
-        if(ANIMATED_THEMES.includes(name))preview.src='/brand/pieces/piece_white_knight.svg';
         display.append(preview);
         item.append(display,mk('strong','',label),mk('small','',detail));
         item.onclick=()=>{

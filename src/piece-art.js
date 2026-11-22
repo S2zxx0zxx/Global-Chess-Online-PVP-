@@ -10,7 +10,7 @@ export function renderPieceArt(cell, piece, names) {
   }
   catch { /* Storage-disabled guests can still see classic pieces. */ }
   const style = pieceTheme(selected);
-  const ornate = style !== 'classic';
+  const ornate = style === 'crest';
   cell.classList.add('has-piece','piece-'+side,'piece-'+piece.type);
   if (ANIMATED_THEMES.includes(style)) {
     const aura = document.createElement('span');
