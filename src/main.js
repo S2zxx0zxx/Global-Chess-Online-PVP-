@@ -1,7 +1,8 @@
 import { renderPieceArt } from './piece-art.js';
 import { emitFeedback } from './feedback.js';
 import { loadBrowserMateSolver } from './mate-solver.js';
-import { bindLearning } from './learning.js';
+import { bindLearning, lessons, puzzles } from './learning.js';
+import { progressKey, legacyProgressKey, readProgress, migrateLegacyProgress, currentProgressReport } from './progression.js';
 import { bindLobby } from './lobby.js';
 import { openGameStorage } from './storage.js';
 import { bindOnline } from './online.js';
@@ -17,10 +18,26 @@ import { mountAppShell } from './app-shell.js';
 import { finalizeOfflineExit } from './session-exit.js';
 import { restoreGame, serializeGame, savedMatchOutcome, claimableDraw, intendedDraw, hasAvailableDrawClaim } from './game.js';
 
-import { matchKey as key, historyKey, exportBackup, importBackup, previewBackup } from './backup.js';
+import { matchKey as key, historyKey, exportBackup, importBackupDurably, previewBackup } from './backup.js';
 async function initialize() {
 // The optional WASM mating solver must not delay guest-first gameplay.
 const gameStorage = await openGameStorage();
+let progressWarning='';
+try {
+  // Keep the user's prior puzzle completions; an existing event journal wins
+  // over stale legacy data and is NEVER overwritten by a migration.
+  if(gameStorage.getItem(progressKey)===null) {
+    let legacy=null;
+    try { legacy=localStorage.getItem(legacyProgressKey); } catch {}
+    if(legacy!==null){
+      migrateLegacyProgress(gameStorage,legacy,lessons,puzzles);
+      if(gameStorage.durable!==false) await gameStorage.flush();
+    }
+  }
+  readProgress(gameStorage.getItem(progressKey));
+} catch {
+  progressWarning='Local progression could not be read or migrated. Existing records remain intact; export a backup before changing them.';
+}
 loadBrowserMateSolver().catch(() => {
   // The simpler validated timeout policy remains available.
 });
@@ -35,7 +52,7 @@ rematch.onclick = () => {
 const promotion = document.querySelector('#promotion');
 const names = { k:'King', q:'Queen', r:'Rook', b:'Bishop', n:'Knight', p:'Pawn' };
 let state = restoreGame();
-let notice = '';
+let notice = progressWarning;
 let corruptMatchRaw;
 try {
   state = restoreGame(gameStorage.getItem(key));
@@ -459,6 +476,7 @@ appShell = mountAppShell({
     try { return summarizeMatches(readHistory(gameStorage)).completed; } catch { return null; }
   },
   storagePersistent: gameStorage.durable,
+  getProgressReport(){ return currentProgressReport(gameStorage,lessons,puzzles); },
   async onNativeBackground(){
     updateClock();
     if(online?.active)return;
@@ -685,16 +703,19 @@ backupFile.onchange = async () => {
     if (online?.active) throw new Error('Online match in progress');
     const {summary} = previewBackup(contents);
     const summaryText = 'Validated backup: ' + summary.historyCount + ' completed games, ' +
-      summary.activePly + ' half-moves in ' + summary.activeMode + ' mode.\\n\\n' +
-      'Replace this device’s current match and local history? Export a copy first if needed.';
+      summary.activePly + ' half-moves in ' + summary.activeMode + ' mode.' +
+      (summary.exerciseEvents===undefined?' Legacy v1 backup: existing exercise XP will be preserved.':' Exercise journal events: '+summary.exerciseEvents+'.') +
+      '\\n\\nReplace the covered local records? Export a copy first if needed.';
     if (!confirm(summaryText)) { backupStatus.textContent = 'Import cancelled. Existing games were not changed.'; return; }
-    const restored = importBackup(gameStorage, contents);
+    const restored = await importBackupDurably(gameStorage, contents);
     stopComputer();
     state = restored;
     corruptMatchRaw = undefined;
     selected = undefined;
     tickAt = performance.now();
-    notice = 'Backup restored.';
+    notice = 'Backup restored and durable storage confirmed.';
+    backupStatus.textContent = notice;
+    window.dispatchEvent(new Event('chess-progress-changed'));
     historyDialog.close();
     render();
     playComputer();
@@ -703,7 +724,7 @@ backupFile.onchange = async () => {
   }
 };
 
-bindLearning(names);
+bindLearning(names,gameStorage);
 window.addEventListener('chess-appearance-changed', () => render());
 
 window.addEventListener('chess-storage-error', () => {

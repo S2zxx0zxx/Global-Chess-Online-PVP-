@@ -6,6 +6,10 @@ on:
       - '.github/workflows/android-signing-smoke.yml'
       - 'scripts/build-android-release.sh'
       - 'capacitor.config.json'
+      - 'src/**'
+      - 'public/**'
+      - 'package*.json'
+      - 'vite.config.js'
   push:
     branches:
       - feat/chess-v3-android-release-gate

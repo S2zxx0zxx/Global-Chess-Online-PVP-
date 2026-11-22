@@ -6,7 +6,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "node --test",
+    "test": "node --test && node scripts/validate-learning-pack.mjs",
     "dev": "vite",
     "build": "vite build"
   },
