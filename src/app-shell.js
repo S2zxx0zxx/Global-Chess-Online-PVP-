@@ -2,6 +2,7 @@ import { summarizeMatches } from './game-stats.js';
 import { BOARD_THEMES, PIECE_THEMES } from './appearance.js';
 import { lessons, puzzles, dailyExercise } from './learning.js';
 import { mountScreenRoutes } from './screen-routes.js';
+import { bindNativeLifecycle } from './native-lifecycle.js';
 
 const byId = id => document.getElementById(id);
 
@@ -14,7 +15,7 @@ function element(tag, className, text) {
 
 // The v3 M0 shell intentionally calls existing, tested game commands rather
 // than keeping a separate copy of chess state in the presentation layer.
-export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMoves, readSavedHistory, getProgressReport, writeSavedHistory, clearCompletedHistory, getMatchSummary, saveAndExitCurrentMatch, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, preparePwaUpdate,hasCorruptMatch, storagePersistent = true}) {
+export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMoves, readSavedHistory, getProgressReport, writeSavedHistory, clearCompletedHistory, getMatchSummary, saveAndExitCurrentMatch, onNativeBackground, onNativeForeground, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, preparePwaUpdate,hasCorruptMatch, storagePersistent = true}) {
   const main = document.querySelector('main');
   const lobby = byId('lobby');
   const match = byId('match-area');
@@ -416,6 +417,14 @@ export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMo
     go(views.has(target) ? target : 'home', {fromHistory:true});
   });
   go(invite ? 'match' : (views.has(requested) ? requested : 'home'), {replace:true});
+  void bindNativeLifecycle({
+    plugin:globalThis.Capacitor?.Plugins?.App,
+    getRoute:()=>view,
+    go,
+    getOpenDialog:()=>document.querySelector('dialog[open]'),
+    onBackground:onNativeBackground,
+    onForeground:onNativeForeground,
+  }).catch(()=>window.dispatchEvent(new Event('chess-native-lifecycle-error')));
   return {
     go,openSetup,
     onNewMatch(){go('match');startTutorial();},

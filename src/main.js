@@ -76,6 +76,7 @@ let appShell;
 let flipped = state.mode === 'computer' && state.playerSide === 'b';
 document.documentElement.classList.toggle('ch-board-flipped',flipped);
 let wasVisible = !document.hidden;
+let nativeBackgrounded = false;
 const flip = document.querySelector('#flip-board');
 flip.onclick = () => {
   flipped = !flipped;
@@ -89,8 +90,8 @@ function updateClock() {
   const now = performance.now();
   const elapsed = wasVisible ? now - tickAt : 0;
   tickAt = now;
-  wasVisible = !document.hidden;
-  if (online?.active || state.paused || importingBackup) { displayClock(); return; }
+  wasVisible = !document.hidden && !nativeBackgrounded;
+  if (online?.active || state.paused || importingBackup || nativeBackgrounded) { displayClock(); return; }
   const { clock, game } = state;
   if (clock && !outcome(game) && elapsed > 0) {
     state.clock = remainingClock(clock, game.turn(), elapsed);
@@ -289,7 +290,7 @@ function commit(move) {
 
 function playComputer() {
   const {game, mode} = state;
-  if (worker || importingBackup || state.paused || mode !== 'computer' || game.turn() === state.playerSide || outcome(game)) return;
+  if (worker || nativeBackgrounded || importingBackup || state.paused || mode !== 'computer' || game.turn() === state.playerSide || outcome(game)) return;
   const requestedFen = game.fen();
   let job;
   try {
@@ -513,6 +514,24 @@ appShell = mountAppShell({
     return {durable:true};
   },
   getProgressReport(){ return currentProgressReport(gameStorage,lessons,puzzles); },
+  async onNativeBackground(){
+    updateClock();
+    nativeBackgrounded=true;
+    wasVisible=false;
+    if (online?.active || importingBackup || corruptMatchRaw !== undefined) return;
+    stopComputer();
+    const started = state.preset !== undefined || state.game.history().length > 0;
+    if (!started || !save() || gameStorage.durable===false) return;
+    try { await gameStorage.flush(); }
+    catch { window.dispatchEvent(new Event('chess-storage-error')); }
+  },
+  onNativeForeground(){
+    nativeBackgrounded=false;
+    tickAt=performance.now();
+    wasVisible=!document.hidden;
+    render();
+    playComputer();
+  },
   saveAndExitCurrentMatch(){
     if (importingBackup || corruptMatchRaw !== undefined) {
       return {ok:false,reason:'Resolve the backup or saved-match recovery before leaving.'};
