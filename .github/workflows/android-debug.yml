@@ -34,6 +34,13 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - name: Verify regression + source contract before Android packaging
+        run: |
+          npm ci --no-audit --no-fund
+          npm run check:architecture
+          node scripts/verify-source-tracker.mjs
+          npm run check:regressions
+          npm test
       - uses: actions/setup-java@v5
         with:
           distribution: temurin

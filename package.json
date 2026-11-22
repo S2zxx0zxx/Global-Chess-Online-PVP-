@@ -9,7 +9,8 @@
     "test": "node --test",
     "dev": "vite",
     "build": "vite build",
-    "check:architecture": "node scripts/check-architecture-contract.mjs"
+    "check:architecture": "node scripts/check-architecture-contract.mjs",
+    "check:regressions": "node scripts/check-regression-baseline.mjs"
   },
   "keywords": [],
   "author": "",

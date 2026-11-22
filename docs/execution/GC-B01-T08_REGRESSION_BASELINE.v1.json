@@ -1,0 +1,167 @@
+{
+  "id": "GC-B01-T08-REGRESSION-FREEZE-v1.0",
+  "owner_command": "START GC-B01-T07 & START GC-B01-T08 start kro build and merge",
+  "task": "GC-B01-T08",
+  "baseline": {
+    "canonical_at_start": "3389c3f3cb3b7bd3235a47e80817cb0d44591574",
+    "prior_task": "GC-B01-T07",
+    "prior_task_pr": 27,
+    "postmerge_ci_url": "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45039455255",
+    "prior_ci_attempt_1": "FAILED_INTERMITTENT_CHROMIUM_STATE_WAIT",
+    "prior_ci_attempt_2": "SUCCESS_125_OF_125",
+    "source_task_registry": 602,
+    "source_task_accepted": 0,
+    "original_release_gates": 23,
+    "original_screens": 30,
+    "third_party_review": "NOT_CLAIMED",
+    "hosted_release": "NOT_VERIFIED"
+  },
+  "coverage": {
+    "LEGAL_CHESS": {
+      "required_tests": [
+        "tests/game.test.js",
+        "tests/m03-gameplay-regression.test.js",
+        "tests/mate-solver.test.js",
+        "tests/physics.test.js"
+      ],
+      "entry": "npm test",
+      "device_acceptance": "NOT_YET_VERIFIED"
+    },
+    "OPPONENT_AND_CLOCK": {
+      "required_tests": [
+        "tests/computer.test.js",
+        "tests/bot-budget.test.js",
+        "tests/game.test.js"
+      ],
+      "entry": "npm test",
+      "device_acceptance": "NOT_YET_VERIFIED"
+    },
+    "SAVE_BACKUP_RECOVERY": {
+      "required_tests": [
+        "tests/backup.test.js",
+        "tests/storage-fallback.test.js",
+        "tests/history-mutation.test.js",
+        "tests/session-exit.test.js",
+        "tests/data-identity-contract.test.js"
+      ],
+      "entry": "npm test",
+      "device_acceptance": "NOT_YET_VERIFIED"
+    },
+    "XP_LEARNING": {
+      "required_tests": [
+        "tests/progression.test.js",
+        "tests/learning.test.js"
+      ],
+      "entry": "npm test + node scripts/validate-learning-pack.mjs",
+      "device_acceptance": "NOT_YET_VERIFIED"
+    },
+    "PRIVATE_PVP_AUTHORITY": {
+      "required_tests": [
+        "tests/online-match.test.js",
+        "tests/pvp-resignation.test.js",
+        "tests/room.test.js"
+      ],
+      "entry": "npm test + node scripts/smoke-local-rooms.mjs (local Worker)",
+      "production_service": "NOT_VERIFIED"
+    },
+    "ORIGINAL_ART_AND_3D": {
+      "required_tests": [
+        "tests/original-art.test.js",
+        "tests/appearance.test.js",
+        "tests/physics.test.js"
+      ],
+      "entry": "npm run build + scripts/check-original-art.mjs + scripts/check-bundle-budget.js + Chromium",
+      "rights": "Original asset provenance review separate",
+      "opt_in_renderer_raw_max_bytes": 1800000,
+      "baseline_renderer_raw_bytes": 1114381
+    },
+    "PWA_OFFLINE_UPDATE": {
+      "required_tests": [
+        "tests/pwa-update-contract.test.js",
+        "tests/session-exit.test.js"
+      ],
+      "entry": "npm run build + scripts/smoke-browser.mjs + offline solver WASM preflight",
+      "recovery": "MUST_SAVE_BEFORE_UPDATE"
+    },
+    "ANDROID_NATIVE": {
+      "required_tests": [
+        "tests/native-lifecycle.test.js"
+      ],
+      "entry": "Android debug APK and ephemeral signed AAB workflows",
+      "physical_device_qa": "NOT_COMPLETED",
+      "play_store_release": "NOT_APPROVED"
+    },
+    "SECURITY_AND_PRIVACY": {
+      "required_tests": [
+        "tests/room.test.js",
+        "tests/online-match.test.js",
+        "tests/data-identity-contract.test.js",
+        "tests/feedback.test.js"
+      ],
+      "entry": "Worker authority, imports/credentials, CSP, original asset provenance, permission/privacy review",
+      "penetration_test": "NOT_COMPLETED"
+    },
+    "SOURCE_TRACEABILITY": {
+      "required_tests": [
+        "tests/task-source-ledger.test.js",
+        "tests/architecture-contract.test.js"
+      ],
+      "entry": "node scripts/verify-source-tracker.mjs + npm run check:architecture",
+      "source_602_acceptance_verified": 0
+    }
+  },
+  "mandatory_workflow_files": [
+    ".github/workflows/verify.yml",
+    ".github/workflows/android-debug.yml",
+    ".github/workflows/android-signing-smoke.yml",
+    ".github/workflows/android-production-release.yml"
+  ],
+  "mandatory_script_files": [
+    "scripts/check-regression-baseline.mjs",
+    "scripts/verify-source-tracker.mjs",
+    "scripts/check-architecture-contract.mjs",
+    "scripts/check-original-art.mjs",
+    "scripts/check-bundle-budget.js",
+    "scripts/smoke-browser.mjs",
+    "scripts/smoke-local-rooms.mjs",
+    "scripts/validate-learning-pack.mjs",
+    "scripts/prepare-worker-solver.js"
+  ],
+  "required_core_CI_steps": [
+    "Install locked dependencies",
+    "Check source syntax",
+    "Check architecture boundaries",
+    "Check source-task traceability",
+    "Check regression gate baseline",
+    "Run automated tests",
+    "Build production PWA",
+    "Check packaged board and piece artwork",
+    "Validate offline lesson and puzzle pack",
+    "Enforce 3D bundle performance budget",
+    "Smoke-test playable 2D and mounted 3D in Chromium",
+    "Prepare Cloudflare WASM asset",
+    "Confirm offline shell and solver files",
+    "Smoke-test two seats on local Workers runtime"
+  ],
+  "policy": {
+    "no_automatic_production_workflow": true,
+    "no_automatic_ads": true,
+    "no_original_source_task_false_VERIFIED": true,
+    "no_live_authenticated_identity_or_sync": true,
+    "no_force_push": true,
+    "original_main_branch_protection": "T03_BLOCKED_EXTERNAL",
+    "batch01_gate": "NOT_ELIGIBLE",
+    "release_go": "NO_GO",
+    "user_approved_T08_only": true,
+    "android_ephemeral_signing_not_play": true,
+    "timeout_flake_not_claimed_eliminated_until_repeat_evidence": true
+  },
+  "verification_required": {
+    "exact_head_core_CI": true,
+    "exact_head_android_debug_CI": true,
+    "exact_head_android_ephemeral_signing_CI": true,
+    "protected_squash_merge": true,
+    "canonical_exact_head_core_success": true,
+    "repeat_browser_smoke_on_same_SHA_for_intermit_race": "recommended_after_first_green"
+  }
+}
