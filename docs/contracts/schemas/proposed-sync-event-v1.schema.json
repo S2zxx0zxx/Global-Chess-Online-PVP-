@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://global-chess.invalid/contracts/proposed-sync-event-v1",
+  "title": "PROPOSED future opt-in sync event; NOT deployed",
+  "description": "Intended for B03 only after authenticated server authority, consent and transactional migration. Client-supplied payload is never intrinsically trusted.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "eventId",
+    "deviceId",
+    "entityType",
+    "entityId",
+    "operation",
+    "localRevision",
+    "occurredAt",
+    "payload"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "deviceId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "entityType": {
+      "enum": [
+        "match",
+        "progress",
+        "preferences",
+        "profile"
+      ]
+    },
+    "entityId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "operation": {
+      "enum": [
+        "put",
+        "tombstone"
+      ]
+    },
+    "localRevision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload": {
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "tombstone"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "put"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}
