@@ -76,6 +76,7 @@ export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, 
     </div>
     <h2 class="ch-section-title">Vs Computer</h2>
     <dl class="ch-profile-results" id="ch-profile-results"></dl>
+    <h2 class="ch-section-title">Your chess hub</h2>
     <div class="ch-profile-actions">
       <button type="button" id="ch-profile-history">Match history</button>
       <button type="button" id="ch-profile-settings">Settings</button>
@@ -288,6 +289,9 @@ export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, 
       row.append(element('dt','',label),element('dd','',String(value)));
       return row;
     }));
+    const savedCount=stats ? String(stats.completed) : 'Unavailable';
+    byId('ch-history-card-detail').textContent=stats ? savedCount+(stats.completed===1?' verified match':' verified matches') : 'History unavailable';
+    byId('ch-progress-card-detail').textContent=stats ? stats.computerGames+(stats.computerGames===1?' computer game':' computer games')+' in history' : 'Practice and match statistics';
     if(stats?.invalid) byId('ch-profile-results').append(element('div','ch-profile-result-note',stats.invalid+' unverified records excluded.'));
 
   }
@@ -342,9 +346,27 @@ export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, 
   });
   for(const route of screenRoutes.routes)views.add(route);
   const profileActions=profile.querySelector('.ch-profile-actions');
-  for(const [label,route] of [['Progress','progress'],['Achievements','achievements'],['Avatars & Frames','avatars'],['Appearance','appearance'],['Data & Privacy','data']]){
-    const link=element('button','ch-profile-shortcut',label);link.type='button';link.addEventListener('click',()=>go(route));
-    profileActions.append(link);
+  const profileLinks=[
+    ['Match history','history','Review saved games','ch-profile-history'],
+    ['Settings','settings','Sound, motion and board controls','ch-profile-settings'],
+    ['Progress','progress','Practice and match statistics'],
+    ['Achievements','achievements','Milestones you have earned'],
+    ['Avatars & Frames','avatars','Customize your player card'],
+    ['Appearance','appearance','Choose board and piece styles'],
+    ['Data & Privacy','data','Back up and manage local data'],
+  ];
+  for(const [label,route,description,id] of profileLinks){
+    const existing=id ? byId(id) : null;
+    const button=existing ?? element('button','ch-profile-shortcut');
+    button.type='button';
+    button.dataset.profileLink=route;
+    const detail=element('small','',description);
+    if(route==='history'||route==='progress')detail.id='ch-'+route+'-card-detail';
+    button.replaceChildren(element('strong','',label),detail);
+    if(!existing){
+      button.addEventListener('click',()=>go(route));
+      profileActions.append(button);
+    }
   }
   const more=element('div','ch-home-shortcuts');
   for(const [label,route] of [['Daily Challenge','daily'],['Puzzles','puzzles'],['Achievements','achievements'],['Appearance','appearance']]){
