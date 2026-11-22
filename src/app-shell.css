@@ -69,7 +69,7 @@ html.ch-shell-ready{scroll-padding-bottom:100px}
 #ch-match-home{display:block;min-height:46px;max-width:190px;margin:0 0 10px;padding:9px 16px;border:1px solid var(--ch-card-stroke);border-radius:12px;background:#4a2b25;color:var(--ch-color-brand-cream);font-weight:800}
 .ch-shell-ready.ch-view-match .player-panel{min-height:56px;border:1px solid var(--ch-card-stroke);border-radius:13px;background:linear-gradient(120deg,#512c2c,#2b191a);padding:11px 13px}
 .ch-shell-ready.ch-view-match #board{margin:0 auto;box-shadow:0 18px 40px #08040595}
-.ch-shell-ready.ch-view-match #flip-board,.ch-shell-ready.ch-view-match #view{min-height:44px;margin-bottom:10px;border-radius:12px}
+.ch-shell-ready.ch-view-match #flip-board{min-height:44px;margin-bottom:10px;border-radius:12px}
 .ch-shell-ready.ch-view-match #moves{max-height:120px}
 .ch-setup-dialog{width:min(420px,calc(100vw - 28px));max-height:min(90dvh,750px);overflow:auto;padding:24px 20px;border:1px solid var(--ch-color-brand-gold);border-radius:22px;background:linear-gradient(135deg,#5b352d,#251619);box-shadow:0 30px 80px #080405cc;color:var(--ch-color-brand-cream)}
 .ch-setup-dialog::backdrop{background:rgba(12,5,7,.77);backdrop-filter:blur(5px)}
@@ -113,9 +113,6 @@ html.ch-shell-ready{scroll-padding-bottom:100px}
 .ch-match-dock{display:grid;gap:8px;width:100%;margin:13px 0 8px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,#4a2826,#291718);border:1px solid var(--ch-card-stroke)}
 .ch-match-dock #clocks{margin:0;text-align:center;font-size:1rem;font-weight:900;font-variant-numeric:tabular-nums;color:#f9d48b}
 .ch-match-dock #status{margin:0;min-height:21px;font-size:.84rem;color:#f4ddc1;line-height:1.4}
-.ch-match-dock #moves{display:flex;gap:12px;min-height:25px;margin:0;padding:0;list-style:none;overflow-x:auto;max-height:56px;white-space:nowrap;scrollbar-width:thin}
-.ch-match-dock #moves:empty{display:none}
-.ch-match-dock #moves li{padding:4px 9px;background:#1b0f12;border-radius:8px;font-size:.78rem}
 .ch-match-dock #claim,.ch-match-dock #rematch,.ch-match-dock #result-open,.ch-match-dock #online-copy{margin:0;min-height:44px;border:1px solid var(--ch-card-stroke);border-radius:10px;background:#63402e;color:#fff0d5;padding:8px 12px}
 .ch-match-dock #rematch,.ch-match-dock #result-open{background:var(--ch-highlight);color:#31170e;font-weight:800}
 .ch-match-dock #online-status{margin:0;font-size:.78rem;line-height:1.4;color:#f7d594}

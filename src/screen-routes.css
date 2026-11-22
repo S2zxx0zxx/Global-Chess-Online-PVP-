@@ -161,9 +161,7 @@
 .ch-shell-ready.ch-view-match .ch-first-move-tip{order:0}
 .ch-shell-ready.ch-view-match #black-panel{order:1}
 .ch-shell-ready.ch-view-match #white-panel{order:4}
-.ch-shell-ready.ch-view-match .ch-board-controls{order:2;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:3px 0 9px}
-.ch-shell-ready.ch-view-match .ch-board-controls #flip-board,.ch-shell-ready.ch-view-match .ch-board-controls #view{margin:0;flex:0 0 auto}
-.ch-shell-ready.ch-view-match #board,.ch-shell-ready.ch-view-match #scene{order:3}
+.ch-shell-ready.ch-view-match #board{order:3}
 .ch-shell-ready.ch-view-match .ch-match-dock{order:5}
 :root.ch-board-flipped.ch-shell-ready.ch-view-match #white-panel{order:1}
 :root.ch-board-flipped.ch-shell-ready.ch-view-match #black-panel{order:4}
@@ -340,44 +338,9 @@
   color: #fff0d5;
 }
 .ch-room-actions #online-create { background: var(--ch-highlight); color: #25160b; font-weight: 750; }
-.ch-shell-ready.ch-view-match .ch-board-controls { order: 5; margin: 5px 0 0; }
 .ch-shell-ready.ch-view-match .ch-match-dock { order: 6; }
 .ch-shell-ready.ch-view-match .player-panel {
   border-radius: 10px;
   background: #191613;
 }
 .ch-shell-ready.ch-view-match .player-panel.active-player { border-color: #cfa463; }
-
-#board button.last-move:not(.in-check) {
-  box-shadow: inset 0 0 0 2px #f9dc96, inset 0 0 0 100px #e7b84826;
-}
-#board button.target:not(.capture-target)::after {
-  inset: 36%;
-  background: #79e6eb;
-  border-color: #143e43;
-  box-shadow: 0 0 0 1px #e6ffff;
-}
-#board button.capture-target::after {
-  border-color: #ffe0a0;
-  inset: 6%;
-}
-#board button:focus-visible { z-index: 2; }
-#board button.ch-piece-sliding { z-index: 3; }
-#board button.ch-capture-flash::before {
-  content: '';
-  position: absolute;
-  inset: 8%;
-  border: 3px solid #fcd28b;
-  border-radius: 50%;
-  z-index: 2;
-  pointer-events: none;
-  animation: ch-capture-ring 280ms ease-out both;
-}
-@keyframes ch-capture-ring {
-  from { opacity: 1; transform: scale(.56); }
-  to { opacity: 0; transform: scale(1.15); }
-}
-@media (prefers-reduced-motion: reduce) {
-  #board button.ch-capture-flash::before { content: none; }
-}
-.ch-reduce-motion #board button.ch-capture-flash::before { content: none; }

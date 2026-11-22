@@ -117,15 +117,17 @@ export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, 
   });
   toolbar.append(back,tools);
   match.prepend(toolbar);
-  const boardControls=element('div','ch-board-controls');
-  match.insertBefore(boardControls,byId('flip-board'));
-  boardControls.append(byId('flip-board'),byId('view'));
-  document.querySelector('.layout>aside').id='ch-match-sidebar';
+  const sidebar = document.querySelector('.layout>aside');
+  sidebar.id='ch-match-sidebar';
+  const moveList=element('details','ch-match-move-list');
+  moveList.append(element('summary','','Moves this game'),byId('moves'));
+  sidebar.append(byId('flip-board'),moveList);
   const dock=element('section','ch-match-dock');
   dock.setAttribute('aria-label','Match status and controls');
-  for(const id of ['clocks','status','moves','result-open','rematch','claim']) {
-    dock.append(byId(id));
-  }
+  dock.append(byId('clocks'),byId('status'));
+  const matchActions=element('div','ch-match-actions');
+  matchActions.append(byId('claim'),byId('result-open'),byId('rematch'));
+  dock.append(matchActions);
   const room = element('section','ch-room-panel');
   room.hidden = true;
   room.setAttribute('aria-labelledby','ch-room-title');

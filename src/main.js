@@ -1,4 +1,5 @@
 import { renderPieceArt } from './piece-art.js';
+import { prepareMoveEffect } from './board-motion.js';
 import { emitFeedback } from './feedback.js';
 import { loadBrowserMateSolver } from './mate-solver.js';
 import { bindLearning } from './learning.js';
@@ -15,6 +16,7 @@ import './screen-routes.css';
 import './royal-appearance.css';
 import './home.css';
 import './profile.css';
+import './board-motion.css';
 import { mountAppShell } from './app-shell.js';
 import { restoreGame, serializeGame, savedMatchOutcome, claimableDraw, intendedDraw, hasAvailableDrawClaim } from './game.js';
 
@@ -65,7 +67,6 @@ flip.onclick = () => {
   flipped = !flipped;
   flip.setAttribute('aria-pressed', String(flipped));
   document.documentElement.classList.toggle('ch-board-flipped',flipped);
-  renderer?.setFlipped(flipped);
   render();
 };
 let focusSquare = 'e2';
@@ -141,67 +142,6 @@ function stopComputer() {
   worker?.terminate();
   worker = undefined;
 }
-let renderer;
-const canvas = document.querySelector('#scene');
-const view = document.querySelector('#view');
-view.onclick = async () => {
-  if (renderer) {
-    renderer.dispose();
-    renderer = undefined;
-    canvas.hidden = true;
-    board.hidden = false;
-    view.textContent = 'Use 3D board';
-    return;
-  }
-  view.disabled = true;
-  canvas.hidden = false;
-  try {
-    const { mountBoard } = await import('./board3d.js');
-    renderer = await mountBoard(canvas, selectSquare);
-    renderer.setFlipped(flipped);
-    board.hidden = true;
-    view.textContent = 'Use 2D board';
-    render();
-  } catch {
-    renderer?.dispose();
-    renderer = undefined;
-    canvas.hidden = true;
-    board.hidden = false;
-    view.textContent = 'Use 3D board';
-    notice = '3D unavailable on this device. The 2D match is still available.';
-    render();
-  } finally {
-    view.disabled = false;
-  }
-};
-
-function animateBoardMove(move) {
-  if (board.hidden || !board.getClientRects().length ||
-      matchMedia('(prefers-reduced-motion: reduce)').matches ||
-      document.documentElement.classList.contains('ch-reduce-motion')) return;
-
-  const square = name => board.querySelector(`[data-square="${name}"]`);
-  const slide = (from, to) => {
-    const origin = square(from);
-    const destination = square(to);
-    const art = destination?.querySelector('.piece-art');
-    if (!origin || !art?.animate) return;
-    const start = origin.getBoundingClientRect();
-    const end = destination.getBoundingClientRect();
-    destination.classList.add('ch-piece-sliding');
-    const animation = art.animate([
-      { transform: `translate(${start.x - end.x}px, ${start.y - end.y}px)` },
-      { transform: 'translate(0, 0)' },
-    ], { duration: 180, easing: 'cubic-bezier(.18,.72,.28,1)' });
-    animation.finished.finally(() => destination.classList.remove('ch-piece-sliding')).catch(() => {});
-  };
-  slide(move.from, move.to);
-  const rank = move.to[1];
-  if (move.isKingsideCastle?.()) slide('h' + rank, 'f' + rank);
-  if (move.isQueensideCastle?.()) slide('a' + rank, 'd' + rank);
-  if (move.captured) square(move.to)?.classList.add('ch-capture-flash');
-}
-
 function render(move) {
   rematch.hidden = Boolean(online?.active) || !outcome(state.game);
   displayClock();
@@ -209,10 +149,11 @@ function render(move) {
   lobby?.render({outcome:outcome(game),turn:game.turn(),mode,playerSide:state.playerSide,online:Boolean(online?.active),
     started:online?.active ? online.match.turnStartedAt !== null : state.preset !== undefined || game.history().length > 0 || Boolean(state.clock)});
   const activeSquare = document.activeElement?.dataset.square;
-  const targets = selected ? game.moves({square: selected, verbose: true}).map(move => move.to) : [];
+  const targets = new Map((selected ? game.moves({square: selected, verbose: true}) : [])
+    .map(option => [option.to, option]));
   const lastMove = move ?? game.history({verbose:true}).at(-1);
   const checkedSide = game.inCheck() ? game.turn() : null;
-  renderer?.syncTurns(game, selected, targets, move, lastMove, checkedSide);
+  const playMoveEffect = move ? prepareMoveEffect(board, move) : null;
   board.classList.toggle('flipped',flipped);
   const rows = game.board();
   if (flipped) rows.reverse().forEach(row => row.reverse());
@@ -226,13 +167,16 @@ function render(move) {
     cell.tabIndex = square === focusSquare ? 0 : -1;
 
     cell.className = (rank + file) % 2 ? 'dark' : 'light';
-    const isTarget = targets.includes(square);
-    cell.classList.toggle('target', isTarget);
-    cell.classList.toggle('capture-target', isTarget && Boolean(piece));
+    const legalMove = targets.get(square);
+    cell.classList.toggle('target', Boolean(legalMove));
+    cell.classList.toggle('capture-target', Boolean(legalMove?.captured));
+    cell.classList.toggle('last-origin', square === lastMove?.from);
+    cell.classList.toggle('last-destination', square === lastMove?.to);
     cell.classList.toggle('last-move', square === lastMove?.from || square === lastMove?.to);
     cell.classList.toggle('in-check', piece?.type === 'k' && piece.color === checkedSide);
     cell.setAttribute('aria-pressed', String(square === selected));
-    cell.setAttribute('aria-label', piece ? square + ', ' + (piece.color === 'w' ? 'White ' : 'Black ') + names[piece.type] : square);
+    const label = piece ? square + ', ' + (piece.color === 'w' ? 'White ' : 'Black ') + names[piece.type] : square;
+    cell.setAttribute('aria-label', label + (legalMove ? legalMove.captured ? ', legal capture' : ', legal move' : ''));
     renderPieceArt(cell,piece,names);
     const coordinates = [
       [visibleRank === 7, 'file-label', square[0]],
@@ -248,7 +192,7 @@ function render(move) {
     }
     return cell;
   })));
-  if (move) animateBoardMove(move);
+  playMoveEffect?.();
   if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus({preventScroll:true});
   const storageNote = gameStorage.durable === false ? 'Session only · Progress will not be saved after closing' : '';
   status.textContent = [state.paused ? 'Match paused · Open Pause screen to resume' : (outcome(game) ?? (mode === 'computer' && game.turn() !== state.playerSide ? 'Computer thinking…' :
@@ -368,8 +312,8 @@ board.addEventListener('pointerup', event => {
   const target = document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-square]')?.dataset.square;
   if (!target || target === drag.square) return;
   suppressClickUntil = performance.now() + 200;
-  selectSquare(drag.square);
-  queueMicrotask(() => selectSquare(target));
+  if (selected !== drag.square) selectSquare(drag.square);
+  selectSquare(target);
 });
 window.addEventListener('pointerup', () => {dragStart=undefined;board.classList.remove('ch-dragging');});
 window.addEventListener('pointercancel', () => {dragStart=undefined;board.classList.remove('ch-dragging');});
@@ -430,7 +374,6 @@ function startLocalMatch(mode, preset, difficulty, side = 'w') {
   flipped = mode === 'computer' && playerSide === 'b';
   document.documentElement.classList.toggle('ch-board-flipped',flipped);
   flip.setAttribute('aria-pressed', String(flipped));
-  renderer?.setFlipped(flipped);
   showVersus(mode === 'computer' && playerSide === 'b' ? 'Computer · White' : 'White',
     mode === 'computer' && playerSide === 'w' ? 'Computer · Black' : 'Black');
   tickAt = performance.now();
