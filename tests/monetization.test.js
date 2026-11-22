@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createMonetizationController,findNativeAdMob} from '../src/monetization.js';
+import {createMonetizationController,findNativeAdMob,awaitNativeAdResult} from '../src/monetization.js';
 import {M4_SUPPORTER_KEY,M4_AD_PREFERENCE_KEY} from '../src/monetization-policy.js';
 
 function testRig(override={}){
@@ -153,4 +153,41 @@ test('a reward commit failure never reports the cosmetic as unlocked',async()=>{
   const result=await h.controller.rewarded();
   assert.equal(result.ok,false);
   assert.equal(h.controller.status().earned,false);
+});
+
+test('a hung native rewarded ad eventually returns control without issuing XP or badge',async()=>{
+  const h=testRig({showTimeoutMs:5,native:{
+    async showRewardVideoAd(){h.calls.push('show');return new Promise(()=>{});}
+  }});
+  h.controller.optIn(true);
+  const result=await h.controller.rewarded();
+  assert.equal(result.ok,false);
+  assert.equal(h.controller.status().busy,false);
+  assert.equal(h.s.getItem(M4_SUPPORTER_KEY),null);
+  assert.equal(h.calls.includes('show'),true);
+});
+
+test('native callback timeout rejects in bounded time and late results cannot credit rewards',async()=>{
+  await assert.rejects(awaitNativeAdResult(new Promise(()=>{}),5),/timed out/);
+  assert.throws(()=>awaitNativeAdResult(Promise.resolve(null),0),/Invalid native timeout/);
+});
+
+test('attempt cooldown and maximum three provider requests prevent rapid ad loops',async()=>{
+  let now=2000000000000;
+  const h=testRig({now:()=>now,native:{
+    async prepareRewardVideoAd(){h.calls.push('prepare');throw Error('No fill');}
+  }});
+  h.controller.optIn(true);
+  assert.equal((await h.controller.rewarded()).ok,false);
+  assert.equal((await h.controller.rewarded()).ok,false);
+  assert.equal(h.calls.filter(x=>x==='prepare').length,1);
+  now+=31000;
+  assert.equal((await h.controller.rewarded()).ok,false);
+  now+=31000;
+  assert.equal((await h.controller.rewarded()).ok,false);
+  now+=31000;
+  const attempt=(await h.controller.rewarded());
+  assert.equal(attempt.ok,false);
+  assert.match(attempt.reason,/attempt limit/i);
+  assert.equal(h.calls.filter(x=>x==='prepare').length,3);
 });
