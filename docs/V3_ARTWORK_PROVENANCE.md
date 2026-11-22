@@ -16,12 +16,12 @@ All above SVG assets were newly authored for this game in this development wave.
 - Assets are stored under `public/brand/` and `public/brand/pieces/`.
 - Installable icon is `public/icon.svg`, with safer-area maskable `public/maskable.svg`.
 - Offline service-worker manifest enumerates brand and piece files.
-- Main lobby and match views use original art directly; piece artwork selectable as `Royal Crest`.
-- Current original art is scalable and editable SVG; no external image CDN is required.
+- Both the 2D board and Babylon's default board texture use the project-authored 496px board from PR #13.
+- Classic, Crest and animated piece styles share the 12 original piece silhouettes. Finishes and effects distinguish the styles.
+- `public/brand/home-shortcuts.png` is the generated Global Chess card backdrop added in commit `001c7de`. It is bundled and precached with the SVG art.
+- Earlier unverified WebP board and piece masters remain in Git history. The current source tree, build and offline cache exclude them.
 
 ## Still requires validation
-- Existing earlier `public/chess-assets/board/maple-walnut.webp` and earlier
-  `public/chess-assets/pieces/*.webp` must have proof of ownership/license and original master files.
 - New art requires 320/360/412px and device contrast QA, display-zoom tests and icon mask checks.
 - Generated concept renders, audio OGG files, store poster, real mobile screenshots,
   self-hosted licensed fonts and native PNG/adaptive assets are not certified in this repo.

@@ -10,7 +10,7 @@ export const BOARD_THEMES = Object.freeze([
 ]);
 
 export const PIECE_THEMES = Object.freeze([
-  {id:'classic', name:'Classic', detail:'Traditional dimensional pieces'},
+  {id:'classic', name:'Classic', detail:'Traditional pieces with a matte finish'},
   {id:'crest', name:'Royal Crest', detail:'Original ivory and oxblood artwork'},
   {id:'ember', name:'Pyre Guard', detail:'Gold silhouettes with living flame'},
   {id:'mist', name:'Spectral Guard', detail:'Moon silver and rising smoke'},

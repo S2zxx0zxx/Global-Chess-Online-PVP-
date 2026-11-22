@@ -346,7 +346,7 @@ export function mountScreenRoutes({main,go,leaveMatch,toggleBoardView,getBoardVi
         tile.setAttribute('aria-pressed',String(ls('global-chess.appearance.v1','maple')===name));
         const preview=mk('span','ch-theme-preview ch-preview-'+name);
         if(ANIMATED_THEMES.includes(name)){
-          const mark=mk('img','ch-theme-preview-piece');mark.src='/chess-assets/pieces/white-king.webp';mark.alt='';
+          const mark=mk('img','ch-theme-preview-piece');mark.src='/brand/pieces/piece_white_king.svg';mark.alt='';
           preview.append(mark);
         }
         tile.append(preview,mk('strong','',title),mk('small','',detail));
@@ -364,7 +364,7 @@ export function mountScreenRoutes({main,go,leaveMatch,toggleBoardView,getBoardVi
         item.dataset.pieceStyle=name;
         const display=mk('span','ch-piece-preview');
         if(ANIMATED_THEMES.includes(name))display.append(mk('span','ch-piece-aura'));
-        const preview=mk('img','ch-piece-example');preview.src=name==='crest'?'/brand/pieces/piece_white_knight.svg':'/chess-assets/pieces/white-knight.webp';
+        const preview=mk('img','ch-piece-example');preview.src='/brand/pieces/piece_white_knight.svg';
         preview.alt='';
         display.append(preview);
         item.append(display,mk('strong','',label),mk('small','',detail));

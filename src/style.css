@@ -80,7 +80,7 @@ dialog form{margin-top:8px}
 
 /* The supplied board has a 24 px frame around a 448 px playing area. */
 .board{position:relative;border:0;padding:4.83871%;background:none;isolation:isolate}
-.board::before{content:'';position:absolute;inset:0;background:url('/chess-assets/board/maple-walnut.webp') center/100% 100% no-repeat;z-index:-1;pointer-events:none}
+.board::before{content:'';position:absolute;inset:0;background:url('/brand/board-maple-walnut.svg') center/100% 100% no-repeat;z-index:-1;pointer-events:none}
 .board.flipped::before{transform:rotate(180deg)}
 .board .light,.board .dark{background:transparent}
 .board button[aria-pressed=true]{background:color-mix(in srgb,var(--ch-color-board-select) 57%,transparent)}

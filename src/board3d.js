@@ -73,7 +73,7 @@ export async function mountBoard(canvas, selectSquare) {
     }
     const boardArt = material('maple and walnut', '#FFFFFF');
     boardArt.diffuseTexture = new Texture(
-      new URL('./chess-assets/board/maple-walnut.webp',document.baseURI).href,scene,
+      new URL('./brand/board-maple-walnut.svg',document.baseURI).href,scene,
     );
     boardArt.specularColor = new Color3(.19,.14,.10);
     boardArt.diffuseTexture.onLoadObservable.add(() => {

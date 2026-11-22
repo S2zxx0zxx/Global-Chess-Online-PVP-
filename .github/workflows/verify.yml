@@ -38,6 +38,8 @@ jobs:
         run: npm test
       - name: Build production PWA
         run: npm run build
+      - name: Check packaged board and piece artwork
+        run: node scripts/check-original-art.mjs
       - name: Validate offline lesson and puzzle pack
         run: node scripts/validate-learning-pack.mjs
       - name: Enforce 3D bundle performance budget

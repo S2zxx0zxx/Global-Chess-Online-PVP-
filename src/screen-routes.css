@@ -250,7 +250,7 @@
   --play-edge: #e5a1a0;
   --play-light: #925256;
   --play-base: #412328;
-  --play-art: url('/chess-assets/pieces/white-knight.webp');
+  --play-art: url('/brand/pieces/piece_white_knight.svg');
 }
 
 /* Bottom navigation feedback stays inside each button. */

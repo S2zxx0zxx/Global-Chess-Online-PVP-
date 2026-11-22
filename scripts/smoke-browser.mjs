@@ -239,7 +239,7 @@ try {
   await evaluate('document.querySelector(".ch-appearance-categories button:nth-child(2)").click();document.querySelector("[data-piece-style=crest]").click();true');
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=match'});
   await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#board .piece-art") !== null'));
-  const crest=await evaluate('Array.from(document.querySelectorAll("#board .piece-art")).some(img=>img.src.includes("/brand/pieces/"))');
+  const crest=await evaluate('document.querySelector("#board .ch-piece-crest")?.src.includes("/brand/pieces/") === true');
   if(!crest)throw new Error('Saved SVG piece skin was not rendered after navigation');
   const crestShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/SCR-23-crest-piece-style.png',Buffer.from(crestShot.data,'base64'));
