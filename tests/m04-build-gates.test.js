@@ -43,6 +43,8 @@ test('Android debug only installs native ads when explicitly requested',()=>{
  assert.match(script,/CHESS_M4_ADS_TEST/);
  assert.match(script,/VITE_CHESS_ADS_MODE=disabled/);
  assert.match(script,/@capacitor-community\/admob@8\.2\.1/);
+ assert.match(script,/npm install --save-exact/);
+ assert.match(script,/check-android-native-plugins\.mjs/);
  const production=readFileSync('scripts/build-android-release.sh','utf8');
  assert.match(production,/validate-live-ad-config\.mjs/);
  assert.match(production,/CHESS_M4_ADS_TEST/);
