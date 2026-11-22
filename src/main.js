@@ -86,6 +86,14 @@ flip.onclick = () => {
   render();
 };
 let focusSquare = 'e2';
+const boardArrows = {ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,1],ArrowDown:[0,-1]};
+
+function adjacentSquare(square, [fileDelta, rankDelta]) {
+  const direction = flipped ? -1 : 1;
+  const file = 'abcdefgh'.indexOf(square[0]) + fileDelta * direction;
+  const rank = Number(square[1]) + rankDelta * direction;
+  if (file >= 0 && file < 8 && rank >= 1 && rank <= 8) return 'abcdefgh'[file] + rank;
+}
 
 function updateClock() {
   const now = performance.now();
@@ -159,8 +167,35 @@ function stopComputer() {
   worker = undefined;
 }
 const canvas = document.querySelector('#scene');
+const sceneSquare = document.querySelector('#scene-square');
 let renderer;
 let loading3D = false;
+
+function sync3DKeyboardFocus() {
+  const focused = renderer && document.activeElement === canvas;
+  const square = focused ? board.querySelector('[data-square="' + focusSquare + '"]') : null;
+  renderer?.setKeyboardSquare(square?.dataset.square);
+  const label = square ? square.getAttribute('aria-label') + (square.getAttribute('aria-pressed') === 'true' ? ', selected' : '') : '';
+  if (sceneSquare.textContent !== label) sceneSquare.textContent = label;
+}
+
+canvas.addEventListener('focus', sync3DKeyboardFocus);
+canvas.addEventListener('blur', sync3DKeyboardFocus);
+canvas.addEventListener('keydown', event => {
+  if (!renderer || event.altKey || event.ctrlKey || event.metaKey) return;
+  const delta = boardArrows[event.key];
+  if (delta) {
+    event.preventDefault();
+    const next = adjacentSquare(focusSquare, delta);
+    if (next) {
+      focusSquare = next;
+      sync3DKeyboardFocus();
+    }
+  } else if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    if (!event.repeat) selectSquare(focusSquare);
+  }
+});
 window.addEventListener('chess-match-view-shown', () => {
   if (renderer) render();
 });
@@ -253,6 +288,7 @@ function render(move) {
   })));
   playMoveEffect?.();
   if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus({preventScroll:true});
+  sync3DKeyboardFocus();
   const storageNote = gameStorage.durable === false ? 'Session only · Progress will not be saved after closing' : '';
   status.textContent = [state.paused ? 'Match paused · Open Pause screen to resume' : (matchOutcome ?? (mode === 'computer' && game.turn() !== state.playerSide ? 'Computer thinking…' :
     (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : ''))), notice, storageNote].filter(Boolean).join(' · ');
@@ -342,6 +378,7 @@ async function selectSquare(square) {
   const source = selected;
   const previousPosition = game.fen();
   const restoreBoardFocus = board.contains(document.activeElement);
+  const restoreCanvasFocus = document.activeElement === canvas;
   for (const icon of promotion.querySelectorAll('.ch-promotion-icon')) {
     icon.replaceChildren();
     icon.classList.remove('piece-white', 'piece-black');
@@ -358,6 +395,11 @@ async function selectSquare(square) {
   if (canCommit) commit(chosen);
   if (restoreBoardFocus && !board.hidden) {
     board.querySelector('[data-square="' + (canCommit ? square : source) + '"]')?.focus({preventScroll:true});
+  }
+  if (restoreCanvasFocus && !canvas.hidden) {
+    focusSquare = canCommit ? square : source;
+    canvas.focus({preventScroll:true});
+    sync3DKeyboardFocus();
   }
 }
 // Pointer drag is presentation-only: legal move validation remains in selectSquare
@@ -405,16 +447,12 @@ board.addEventListener('focusin', ({target}) => {
   target.tabIndex = 0;
 });
 board.addEventListener('keydown', event => {
-  const delta = {ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,1],ArrowDown:[0,-1]}[event.key];
+  const delta = boardArrows[event.key];
   const square = event.target.dataset.square;
   if (!delta || !square) return;
   event.preventDefault();
-  const direction = flipped ? -1 : 1;
-  const file = 'abcdefgh'.indexOf(square[0]) + delta[0] * direction;
-  const rank = Number(square[1]) + delta[1] * direction;
-  if (file < 0 || file > 7 || rank < 1 || rank > 8) return;
-  const next = board.querySelector('[data-square="' + 'abcdefgh'[file] + rank + '"]');
-  next.focus();
+  const next = adjacentSquare(square, delta);
+  if (next) board.querySelector('[data-square="' + next + '"]').focus();
 });
 let versusTimer;
 function closeVersus() {

@@ -416,11 +416,12 @@ try {
     await waitUntil(() => evaluate('document.querySelector("#promotion[open]")?.contains(document.activeElement)'));
   }
   async function pressKey(key, windowsVirtualKeyCode) {
+    const code = key === ' ' ? 'Space' : key;
     await send('Input.dispatchKeyEvent',{
-      type:'keyDown',key,code:key,windowsVirtualKeyCode,
+      type:'keyDown',key,code,windowsVirtualKeyCode,
       ...(key === 'Enter' ? {text:'\r'} : {}),
     });
-    await send('Input.dispatchKeyEvent',{type:'keyUp',key,code:key,windowsVirtualKeyCode});
+    await send('Input.dispatchKeyEvent',{type:'keyUp',key,code,windowsVirtualKeyCode});
   }
   await openPromotion();
   if (!await evaluate(`(() => {
@@ -453,6 +454,50 @@ try {
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=match'});
   await waitUntil(() => evaluate('document.querySelector("#board [data-square=a8].last-destination")?.getAttribute("aria-label") === "a8, White Knight"'));
   console.log('Promotion keyboard navigation, Escape, all four choices and persisted underpromotion: passed');
+
+  await evaluate('document.getElementById("local").click();true');
+  await evaluate('document.getElementById("ch-match-tools").click();true');
+  await waitUntil(() => evaluate('Boolean(document.querySelector("[data-board-view=mode-2d]"))'));
+  await evaluate('document.querySelector("[data-board-view=mode-2d]").click();true');
+  await waitUntil(() => evaluate('!document.querySelector("#scene").hidden && !document.documentElement.classList.contains("ch-loading-3d")'));
+  await evaluate('document.querySelector("#scene").focus()');
+  const expectSquare = label => waitUntil(() => evaluate('document.querySelector("#scene-square").textContent === ' + JSON.stringify(label)));
+  await expectSquare('e2, White Pawn');
+  await pressKey('Enter',13);
+  await expectSquare('e2, White Pawn, selected');
+  for (let steps=0;steps<2;steps++) await pressKey('ArrowUp',38);
+  await expectSquare('e4, legal move');
+  await pressKey(' ',32);
+  await expectSquare('e4, White Pawn');
+  await pressKey('ArrowLeft',37);
+  for (let steps=0;steps<3;steps++) await pressKey('ArrowUp',38);
+  await expectSquare('d7, Black Pawn');
+  await pressKey('Enter',13);
+  for (let steps=0;steps<2;steps++) await pressKey('ArrowDown',40);
+  await expectSquare('d5, legal move');
+  await pressKey('Enter',13);
+  await expectSquare('d5, Black Pawn');
+  await pressKey('ArrowDown',40);
+  await pressKey('ArrowRight',39);
+  await expectSquare('e4, White Pawn');
+  await pressKey('Enter',13);
+  await pressKey('ArrowUp',38);
+  await pressKey('ArrowLeft',37);
+  await expectSquare('d5, Black Pawn, legal capture');
+  const threeDKeyboard=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/SCR-07-3d-keyboard-capture.png',Buffer.from(threeDKeyboard.data,'base64'));
+  await pressKey('Enter',13);
+  await expectSquare('d5, White Pawn');
+  await evaluate('document.getElementById("flip-board").click();true');
+  await pressKey('ArrowRight',39);
+  await expectSquare('c5');
+  await pressKey('Tab',9);
+  await waitUntil(() => evaluate('document.activeElement.id !== "scene" && !document.querySelector("#scene-square").textContent'));
+  await evaluate('document.getElementById("ch-match-tools").click();true');
+  await waitUntil(() => evaluate('Boolean(document.querySelector("[data-board-view=mode-3d]"))'));
+  await evaluate('document.querySelector("[data-board-view=mode-3d]").click();true');
+  await waitUntil(() => evaluate('!document.querySelector("#board").hidden && document.querySelector("#board [data-square=d5].last-destination")?.getAttribute("aria-label") === "d5, White Pawn"'));
+  console.log('3D keyboard moves, legal capture, flipped controls and 2D board continuity: passed');
 
   // Screen contracts SCR-00/01: denied browser storage must not crash the app,
   // and the UI may NOT claim a durable save for temporary guest play.

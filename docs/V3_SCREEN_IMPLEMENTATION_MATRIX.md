@@ -13,7 +13,7 @@ This is an implementation/evidence ledger, **not** a claim that any contract is 
 | SCR-04 | Play Hub | src/app-shell.js #ch-play-hub | PARTIAL | Format vs opponent separation and onboarding acceptance |
 | SCR-05 | New Match Setup | src/app-shell.js #ch-setup-dialog; src/main.js playerSide | PARTIAL | Full settings/undo/flip policy, persisted format defaults and mobile QA |
 | SCR-06 | VS Introduction | src/main.js showVersus; index.html #versus | PARTIAL | Real human/online labels, escape/skip and animation device QA |
-| SCR-07 | Gameplay Board | src/main.js; src/board3d.js; src/app-shell.css | PARTIAL | Drag/clock/3D device QA, check accessibility and corner cases |
+| SCR-07 | Gameplay Board | Chromium plays `e4 d5 exd5` with 3D keyboard controls, announces the legal capture, tests flipped arrows and Tab exit, and verifies the same capture on the 2D board. | PARTIAL | Physical touch, clocks, 3D performance, TalkBack and edge cases |
 | SCR-08 | Promotion | Named modal, explicit Cancel, active piece art and keyboard focus restoration. Chromium reached legal promotion from the starting position, tested Escape and all four piece choices, and reloaded the saved knight. | PARTIAL | Android TalkBack, touch and physical-device timing |
 | SCR-09 | In-Game Menu | src/screen-routes.js ?screen=menu | PARTIAL | Resign/undo terminal policy, destructive confirmations |
 | SCR-10 | Pause | src/screen-routes.js ?screen=pause | PARTIAL | Clock pause transition + Android background lifecycle |

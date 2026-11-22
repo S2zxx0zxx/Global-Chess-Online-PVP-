@@ -88,6 +88,8 @@ export async function mountBoard(canvas, selectSquare) {
     const captureTile = material('capture square', '#AD572C');
     const rim = material('selection rim', '#FFE3A1');
     rim.emissiveColor = Color3.FromHexString('#947047');
+    const keyboardRim = material('keyboard focus rim', '#E1F6FF');
+    keyboardRim.emissiveColor = Color3.FromHexString('#62BDFF');
     const previous = material('last move', color('board-last'));
     const check = material('check', color('board-check'));
     const frame = material('frame', color('brand-walnut'));
@@ -194,6 +196,9 @@ export async function mountBoard(canvas, selectSquare) {
       mesh.isPickable = false;
       return mesh;
     }
+    const keyboardFocus = ring('keyboard focus', 'a1', .98, .042, keyboardRim);
+    keyboardFocus.setEnabled(false);
+    let keyboardSquare;
 
     function syncCue(square, kind) {
       const current = cues.get(square);
@@ -368,6 +373,16 @@ export async function mountBoard(canvas, selectSquare) {
     });
     return {
       syncTurns,
+      setKeyboardSquare(square) {
+        if (keyboardSquare === square) return;
+        keyboardSquare = square;
+        keyboardFocus.setEnabled(Boolean(square));
+        if (square) {
+          const position = tiles.get(square).mesh.position;
+          keyboardFocus.position.set(position.x, .10, position.z);
+        }
+        needsFrame = true;
+      },
       setFlipped(flipped) {
         camera.alpha = flipped ? Math.PI / 2 : -Math.PI / 2;
         needsFrame = true;
