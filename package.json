@@ -8,7 +8,8 @@
   "scripts": {
     "test": "node --test",
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "check:architecture": "node scripts/check-architecture-contract.mjs"
   },
   "keywords": [],
   "author": "",
