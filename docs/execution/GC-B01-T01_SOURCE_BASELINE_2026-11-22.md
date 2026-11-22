@@ -44,13 +44,12 @@ main @ 63462e20f97a
 - #17 versus #18: **diverged**, +33 on #18 side and 109 on #17 side. AdMob/UMP experiment is not integrated into the release branch. No optional monetization decisions are made in Task T01.
 - `main` versus #18 is **diverged**, with 251 unique commits on #18 and 1 unique on `main` (README deletion). This is a source graph fact, not proof of how a future merge will behave.
 
-### Full branch inventory, exact SHA at T01 snapshot (20 pre-existing branches)
+### Full branch inventory, exact SHA at T01 snapshot (19 pre-existing branches)
 
-The documentation-only audit branch was created **after** this source snapshot and is not included in these 20 pre-existing branch heads.
+The documentation-only audit branch was created after the initial read and is intentionally excluded from this original 19-branch source snapshot.
 
 | Branch | Exact SHA | Protected |
 |---|---|---|
-| `audit/gc-b01-t01-source-pin-20261122` | `a50749b247681332f7dfc7bc5a62bc07906328e3` | no |
 | `audit/m01-repository-reconciliation-20261122` | `f948510e6db45ead1e1112ee38fc364a235a0fb9` | no |
 | `feat/chess-release-integration` | `3d9467ada0eaf167eecc52d6c98ed126fa98c98c` | no |
 | `feat/chess-v3-android-debug-shell` | `56faad37c15ef8ab354dba3947b2bb10f6a56815` | no |
