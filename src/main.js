@@ -20,6 +20,7 @@ import './home.css';
 import './profile.css';
 import './board-motion.css';
 import { mountAppShell } from './app-shell.js';
+import { finalizeOfflineExit } from './session-exit.js';
 import { restoreGame, serializeGame, savedMatchOutcome, claimableDraw, intendedDraw, hasAvailableDrawClaim } from './game.js';
 
 import { matchKey as key, historyKey, exportBackup, importBackupDurably, previewBackup } from './backup.js';
@@ -265,8 +266,10 @@ function save() {
     const completed = outcome(state.game);
     if (completed) recordMatch(gameStorage, completed, snapshot);
     notice = '';
+    return true;
   } catch {
     notice = 'Storage unavailable. This match may not resume after closing.';
+    return false;
   }
 }
 
@@ -508,6 +511,31 @@ appShell = mountAppShell({
     return {durable:true};
   },
   getProgressReport(){ return currentProgressReport(gameStorage,lessons,puzzles); },
+  saveAndExitCurrentMatch(){
+    if (importingBackup || corruptMatchRaw !== undefined) {
+      return {ok:false,reason:'Resolve the backup or saved-match recovery before leaving.'};
+    }
+    if (online?.active && online.match.outcome) return {ok:true};
+    if (!online?.active && !state.game.history().length && state.preset === undefined) return {ok:true};
+    return finalizeOfflineExit({
+      isOnline:()=>Boolean(online?.active),
+      isDurable:()=>gameStorage.durable !== false,
+      prepare(){
+        updateClock();
+        if (!outcome(state.game)) {
+          stopComputer();
+          state.paused=true;
+          selected=undefined;
+        }
+      },
+      persist(){
+        const saved=save();
+        render();
+        return saved;
+      },
+      flush:()=>gameStorage.flush(),
+    });
+  },
   async resignCurrentMatch(){
     if (online?.active) {
       if (!online.canResign() || !confirm('Resign this private match?')) return false;

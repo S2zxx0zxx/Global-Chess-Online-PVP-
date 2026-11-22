@@ -178,6 +178,14 @@ try {
   await evaluate('document.querySelector("[data-board-view=mode-3d]").click(); true');
   await waitUntil(() => evaluate('!document.getElementById("board").hidden && document.querySelector("#board [data-square=e4].last-destination")?.getAttribute("aria-label") === "e4, White Pawn"'));
 
+  await evaluate('document.querySelector("#ch-match-home").click();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-home")'));
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=home'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden && !document.querySelector("#lobby-resume").hidden'));
+  await evaluate('document.querySelector("#lobby-resume").click();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-match") && document.querySelector("#board [data-square=e4].last-destination")?.getAttribute("aria-label")==="e4, White Pawn" && !document.querySelector("#status").textContent.includes("Match paused")'));
+  console.log('Save and Exit restores the latest move after reload: passed');
+
   // Start a real new game with the computer as White and player as Black.
   // The CDP dialog listener explicitly accepts replacement of the prior match.
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=play'});

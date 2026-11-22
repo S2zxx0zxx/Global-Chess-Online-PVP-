@@ -22,7 +22,7 @@ const EXPORT=(data,name,type)=>{
 };
 export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','frames','settings','data','transfer','recovery','update','about']);
 
-export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMoves,replayTutorial,readHistory,getProgressReport,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
+export function mountScreenRoutes({main,go,leaveMatch,toggleBoardView,getBoardView,readMoves,replayTutorial,readHistory,getProgressReport,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
   main.insertBefore(screen,el('ch-tab-bar'));
@@ -73,7 +73,11 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
       boardOption.disabled=boardView==='loading';
       card(items,'Flip board','Swap which side is closest',()=>{el('flip-board').click();go('match');});
       card(items,'Settings','Sound, motion and board controls',()=>go('settings'));
-      card(items,'Home','Return to the lobby',()=>go('home'));
+      const exitMessage=mk('p','ch-inline-notice');
+      exitMessage.setAttribute('role','status');
+      exitMessage.hidden=true;
+      const home=card(items,details?.started&&!details.online?'Save & exit':'Home','Return to the lobby',()=>leaveMatch(home,exitMessage));
+      section.append(exitMessage);
       if(!details?.started){
         card(items,'Choose a game mode','Set up a new match',()=>go('play'));
       } else if(!details.online){

@@ -14,7 +14,7 @@ function element(tag, className, text) {
 
 // The v3 M0 shell intentionally calls existing, tested game commands rather
 // than keeping a separate copy of chess state in the presentation layer.
-export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMoves, readSavedHistory, getProgressReport, writeSavedHistory, clearCompletedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, preparePwaUpdate,hasCorruptMatch, storagePersistent = true}) {
+export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMoves, readSavedHistory, getProgressReport, writeSavedHistory, clearCompletedHistory, getMatchSummary, saveAndExitCurrentMatch, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, preparePwaUpdate,hasCorruptMatch, storagePersistent = true}) {
   const main = document.querySelector('main');
   const lobby = byId('lobby');
   const match = byId('match-area');
@@ -104,7 +104,25 @@ export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMo
   const back = element('button','ch-match-home','← Home');
   back.id='ch-match-home';
   back.type='button';
-  back.addEventListener('click',()=>go('home'));
+  async function leaveMatch(button, feedback){
+    const leavingView=view;
+    button.disabled=true;
+    try {
+      const result=await saveAndExitCurrentMatch();
+      if (view!==leavingView || !button.isConnected) return;
+      if (result.ok) {
+        go('home');
+      } else {
+        feedback.textContent=result.reason;
+        feedback.hidden=false;
+      }
+    } finally { button.disabled=false; }
+  }
+  const exitMessage=element('p','ch-inline-notice ch-exit-message');
+  exitMessage.setAttribute('role','status');
+  exitMessage.hidden=true;
+  match.append(exitMessage);
+  back.addEventListener('click',()=>leaveMatch(back,exitMessage));
   const tools=element('button','ch-match-tools','More options');
   tools.id='ch-match-tools';
   tools.type='button';
@@ -329,6 +347,7 @@ export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMo
       window.scrollTo({top:0,behavior:'instant'});
     }
     if(next==='match') {
+      exitMessage.hidden=true;
       match.focus({preventScroll:true});
       window.dispatchEvent(new Event('chess-match-view-shown'));
     }
@@ -346,7 +365,7 @@ export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMo
   });
   byId('online-leave').addEventListener('click',()=>go('home'));
   screenRoutes=mountScreenRoutes({
-    main,go,toggleBoardView,getBoardView,readMoves,replayTutorial:()=>startTutorial(true),
+    main,go,leaveMatch,toggleBoardView,getBoardView,readMoves,replayTutorial:()=>startTutorial(true),
     readHistory:readSavedHistory,getProgressReport,writeHistory:writeSavedHistory,clearCompletedHistory,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch,
     openExercise(exercise){
       byId('learn').click();
