@@ -32,6 +32,7 @@ fs.writeFileSync(path,JSON.stringify(cfg,null,2)+'\n');
 JS
 npx cap add android
 npx cap sync android
+node -e 'const plugins=require("./android/app/src/main/assets/capacitor.plugins.json"); if(!plugins.some(p=>p.classpath==="com.capacitorjs.plugins.app.AppPlugin")) throw Error("Android App lifecycle plugin was not packaged")'
 node scripts/generate-android-assets.mjs
 if ! grep -q 'targetSdkVersion = 36' android/variables.gradle; then
   echo 'Target API 36 build contract failed' >&2; exit 1

@@ -10,6 +10,7 @@ npm install --no-save --package-lock=false --no-audit --no-fund \
   @capacitor/core@8.6.2 @capacitor/android@8.6.2 @capacitor/cli@8.6.2 @capacitor/app@8.1.0 @resvg/resvg-js@2.6.2
 npx cap add android
 npx cap sync android
+node -e 'const plugins=require("./android/app/src/main/assets/capacitor.plugins.json"); if(!plugins.some(p=>p.classpath==="com.capacitorjs.plugins.app.AppPlugin")) throw Error("Android App lifecycle plugin was not packaged")'
 node scripts/generate-android-assets.mjs
 # Google's Play submission target API is 36+ as of Nov 2026.
 grep -q 'targetSdkVersion = 36' android/variables.gradle || {
