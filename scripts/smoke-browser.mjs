@@ -410,6 +410,7 @@ try {
       }
       cell('b7').focus();
       cell('b7').click();
+      cell('a8').focus();
       cell('a8').click();
     })()`);
     await waitUntil(() => evaluate('document.querySelector("#promotion[open]")?.contains(document.activeElement)'));

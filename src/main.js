@@ -39,6 +39,7 @@ rematch.onclick = () => {
   }
 };
 const promotion = document.querySelector('#promotion');
+let promotionPending = false;
 const names = { k:'King', q:'Queen', r:'Rook', b:'Bishop', n:'Knight', p:'Pawn' };
 let state = restoreGame();
 let notice = '';
@@ -323,7 +324,7 @@ function playComputer() {
 }
 
 async function selectSquare(square) {
-  if (importingBackup || promotion.open) return;
+  if (importingBackup || promotionPending) return;
   const {game, mode} = state;
   if (online?.active && !online.canMove(game.turn())) return;
   if (!square || state.paused || outcome(game) || (mode === 'computer' && game.turn() !== state.playerSide)) return;
@@ -348,7 +349,9 @@ async function selectSquare(square) {
   }
   promotion.returnValue = '';
   promotion.showModal();
+  promotionPending = true;
   await new Promise(resolve => promotion.addEventListener('close', resolve, {once:true}));
+  promotionPending = false;
   const chosen = options.find(move => move.promotion === promotion.returnValue);
   const canCommit = chosen && state.game === game && game.fen() === previousPosition &&
     !state.paused && !outcome(game);
