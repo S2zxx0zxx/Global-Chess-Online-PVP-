@@ -29,7 +29,7 @@ The task specifies **immutable local event IDs, migration versions, account-link
 | Backup JSON **2**, import JSON **1/2** | `src/backup.js` | `{version:2,match:string|null,history:[],progress:{version:1,events:[]}}`; import capped at **2,000,000 chars** and history 50; live functions also validate inner moves. v1 import intentionally does **not** erase existing progress | Match/history are nested JSON **strings**; generic JSON Schema cannot validate their chess legality |
 | Private room | `server/worker.js`, `server/match.js`, `src/online.js` | Server stores room + secret invite/seat tokens; match `version:0,1,2…` is **optimistic concurrency revision**, serverNow, moves, clocks; room expiry **24h** | Room `id` UUID is not account ID; seat secret is not OAuth token |
 | Saved online seat | `src/online.js` | `global-chess.online-seat.v1` best-effort in sessionStorage **and localStorage**, holds `id,seat,credential,invite`; invite shared in URL fragment then cleared on join | **Sensitive bearer capability** retained on device; do not put in normal backup, telemetry or cloud event |
-| Display preferences/profile | `src/app-shell.js`, `src/screen-routes.js` | Local nickname/avatar/frame, appearance, settings, setup flags, optional feedback toggle | Local profile is not authenticated account; default export does not cover all these keys |
+| Display preferences/profile | `src/app-shell.js`, `src/screen-routes.js`, `src/feedback.js` | Local nickname/avatar/frame, appearance, settings, setup flags, tutorial completion `global-chess.first-move-v1`, optional feedback `global-chess.feedback.v1` | Local profile is not authenticated account; default export does not cover all these keys |
 
 **Important limitations:** `src/storage.js` can fall back to localStorage or **volatile memory-only** when IDB unavailable. Memory session must not be sold as durable. Default JSON backup covers active match/history/progress, **not all local profile/settings/seat records**; comprehensive export and full-profile delete remain **separate product/privacy gaps** (B07/B10). A local Chrome storage permission issue is not equivalent to data corruption.
 
@@ -158,7 +158,7 @@ Future linking is **explicit consent**, never automatic on visiting a page:
 - [x] Machine-readable `GC-B01-T06_CONTRACT_MANIFEST.v1.json` and six JSON Schema Draft-2020-12 descriptors: 4 existing format descriptors, 2 **future-only** proposal shapes.
 - [x] Explicit stable ID contract, migration ordering and version matrix, account link boundaries, offline authority and server PvP responsibilities.
 - [x] Conflict/tombstone/consent policy and privacy categories, no actual user data/mock live OAuth credentials.
-- [x] Node suite `tests/data-identity-contract.test.js` added to assert source/manifest matching, malformed records rejection, synthetic legacy backup roundtrip and room version guard.
+- [x] Node suite `tests/data-identity-contract.test.js` added with **13 synthetic contract tests** for source/manifest matching, malformed records rejection, legacy backup roundtrip, room versioning and sensitive-seat exclusion.
 - [ ] Final exact task PR head CI checks / protected canonical squash merge / post-merge CI verification (required before DONE).
 - [ ] Independent product/legal/security signoff for *future implementation* is NOT part of T06's design-only DoD and must not be implied.
 
