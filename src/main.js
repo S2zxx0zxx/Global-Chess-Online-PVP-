@@ -18,7 +18,7 @@ import { mountAppShell } from './app-shell.js';
 import { finalizeOfflineExit } from './session-exit.js';
 import { restoreGame, serializeGame, savedMatchOutcome, claimableDraw, intendedDraw, hasAvailableDrawClaim } from './game.js';
 
-import { matchKey as key, historyKey, exportBackup, importBackup, previewBackup } from './backup.js';
+import { matchKey as key, historyKey, exportBackup, importBackupDurably, previewBackup } from './backup.js';
 async function initialize() {
 // The optional WASM mating solver must not delay guest-first gameplay.
 const gameStorage = await openGameStorage();
@@ -703,16 +703,19 @@ backupFile.onchange = async () => {
     if (online?.active) throw new Error('Online match in progress');
     const {summary} = previewBackup(contents);
     const summaryText = 'Validated backup: ' + summary.historyCount + ' completed games, ' +
-      summary.activePly + ' half-moves in ' + summary.activeMode + ' mode.\\n\\n' +
-      'Replace this device’s current match and local history? Export a copy first if needed.';
+      summary.activePly + ' half-moves in ' + summary.activeMode + ' mode.' +
+      (summary.exerciseEvents===undefined?' Legacy v1 backup: existing exercise XP will be preserved.':' Exercise journal events: '+summary.exerciseEvents+'.') +
+      '\\n\\nReplace the covered local records? Export a copy first if needed.';
     if (!confirm(summaryText)) { backupStatus.textContent = 'Import cancelled. Existing games were not changed.'; return; }
-    const restored = importBackup(gameStorage, contents);
+    const restored = await importBackupDurably(gameStorage, contents);
     stopComputer();
     state = restored;
     corruptMatchRaw = undefined;
     selected = undefined;
     tickAt = performance.now();
-    notice = 'Backup restored.';
+    notice = 'Backup restored and durable storage confirmed.';
+    backupStatus.textContent = notice;
+    window.dispatchEvent(new Event('chess-progress-changed'));
     historyDialog.close();
     render();
     playComputer();
