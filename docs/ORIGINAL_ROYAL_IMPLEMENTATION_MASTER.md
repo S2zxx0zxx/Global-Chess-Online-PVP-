@@ -1,7 +1,7 @@
 # Global Chess — Original Royal System Implementation Master v1.0
 Date: 2026-11-22
 Status: ACTIVE / INCOMPLETE — this document is a source-controlled execution ledger, not production release certification.
-Base for this stacked work: \`feat/chess-release-integration\` (PR #18, observed head \`3d9467ada0eaf167eecc52d6c98ed126fa98c98c\`).
+Base for this stacked work: `feat/chess-release-integration` (PR #18, observed head `3d9467ada0eaf167eecc52d6c98ed126fa98c98c`).
 Target: self-contained commercial PWA + Android Global Chess. Existing source uses Vite/ESM JavaScript and Babylon/Havok. No Unity/C# or proprietary APK code is imported.
 
 ## 1. Evidence and reuse boundary
@@ -15,9 +15,9 @@ Generated-art ownership may vary by law and provider terms; maintain full proven
 
 ## 2. Source-of-truth integration strategy
 1. Preserve foundational PR #1 and the stacked release fixes in PR #18; do not replace tested rules/clock/data contracts.
-2. This branch only implements a uniquely authored first design layer: \`src/original-royal.css\`, \`public/brand/original-royal-hall.svg\`, imported after existing CSS in \`src/main.js\`, plus source contract tests.
+2. This branch implements an independent royal visual layer, a 45-asset original SVG library, real screen references and three saved-avatar choices, preserving compatibility with existing gameplay: `src/original-royal.css`, `public/brand/original-royal-hall.svg`, imported after existing CSS in `src/main.js`, plus source contract tests.
 3. Preserve other active stacks: PR #13 original-art/Android a11y, PR #15 XP/achievements/backups, PR #17 rewarded ads. Reconciling them requires explicit cross-branch diff review and targeted cherry-picks, not automatic "complete".
-4. Keep game logic \`src/game.js\`, \`src/clock.js\`, \`server/match.js\` authoritative. Preserve \`src/storage.js\`, \`src/backup.js\` and \`src/online.js\`. UI commands must use existing tested interfaces, never duplicate game state.
+4. Keep game logic `src/game.js`, `src/clock.js`, `server/match.js` authoritative. Preserve `src/storage.js`, `src/backup.js` and `src/online.js`. UI commands must use existing tested interfaces, never duplicate game state.
 5. Materialize every new production asset from an original master (SVG/source render/3D blend), with hashed outputs, provenance, dimensions, thumbnail, tests and an acceptance log. No third-party APK bitmap is a valid master.
 
 ## 3. Screen-to-code execution matrix
@@ -66,19 +66,19 @@ All contracts remain PARTIAL until exact-head plus device evidence; the table in
 | ID | Task | Status | Dependencies / output |
 |---|---|---|---|
 | GC-ORIG-T01 | Audit PR stacks and source IP boundary | INSPECTED, REVIEW REQUIRED | GitHub PR #1, #13, #15, #17, #18 |
-| GC-ORIG-T02 | Introduce original brand token layer and art | CODE ADDED | src/original-royal.css; original SVG |
-| GC-ORIG-T03 | Add source-level accessibility/design tests | CODE ADDED, CI PENDING | tests/royal-visual.test.js |
-| GC-ORIG-T04 | Publish original asset-slot ledger | IN PROGRESS | original_asset_slots.csv |
-| GC-ORIG-T05 | Author full original PNG/icon family from masters | NOT STARTED | Independent art process; license ledger |
-| GC-ORIG-T06 | Onboarding/Home/Play/Setup/VS full visual QA | NOT STARTED | T05, G-VISUAL |
-| GC-ORIG-T07 | Gameplay HUD, pieces, boards, 2D/3D parity | NOT STARTED | T05, G-RULES, G-GPU |
-| GC-ORIG-T08 | Result/replay/history/learning/puzzles visuals | NOT STARTED | T05, G-CONTENT |
-| GC-ORIG-T09 | Profile/rank/reward/appearance original art and QA | NOT STARTED | T05, PR #15 reconciliation |
-| GC-ORIG-T10 | Settings/data/update/recovery visual QA | NOT STARTED | T06, G-DATA |
+| GC-ORIG-T02 | Introduce original brand token layer and art | CODE ADDED / QA PENDING | src/original-royal.css; original SVG |
+| GC-ORIG-T03 | Add source-level accessibility/design tests | CODE ADDED / exact-head CI pending | tests/royal-visual.test.js |
+| GC-ORIG-T04 | Publish original asset-slot ledger | 45 master slots indexed / extension pending | original_asset_slots.csv |
+| GC-ORIG-T05 | Author full original PNG/icon family from masters | 45 original SVG masters CODE ADDED; PNG exports, distinct final art QA pending | Independent art process; license ledger |
+| GC-ORIG-T06 | Onboarding/Home/Play/Setup/VS full visual QA | Royal CSS references integrated; device QA NOT STARTED | T05, G-VISUAL |
+| GC-ORIG-T07 | Gameplay HUD, pieces, boards, 2D/3D parity | HUD CSS integrated; actual 2D/3D artwork parity pending | T05, G-RULES, G-GPU |
+| GC-ORIG-T08 | Result/replay/history/learning/puzzles visuals | Screen CSS and result ornaments wired; full visual QA pending | T05, G-CONTENT |
+| GC-ORIG-T09 | Profile/rank/reward/appearance original art and QA | Three avatars wired with stable IDs; rank art prepared, full QA pending | T05, PR #15 reconciliation |
+| GC-ORIG-T10 | Settings/data/update/recovery visual QA | Common styling integrated; actual device QA pending | T06, G-DATA |
 | GC-ORIG-T11 | React/TypeScript migration decision ADR | NOT STARTED | Do not assume ESM is React today |
 | GC-ORIG-T12 | PvP WS/idempotency/reconnect/anti-cheat separate work | NOT STARTED | backend protocol, security test |
 | GC-ORIG-T13 | Android native shell, packaging, Play policies | NOT STARTED | PR #13/#17 comparison, keys |
-| GC-ORIG-T14 | Exact-head CI/browser QA and on-device acceptance | NOT STARTED | G-DEVICE, G-A11Y, G-GPU |
+| GC-ORIG-T14 | Exact-head CI/browser QA and on-device acceptance | Core/Android CI triggered; results and devices pending | G-DEVICE, G-A11Y, G-GPU |
 | GC-ORIG-T15 | Rights/attribution/license and release sign-off | NOT STARTED | G-LEGAL, SBOM, consent |
 
 A code file existing is not proof of runtime/device acceptance. A source comment cannot self-certify legal ownership.
@@ -97,3 +97,14 @@ A code file existing is not proof of runtime/device acceptance. A source comment
 
 ## 7. PR policy and rollback
 This PR is DRAFT and targets PR #18's head branch; no merging, deploying, billing, keys or production change. Use a build flag or remove the final CSS import for rollback. First exact-head CI must pass Node tests, bundle size, browser smoke and PWA asset checks; after this, manual mobile and accessibility audits. Other PR branches may advance; never claim head/test evidence carries over without re-run.
+
+
+## 8. Implementation checkpoint 2026-11-22 (PR #29)
+- Added `public/brand/royal-*.svg` (45 new individually authored, self-contained vector masters); these are not derived/traced from foreign APK artwork.
+- `src/original-royal-art.js` lists 45 named source assets. `tests/original-royal-catalog.test.js` checks names/files, self-contained SVGs, CSS references, original import order, basic accessibility and safe-area rules.
+- `src/original-royal.css` now loads AFTER existing home/profile CSS and applies original teal/obsidian/antique-gold presentation to Home, Play, Learn, Profile, bottom navigation, game HUD, dialogs and auxiliary routes.
+- Existing three saved avatar identifiers stay `♞`, `♜`, `♛`; renderers now show independently authored Guardian, Scholar, Traveler vector art; no storage key/schema migration.
+- `src/outcome-artwork.js` selects generic winner/draw/neutral decoration based on actual engine outcome text; no fabricated rating/XP or game authority.
+- `.github/workflows/verify.yml` includes PR #18 target and a branch push verification trigger; exact-head CI evidence remains per SHA, never transferable across later commits.
+- **UNFINISHED:** all final PNG raster exports, per-device visual signoff, exhaustive 2D/3D parity, live Cloudflare two-seat game reliability, WebSocket matchmaking, real rated Elo, anti-cheat, signed owner-release AAB, permanent signing identity, legal/privacy/Play approval and real-device accessibility. These are not completed by adding SVGs or CSS.
+- **PROVENANCE:** generated SVG markup authored for this repository; no third-party source code or artwork committed. Authorship/ownership of all commercial content requires a separate approved provenance/license review.
