@@ -5,6 +5,7 @@ import {summarizeMatches} from './game-stats.js';
 import {renderPieceArt} from './piece-art.js';
 import {feedbackPreferences,setFeedbackPreference} from './feedback.js';
 import {BOARD_THEMES,PIECE_THEMES,ANIMATED_THEMES,applyBoardTheme,applyPieceTheme} from './appearance.js';
+import {storageConflictMessage} from './storage.js';
 
 const el=id=>document.getElementById(id);
 const ls=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback;}catch{return fallback;}};
@@ -14,14 +15,6 @@ const btn=(title,fn,cls='')=>{const x=mk('button','ch-action '+cls,title);x.type
 const paragraph=(parent,content,cls='ch-support')=>{const x=mk('p',cls,content);parent.append(x);return x;};
 const heading=(parent,group,title,summary,fn)=>{parent.append(btn('← Back',fn,'ch-back-button'));paragraph(parent,group.toUpperCase(),'ch-eyebrow');parent.append(mk('h1','',title));if(summary)paragraph(parent,summary);};
 const card=(parent,title,detail,fn,cls='')=>{const x=btn('',fn,'ch-feature-card '+cls);x.append(mk('strong','',title),mk('small','',detail));parent.append(x);return x;};
-const ALL=[...lessons,...puzzles];
-const KNOWN=new Set(ALL.map(x=>x.id));
-const report=()=>{
-  const list=ls('global-chess.learning.v1',[]);
-  const completed=[...new Set(Array.isArray(list)?list:[])].filter(x=>KNOWN.has(x));
-  const daily=[...new Set(Array.isArray(list)?list:[])].filter(x=>/^daily-\d{4}-\d{2}-\d{2}$/.test(x));
-  return {completed,daily};
-};
 const days=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const EXPORT=(data,name,type)=>{
   const url=URL.createObjectURL(new Blob([data],{type}));
@@ -30,7 +23,7 @@ const EXPORT=(data,name,type)=>{
 };
 export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','frames','settings','data','transfer','recovery','update','about']);
 
-export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMoves,replayTutorial,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
+export function mountScreenRoutes({main,go,leaveMatch,toggleBoardView,getBoardView,readMoves,replayTutorial,readHistory,getProgressReport,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
   main.insertBefore(screen,el('ch-tab-bar'));
@@ -38,6 +31,9 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
   applyBoardTheme(ls('global-chess.appearance.v1','maple'));
   applyPieceTheme(ls('global-chess.pieces.v1','classic'));
 
+  function report(){
+    try{return getProgressReport();}catch{return {completed:[],daily:[],invalid:true};}
+  }
   function records(){
     try{const x=readHistory();if(!Array.isArray(x))throw Error('Invalid records');return x;}catch{return null;}
   }
@@ -78,7 +74,11 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
       boardOption.disabled=boardView==='loading';
       card(items,'Flip board','Swap which side is closest',()=>{el('flip-board').click();go('match');});
       card(items,'Settings','Sound, motion and board controls',()=>go('settings'));
-      card(items,'Home','Return to the lobby',()=>go('home'));
+      const exitMessage=mk('p','ch-inline-notice');
+      exitMessage.setAttribute('role','status');
+      exitMessage.hidden=true;
+      const home=card(items,details?.started&&!details.online?'Save & exit':'Home','Return to the lobby',()=>leaveMatch(home,exitMessage));
+      section.append(exitMessage);
       if(!details?.started){
         card(items,'Choose a game mode','Set up a new match',()=>go('play'));
       } else if(!details.online){
@@ -87,11 +87,21 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
           card(items,'Pause match','Stop the local clock',()=>go('pause'));
         }
         if(!details.outcome){
-          card(items,'Resign game','End your current match',()=>{
-            if(resignCurrentMatch())go('result');
+          card(items,'Resign game','End your current match',async ()=>{
+            if(await resignCurrentMatch())go('result');
           },'ch-danger-card');
         }
         if(!details.outcome) card(items,'How to move','Replay the move and capture guide',()=>{go('match');replayTutorial();});
+      } else if(details.canResignOnline) {
+        const resign = card(items,'Resign game','End your private match',async ()=>{
+          resign.disabled = true;
+          try {
+            const result = await resignCurrentMatch();
+            if (!resign.isConnected) return;
+            if (result === true) go('result');
+            else if (result === 'server-error') go('match');
+          } finally { resign.disabled = false; }
+        },'ch-danger-card');
       }
       const moves=readMoves();
       if(moves.length){
@@ -145,9 +155,9 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
             const x=restoreGame(item.snapshot);
             copy.append(mk('small','',x.mode==='computer'?'Vs computer':'Local friend'),mk('small','',x.game.history().length+' half-moves'));
           }catch{copy.append(mk('small','ch-error','Unable to load this save'));}
-          buttons.append(btn('Review',()=>{selected=i;go('review');}),btn('Delete',()=>{
+          buttons.append(btn('Review',()=>{selected=i;go('review');}),btn('Delete',async()=>{
             if(!confirm('Permanently delete only this recorded match?'))return;
-            try{writeHistory(full.filter((_,index)=>index!==i));redraw();}
+            try{await writeHistory(full.filter((_,index)=>index!==i));redraw();}
             catch{paragraph(section,'Delete failed. Existing records were preserved.','ch-inline-notice ch-notice-warning');}
           }));
           row.append(copy,buttons);result.append(row);
@@ -222,6 +232,7 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
       title('Local player record','Your progress','Validated offline results. Local two-player games are not counted as personal wins.');
       const progress=report(),saved=records(),stats=summarizeMatches(saved),grid=mk('div','ch-stats-grid');
       section.append(grid);
+      if(progress.invalid)paragraph(section,'Exercise progress is unavailable. Existing records were retained.','ch-inline-notice ch-notice-warning');
       if(saved===null)paragraph(section,'Match history is unavailable. No saved data was cleared.','ch-inline-notice ch-notice-warning');
       const values=[
         ['Completed games',saved===null?'Unavailable':stats.completed],
@@ -230,9 +241,10 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
         ['Vs Computer win rate',saved===null?'Unavailable':stats.winRate+'%'],
         ['Current bot win streak',saved===null?'Unavailable':stats.currentWinStreak],
         ['Best bot win streak',saved===null?'Unavailable':stats.bestWinStreak],
-        ['Lessons completed',progress.completed.filter(x=>lessons.some(y=>y.id===x)).length+'/'+lessons.length],
-        ['Puzzles completed',progress.completed.filter(x=>puzzles.some(y=>y.id===x)).length+'/'+puzzles.length],
-        ['Daily challenges',progress.daily.length],
+        ['Lessons completed',progress.invalid?'Unavailable':progress.lessonsSolved+'/'+lessons.length],
+        ['Puzzles completed',progress.invalid?'Unavailable':progress.puzzlesSolved+'/'+puzzles.length],
+        ['Daily challenges',progress.invalid?'Unavailable':progress.daily.length],
+        ['Exercise XP',progress.invalid?'Unavailable':progress.xp+(progress.persisted?'':' (session only)')],
       ];
       for(const [label,value] of values){
         const tile=mk('div','ch-stat');
@@ -243,7 +255,7 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
     }
     if(route==='achievements'){
       title('Proven milestones','Achievements','Unlocks are computed from real local records, not simulated leaderboards.');
-      const p=report(),seen=new Set(p.completed),stats=summarizeMatches(records());
+      const p=report(),seen=new Set(p.completed),saved=records(),stats=summarizeMatches(saved);
       const awards=[
         ['First Steps','Complete one practice exercise',p.completed.length>=1],
         ['Chess Basics','Complete all twelve lessons',lessons.every(x=>seen.has(x.id))],
@@ -254,11 +266,12 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
         ['Winning Run','Win three verified computer games in a row',stats.bestWinStreak>=3],
       ];
       const list=mk('div','ch-feature-list');section.append(list);
-      for(const [name,desc,earned] of awards){
+      for(const [index,[name,desc,earned]] of awards.entries()){
+        const unavailable=index<4 ? p.invalid : saved===null;
         const row=mk('div','ch-achievement '+(earned?'ch-unlocked':'ch-locked'));
         row.append(mk('span','ch-achievement-symbol',earned?'★':'◇'));
         const copy=mk('div');copy.append(mk('strong','',name),mk('small','',desc));
-        row.append(copy,mk('span','ch-achievement-state',earned?'Earned':'Locked'));list.append(row);
+        row.append(copy,mk('span','ch-achievement-state',unavailable?'Unavailable':earned?'Earned':'Locked'));list.append(row);
       }
     }
     if(route==='avatars'||route==='frames'){
@@ -334,7 +347,7 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
         tile.setAttribute('aria-pressed',String(ls('global-chess.appearance.v1','maple')===name));
         const preview=mk('span','ch-theme-preview ch-preview-'+name);
         if(ANIMATED_THEMES.includes(name)){
-          const mark=mk('img','ch-theme-preview-piece');mark.src='/chess-assets/pieces/white-king.webp';mark.alt='';
+          const mark=mk('img','ch-theme-preview-piece');mark.src='/brand/pieces/piece_white_king.svg';mark.alt='';
           preview.append(mark);
         }
         tile.append(preview,mk('strong','',title),mk('small','',detail));
@@ -352,7 +365,7 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
         item.dataset.pieceStyle=name;
         const display=mk('span','ch-piece-preview');
         if(ANIMATED_THEMES.includes(name))display.append(mk('span','ch-piece-aura'));
-        const preview=mk('img','ch-piece-example');preview.src=name==='crest'?'/brand/pieces/piece_white_knight.svg':'/chess-assets/pieces/white-knight.webp';
+        const preview=mk('img','ch-piece-example');preview.src='/brand/pieces/piece_white_knight.svg';
         preview.alt='';
         display.append(preview);
         item.append(display,mk('strong','',label),mk('small','',detail));
@@ -446,6 +459,7 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
       const damaged=hasCorruptMatch();
       title('Keep your data safe',damaged?'Unrestorable saved match':'Recovery',
         damaged?'The original match bytes remain stored. They will not be overwritten until you explicitly confirm replacement.':
+        fault==='conflict'?storageConflictMessage:
         fault?'The last match save could not be written.':'Recover from a storage or asset error without clearing your board.');
       paragraph(section,damaged?
         'Export the unvalidated JSON recovery copy first. Do not import it as a verified backup or clear browser data before inspecting it.':
@@ -457,6 +471,7 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
     if(route==='update'){
       title('Match-safe upgrades','PWA update','New assets are staged offline. A downloaded update never replaces your active match without asking.');
       const status=paragraph(section,'Check for a downloaded update when you are ready.','ch-inline-notice');
+      status.setAttribute('role','status');
       const check=btn('Check for update',async()=>{
         if(!('serviceWorker' in navigator)){
           status.textContent='Service workers are unavailable in this browser. Browser refreshes are managed manually.';return;
@@ -466,6 +481,22 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
           const registration=await navigator.serviceWorker.getRegistration();
           if(!registration){status.textContent='Offline service worker is not installed.';return;}
           await registration.update();
+          const installing=registration.installing;
+          if(installing){
+            status.textContent='Downloading the update…';
+            await new Promise(resolve=>{
+              function checkState(){
+                if(!['installed','activated','redundant'].includes(installing.state))return;
+                installing.removeEventListener('statechange',checkState);
+                resolve();
+              }
+              installing.addEventListener('statechange',checkState);
+              checkState();
+            });
+            if(installing.state==='redundant' && !registration.waiting){
+              throw new Error('Update installation failed');
+            }
+          }
           if(registration.waiting){
             status.textContent='An update is downloaded and waiting. Apply it only when your game is finished.';
             apply.hidden=false;
@@ -518,11 +549,15 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
     }
     section.querySelector('h1')?.setAttribute('tabindex','-1');
   }
-  window.addEventListener('chess-storage-error',()=>{
-    fault=true;if(el('ch-storage-alert'))return;
-    const alert=mk('div','ch-storage-alert','Your last game move could not be saved.');
+  window.addEventListener('chess-storage-error',event=>{
+    if(event.detail?.conflict)fault='conflict';
+    else if(!fault)fault=true;
+    const message=fault==='conflict'?storageConflictMessage:'Your last game move could not be saved.';
+    const existing=el('ch-storage-alert');
+    if(existing){existing.firstElementChild.textContent=message;return;}
+    const alert=mk('div','ch-storage-alert');
     alert.id='ch-storage-alert';alert.setAttribute('role','alert');
-    alert.append(btn('Recovery',()=>go('recovery'),'primary'),btn('Dismiss',()=>alert.remove()));
+    alert.append(mk('span','',message),btn('Recovery',()=>go('recovery'),'primary'),btn('Dismiss',()=>alert.remove()));
     main.prepend(alert);
   });
   window.addEventListener('chess-exercise-solved',event=>{

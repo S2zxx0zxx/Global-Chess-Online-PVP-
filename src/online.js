@@ -135,13 +135,15 @@ export function bindOnline({onMatch, onLeave}) {
   }
 
   async function submit(action, command) {
-    if (!snapshot || !canMove(session.seat)) return;
+    if (!snapshot || !(action === 'resign' ? canResign() : canMove(session.seat))) return false;
     submitting = true;
     const current = generation;
     try {
       const data = await request('/' + session.id + '/' + action,
         {...command, expectedVersion:snapshot.match.version}, session.credential);
-      if (current === generation) accept(data);
+      if (current !== generation) return false;
+      accept(data);
+      return !data.error;
     } catch {
       if (current === generation) status.textContent = 'Server response lost. Checking server position…';
     } finally {
@@ -149,10 +151,16 @@ export function bindOnline({onMatch, onLeave}) {
     }
   }
 
+  function canResign() {
+    return Boolean(snapshot && !submitting && snapshot.match.turnStartedAt !== null && !snapshot.match.outcome);
+  }
+
   return {
     get active() {return Boolean(snapshot);},
     get match() {return snapshot?.match;},
     canMove,
+    canResign,
+    resign() { return submit('resign',{}); },
     remaining(side) {
       const {match, serverNow} = snapshot;
       const running = match.moves.length % 2 ? 'b' : 'w';

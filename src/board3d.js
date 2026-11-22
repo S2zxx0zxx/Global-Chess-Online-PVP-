@@ -4,6 +4,7 @@ import {
   DirectionalLight, Engine, HemisphericLight, PointerEventTypes, Scene, StandardMaterial, Texture, Vector3, VertexBuffer,
   RegisterStandardEngineExtensions, RegisterStandardMaterial, RegisterTexture, RegisterRay,
 } from '@babylonjs/core/pure.js';
+import { pieceTheme } from './appearance.js';
 
 RegisterStandardEngineExtensions();
 RegisterStandardMaterial();
@@ -19,6 +20,13 @@ const profiles = {
   k: [[.35,0],[.35,.11],[.21,.24],[.16,.67],[.28,.81],[.24,.91],[.1,.94],[0,.98]],
 };
 const squareFor = (file, rank) => 'abcdefgh'[file] + (rank + 1);
+const royalImpacts = {
+  ember: {color:'#FF8C32', count:10, duration:560, spread:.74, rise:1.18, orbit:.7, size:.18, shape:'spark'},
+  mist: {color:'#C6D7EB', count:8, duration:920, spread:.70, rise:2.10, orbit:2.2, size:.47, shape:'smoke'},
+  astral: {color:'#BA89FF', count:8, duration:650, spread:.72, rise:.75, orbit:3.8, size:.12, shape:'crystal'},
+  frost: {color:'#73DFFF', count:9, duration:500, spread:.86, rise:.55, orbit:.3, size:.14, shape:'shard'},
+  emerald: {color:'#57F5AC', count:6, duration:690, spread:.58, rise:.80, orbit:4.7, size:.16, shape:'crystal'},
+};
 
 export async function mountBoard(canvas, selectSquare) {
   const engine = new Engine(canvas, true);
@@ -73,7 +81,7 @@ export async function mountBoard(canvas, selectSquare) {
     }
     const boardArt = material('maple and walnut', '#FFFFFF');
     boardArt.diffuseTexture = new Texture(
-      new URL('./chess-assets/board/maple-walnut.webp',document.baseURI).href,scene,
+      new URL('./brand/board-maple-walnut.svg',document.baseURI).href,scene,
     );
     boardArt.specularColor = new Color3(.19,.14,.10);
     boardArt.diffuseTexture.onLoadObservable.add(() => {
@@ -88,6 +96,8 @@ export async function mountBoard(canvas, selectSquare) {
     const captureTile = material('capture square', '#AD572C');
     const rim = material('selection rim', '#FFE3A1');
     rim.emissiveColor = Color3.FromHexString('#947047');
+    const keyboardRim = material('keyboard focus rim', '#E1F6FF');
+    keyboardRim.emissiveColor = Color3.FromHexString('#62BDFF');
     const previous = material('last move', color('board-last'));
     const check = material('check', color('board-check'));
     const frame = material('frame', color('brand-walnut'));
@@ -194,6 +204,9 @@ export async function mountBoard(canvas, selectSquare) {
       mesh.isPickable = false;
       return mesh;
     }
+    const keyboardFocus = ring('keyboard focus', 'a1', .98, .042, keyboardRim);
+    keyboardFocus.setEnabled(false);
+    let keyboardSquare;
 
     function syncCue(square, kind) {
       const current = cues.get(square);
@@ -231,29 +244,55 @@ export async function mountBoard(canvas, selectSquare) {
     }
 
     function impact(square, start, captured) {
-      const pulse = ring('landing pulse', square, .34, .055, captured ? capture : rim);
+      const style = royalImpacts[pieceTheme(document.documentElement.dataset.chPieces)];
+      const smoke = style?.shape === 'smoke';
+      const duration = captured ? style?.duration ?? 320 : 310;
+      const tint = style ? material('royal impact light', style.color) : null;
+      if (tint) tint.emissiveColor = tint.diffuseColor.scale(.58);
+      const haze = captured && smoke ? material('capture smoke', style.color) : null;
+      if (haze) haze.emissiveColor = haze.diffuseColor.scale(.23);
+      const pulse = ring('landing pulse', square, .34, .055, tint ?? (captured ? capture : rim));
       const center = pulse.position.clone();
-      const sparks = captured ? Array.from({length:8}, (_, index) => {
-        const angle = index * Math.PI / 4;
-        const mesh = CreateSphere('capture spark', {diameter:.072, segments:5}, scene);
-        mesh.material = capture;
+      const count = captured ? style?.count ?? 8 : 0;
+      const size = style?.size ?? .072;
+      const shape = style?.shape;
+      const crystal = shape === 'crystal' || shape === 'shard';
+      const particles = Array.from({length:count}, (_, index) => {
+        const mesh = crystal
+          ? CreateBox('capture crystal', {size}, scene)
+          : CreateSphere('capture particle', {diameter:size, segments:smoke ? 8 : 5}, scene);
+        mesh.material = haze ?? tint ?? capture;
         mesh.isPickable = false;
-        return {mesh, x:Math.cos(angle), z:Math.sin(angle)};
-      }) : [];
-      const meshes = [pulse, ...sparks.map(spark=>spark.mesh)];
+        return {mesh, index, angle:index * 2.399963};
+      });
+      const meshes = [pulse, ...particles.map(({mesh})=>mesh)];
       meshes.forEach(mesh=>mesh.setEnabled(false));
       effects.add({
-        start, duration:320,
+        start, duration,
         update(progress) {
           if (!progress) return;
           meshes.forEach(mesh=>mesh.setEnabled(true));
-          pulse.scaling.set(.45+2.7*progress, Math.max(.01,1-progress), .45+2.7*progress);
-          for (const {mesh,x,z} of sparks) {
-            mesh.position.set(center.x+x*progress*.7, center.y+Math.sin(Math.PI*progress)*.52, center.z+z*progress*.7);
-            mesh.scaling.setAll(1-progress);
+          const ringProgress = Math.min(1, progress * duration / 310);
+          pulse.setEnabled(ringProgress < 1);
+          pulse.scaling.set(.45 + 2.7 * ringProgress, Math.max(.01, 1 - ringProgress), .45 + 2.7 * ringProgress);
+          if (haze) haze.alpha = .31 * Math.sin(Math.PI * progress) ** .68;
+          for (const {mesh,index,angle} of particles) {
+            const theta = angle + progress * (style?.orbit ?? 0);
+            const reach = progress * (style?.spread ?? .7) * (.55 + .15 * (index % 4));
+            const lift = smoke || shape === 'spark' ? progress : Math.sin(Math.PI * progress);
+            const drift = smoke ? .48 * progress ** 2 : 0;
+            mesh.position.set(center.x + Math.cos(theta) * reach + drift, center.y + lift * (style?.rise ?? .52) * (.59 + .13 * (index % 4)),
+              center.z + Math.sin(theta) * reach);
+            const scale = smoke ? .7 + progress * 2 : Math.max(.01, 1 - progress);
+            mesh.scaling.set(scale, scale * (shape === 'shard' ? 2.5 : shape === 'spark' ? 1.8 : 1), scale);
+            if (!smoke) mesh.rotation.set(1.2 + theta, progress * 4, theta);
           }
         },
-        dispose:()=>meshes.forEach(mesh=>mesh.dispose()),
+        dispose() {
+          meshes.forEach(mesh=>mesh.dispose());
+          haze?.dispose();
+          tint?.dispose();
+        },
       });
     }
     function animateMove(from,to) {
@@ -368,6 +407,16 @@ export async function mountBoard(canvas, selectSquare) {
     });
     return {
       syncTurns,
+      setKeyboardSquare(square) {
+        if (keyboardSquare === square) return;
+        keyboardSquare = square;
+        keyboardFocus.setEnabled(Boolean(square));
+        if (square) {
+          const position = tiles.get(square).mesh.position;
+          keyboardFocus.position.set(position.x, .10, position.z);
+        }
+        needsFrame = true;
+      },
       setFlipped(flipped) {
         camera.alpha = flipped ? Math.PI / 2 : -Math.PI / 2;
         needsFrame = true;

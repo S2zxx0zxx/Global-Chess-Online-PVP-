@@ -1,4 +1,12 @@
 /* Five original CSS treatments. No remote art, video, canvas loop, or extra download. */
+.board .ch-piece-classic,
+.ch-piece-card[data-piece-style=classic] .ch-piece-example {
+  filter: saturate(.72) contrast(1.12) drop-shadow(0 1px 2px #0009);
+}
+.board .ch-piece-crest,
+.ch-piece-card[data-piece-style=crest] .ch-piece-example {
+  filter: saturate(1.17) drop-shadow(0 2px 2px #40201599);
+}
 :root[data-ch-theme=ember],.ch-preview-ember{
   --royal-light:#f5ce90;--royal-light-glint:#fff2c3;--royal-dark:#652c25;--royal-dark-glint:#b4472e;
   --royal-frame-a:#ffcb70;--royal-frame-b:#612120;--royal-glow:#ff8c36;--royal-veil:#ffb45469;

@@ -50,6 +50,8 @@ dialog{border:1px solid var(--ch-color-brand-gold);border-radius:12px;background
 .player-panel{display:flex;gap:10px;align-items:center;border:1px solid var(--ch-color-brand-walnut);border-radius:9px;padding:8px 12px;margin:8px 0;background:var(--ch-color-brand-wine)}
 .player-panel span{font-size:1.35rem}.player-panel small{margin-left:auto;color:var(--ch-color-brand-gold)}.active-player{border-color:var(--ch-color-brand-goldStrong)}
 #match-area:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--ch-color-a11y-focus);outline-offset:3px}
+#scene:focus-visible{outline:3px solid var(--ch-color-a11y-focus);outline-offset:3px}
+#scene-square{position:absolute;inline-size:1px;block-size:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 #profile-form,#settings-dialog[open]{display:grid;gap:10px}
 #profile-form label{display:grid;gap:5px}
 #profile-form input,#profile-form select{font:inherit;padding:7px}
@@ -80,7 +82,7 @@ dialog form{margin-top:8px}
 
 /* The supplied board has a 24 px frame around a 448 px playing area. */
 .board{position:relative;border:0;padding:4.83871%;background:none;isolation:isolate}
-.board::before{content:'';position:absolute;inset:0;background:url('/chess-assets/board/maple-walnut.webp') center/100% 100% no-repeat;z-index:-1;pointer-events:none}
+.board::before{content:'';position:absolute;inset:0;background:url('/brand/board-maple-walnut.svg') center/100% 100% no-repeat;z-index:-1;pointer-events:none}
 .board.flipped::before{transform:rotate(180deg)}
 .board .light,.board .dark{background:transparent}
 .board button[aria-pressed=true]{background:color-mix(in srgb,var(--ch-color-board-select) 57%,transparent)}

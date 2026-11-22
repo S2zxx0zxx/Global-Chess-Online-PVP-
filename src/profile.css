@@ -97,8 +97,8 @@
 [data-profile-link=progress] { --hub-shade:#24554c; --hub-edge:#538879; --hub-art:url('/brand/tactics-crown.svg'); }
 [data-profile-link=achievements] { --hub-shade:#62364c; --hub-edge:#9e657e; --hub-art:url('/brand/victory-confetti.svg'); }
 [data-profile-link=avatars] { --hub-shade:#4a3a64; --hub-edge:#8c77ab; --hub-art:url('/brand/guest-avatar.svg'); }
-[data-profile-link=appearance] { --hub-shade:#674634; --hub-edge:#a08064; --hub-art:url('/chess-assets/pieces/white-knight.webp'); }
-[data-profile-link=data] { --hub-shade:#284457; --hub-edge:#597f97; --hub-art:url('/chess-assets/pieces/white-rook.webp'); }
+[data-profile-link=appearance] { --hub-shade:#674634; --hub-edge:#a08064; --hub-art:url('/brand/pieces/piece_white_knight.svg'); }
+[data-profile-link=data] { --hub-shade:#284457; --hub-edge:#597f97; --hub-art:url('/brand/pieces/piece_white_rook.svg'); }
 
 #ch-profile-hub .ch-profile-card {
   padding: clamp(12px, 4vw, 24px);
@@ -121,7 +121,7 @@
   padding-top: 28px;
 }
 #ch-profile-hub .ch-profile-equipment > div:first-child {
-  background: url('/chess-assets/pieces/white-knight.webp') right 8px top 5px / 42px no-repeat,
+  background: url('/brand/pieces/piece_white_knight.svg') right 8px top 5px / 42px no-repeat,
     linear-gradient(135deg, #30233e, #17141d);
 }
 #ch-profile-hub .ch-profile-equipment > div:nth-child(2) {

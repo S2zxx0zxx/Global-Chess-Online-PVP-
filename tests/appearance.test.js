@@ -42,7 +42,7 @@ test('selection applies safely and adds an aura only for animated artwork',()=>{
     const fire=makeCell();renderPieceArt(fire,{color:'w',type:'n'},names);
     assert.deepEqual([...fire.classes],['has-piece','piece-white','piece-n']);
     assert.deepEqual(fire.children.map(x=>x.tag),['span','img']);
-    assert.match(fire.children[1].src,/white-knight\.webp$/);
+    assert.match(fire.children[1].src,/piece_white_knight\.svg$/);
     assert.equal(fire.children[0].attributes['aria-hidden'],'true');
 
     applyBoardTheme('unknown');applyPieceTheme('classic');
@@ -51,6 +51,6 @@ test('selection applies safely and adds an aura only for animated artwork',()=>{
     assert.equal(fake.classes.has('ch-animated-pieces'),false);
     const classic=makeCell();renderPieceArt(classic,{color:'b',type:'k'},names);
     assert.deepEqual(classic.children.map(x=>x.tag),['img']);
-    assert.match(classic.children[0].src,/black-king\.webp$/);
+    assert.match(classic.children[0].src,/piece_black_king\.svg$/);
   }finally{globalThis.document=original;}
 });

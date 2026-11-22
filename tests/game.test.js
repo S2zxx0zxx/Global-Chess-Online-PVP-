@@ -32,6 +32,7 @@ test('threefold is claimable and fivefold automatically ends the game', () => {
   const claimed = restoreGame(serializeGame(game, 'local', 'threefold repetition'));
   assert.equal(claimed.drawClaim, 'threefold repetition');
   cycle();
+  assert.equal(result(game), null);
   cycle();
   assert.equal(result(game), 'Draw by fivefold repetition');
 });

@@ -12,6 +12,23 @@ export function startMatch(match, now) {
   return {...match, turnStartedAt: now, version: match.version + 1};
 }
 
+export function applyResign(match, seat, command, now) {
+  const current = advanceClock(match, now);
+  if (current.outcome) return {match:current, error:'Match ended'};
+  if (current.turnStartedAt === null) return {match:current, error:'Waiting for opponent'};
+  if (seat !== 'w' && seat !== 'b') return {match:current, error:'Invalid seat'};
+  if (command?.expectedVersion !== current.version) return {match:current, error:'Position changed'};
+
+  const running = current.moves.length % 2 ? 'b' : 'w';
+  const elapsed = Math.max(0, now - current.turnStartedAt);
+  return {match:{
+    ...current,
+    clock:{...current.clock, [running]:current.clock[running] - elapsed},
+    outcome:seat === 'w' ? 'Black wins by resignation' : 'White wins by resignation',
+    version:current.version + 1,
+  }};
+}
+
 export function advanceClock(match, now) {
   if (match.turnStartedAt === null || match.outcome) return match;
   const side = match.moves.length % 2 ? 'b' : 'w';

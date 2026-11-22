@@ -2,9 +2,11 @@ import { renderPieceArt } from './piece-art.js';
 import { prepareMoveEffect } from './board-motion.js';
 import { emitFeedback } from './feedback.js';
 import { loadBrowserMateSolver } from './mate-solver.js';
-import { bindLearning } from './learning.js';
+import { bindLearning, lessons, puzzles } from './learning.js';
 import { bindLobby } from './lobby.js';
-import { openGameStorage } from './storage.js';
+import { openGameStorage, storageConflictMessage } from './storage.js';
+import { commitHistoryReplacement } from './history-mutation.js';
+import { progressKey, legacyProgressKey, migrateLegacyProgress, currentProgressReport } from './progression.js';
 import { bindOnline } from './online.js';
 import { Chess } from 'chess.js';
 import { readHistory, recordMatch } from './history.js';
@@ -18,9 +20,10 @@ import './home.css';
 import './profile.css';
 import './board-motion.css';
 import { mountAppShell } from './app-shell.js';
+import { finalizeOfflineExit } from './session-exit.js';
 import { restoreGame, serializeGame, savedMatchOutcome, claimableDraw, intendedDraw, hasAvailableDrawClaim } from './game.js';
 
-import { matchKey as key, historyKey, exportBackup, importBackup, previewBackup } from './backup.js';
+import { matchKey as key, historyKey, exportBackup, importBackupDurably, previewBackup } from './backup.js';
 async function initialize() {
 // The optional WASM mating solver must not delay guest-first gameplay.
 const gameStorage = await openGameStorage();
@@ -36,9 +39,20 @@ rematch.onclick = () => {
   }
 };
 const promotion = document.querySelector('#promotion');
+let promotionPending = false;
 const names = { k:'King', q:'Queen', r:'Rook', b:'Bishop', n:'Knight', p:'Pawn' };
 let state = restoreGame();
 let notice = '';
+try {
+  let legacy = null;
+  try { legacy = localStorage.getItem(legacyProgressKey); } catch {}
+  if (legacy !== null && gameStorage.getItem(progressKey) === null) {
+    migrateLegacyProgress(gameStorage, legacy, lessons, puzzles);
+    if (gameStorage.durable !== false) await gameStorage.flush();
+  }
+} catch {
+  notice = 'Exercise progress migration could not be confirmed.';
+}
 let corruptMatchRaw;
 try {
   state = restoreGame(gameStorage.getItem(key));
@@ -49,6 +63,7 @@ try {
 }
 if (state.mode === 'computer') document.querySelector('#difficulty').value = state.difficulty;
 let selected;
+let importingBackup = false;
 const claim = document.querySelector('#claim');
 const outcome = game => {
   if (online?.active) return online.match.outcome;
@@ -62,6 +77,7 @@ let appShell;
 let flipped = state.mode === 'computer' && state.playerSide === 'b';
 document.documentElement.classList.toggle('ch-board-flipped',flipped);
 let wasVisible = !document.hidden;
+let nativeBackgrounded = false;
 const flip = document.querySelector('#flip-board');
 flip.onclick = () => {
   flipped = !flipped;
@@ -70,13 +86,21 @@ flip.onclick = () => {
   render();
 };
 let focusSquare = 'e2';
+const boardArrows = {ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,1],ArrowDown:[0,-1]};
+
+function adjacentSquare(square, [fileDelta, rankDelta]) {
+  const direction = flipped ? -1 : 1;
+  const file = 'abcdefgh'.indexOf(square[0]) + fileDelta * direction;
+  const rank = Number(square[1]) + rankDelta * direction;
+  if (file >= 0 && file < 8 && rank >= 1 && rank <= 8) return 'abcdefgh'[file] + rank;
+}
 
 function updateClock() {
   const now = performance.now();
   const elapsed = wasVisible ? now - tickAt : 0;
   tickAt = now;
-  wasVisible = !document.hidden;
-  if (online?.active || state.paused) { displayClock(); return; }
+  wasVisible = !document.hidden && !nativeBackgrounded;
+  if (online?.active || state.paused || importingBackup || nativeBackgrounded) { displayClock(); return; }
   const { clock, game } = state;
   if (clock && !outcome(game) && elapsed > 0) {
     state.clock = remainingClock(clock, game.turn(), elapsed);
@@ -143,8 +167,35 @@ function stopComputer() {
   worker = undefined;
 }
 const canvas = document.querySelector('#scene');
+const sceneSquare = document.querySelector('#scene-square');
 let renderer;
 let loading3D = false;
+
+function sync3DKeyboardFocus() {
+  const focused = renderer && document.activeElement === canvas;
+  const square = focused ? board.querySelector('[data-square="' + focusSquare + '"]') : null;
+  renderer?.setKeyboardSquare(square?.dataset.square);
+  const label = square ? square.getAttribute('aria-label') + (square.getAttribute('aria-pressed') === 'true' ? ', selected' : '') : '';
+  if (sceneSquare.textContent !== label) sceneSquare.textContent = label;
+}
+
+canvas.addEventListener('focus', sync3DKeyboardFocus);
+canvas.addEventListener('blur', sync3DKeyboardFocus);
+canvas.addEventListener('keydown', event => {
+  if (!renderer || event.altKey || event.ctrlKey || event.metaKey) return;
+  const delta = boardArrows[event.key];
+  if (delta) {
+    event.preventDefault();
+    const next = adjacentSquare(focusSquare, delta);
+    if (next) {
+      focusSquare = next;
+      sync3DKeyboardFocus();
+    }
+  } else if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    if (!event.repeat) selectSquare(focusSquare);
+  }
+});
 window.addEventListener('chess-match-view-shown', () => {
   if (renderer) render();
 });
@@ -182,10 +233,12 @@ async function toggleBoardView() {
 }
 
 function render(move) {
-  rematch.hidden = Boolean(online?.active) || !outcome(state.game);
-  displayClock();
   const {game, mode} = state;
-  lobby?.render({outcome:outcome(game),turn:game.turn(),mode,playerSide:state.playerSide,online:Boolean(online?.active),
+  const matchOutcome = outcome(game);
+  rematch.hidden = Boolean(online?.active) || !matchOutcome;
+  if (promotion.open && (state.paused || matchOutcome)) promotion.close();
+  displayClock();
+  lobby?.render({outcome:matchOutcome,turn:game.turn(),mode,playerSide:state.playerSide,online:Boolean(online?.active),
     started:online?.active ? online.match.turnStartedAt !== null : state.preset !== undefined || game.history().length > 0 || Boolean(state.clock)});
   const activeSquare = document.activeElement?.dataset.square;
   const targets = new Map((selected ? game.moves({square: selected, verbose: true}) : [])
@@ -235,12 +288,13 @@ function render(move) {
   })));
   playMoveEffect?.();
   if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus({preventScroll:true});
+  sync3DKeyboardFocus();
   const storageNote = gameStorage.durable === false ? 'Session only · Progress will not be saved after closing' : '';
-  status.textContent = [state.paused ? 'Match paused · Open Pause screen to resume' : (outcome(game) ?? (mode === 'computer' && game.turn() !== state.playerSide ? 'Computer thinking…' :
+  status.textContent = [state.paused ? 'Match paused · Open Pause screen to resume' : (matchOutcome ?? (mode === 'computer' && game.turn() !== state.playerSide ? 'Computer thinking…' :
     (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : ''))), notice, storageNote].filter(Boolean).join(' · ');
-  const drawAllowed = !outcome(game) && hasAvailableDrawClaim(game);
+  const drawAllowed = !matchOutcome && hasAvailableDrawClaim(game);
   claim.hidden = state.paused || (online?.active && !online.canMove(game.turn())) ||
-    Boolean(outcome(game)) || (mode === 'computer' && game.turn() !== state.playerSide) ||
+    Boolean(matchOutcome) || (mode === 'computer' && game.turn() !== state.playerSide) ||
     !drawAllowed;
 }
 
@@ -252,8 +306,10 @@ function save() {
     const completed = outcome(state.game);
     if (completed) recordMatch(gameStorage, completed, snapshot);
     notice = '';
+    return true;
   } catch {
     notice = 'Storage unavailable. This match may not resume after closing.';
+    return false;
   }
 }
 
@@ -273,7 +329,8 @@ function commit(move) {
 
 function playComputer() {
   const {game, mode} = state;
-  if (worker || state.paused || mode !== 'computer' || game.turn() === state.playerSide || outcome(game)) return;
+  if (worker || nativeBackgrounded || importingBackup || state.paused || mode !== 'computer' || game.turn() === state.playerSide || outcome(game)) return;
+  const requestedFen = game.fen();
   let job;
   try {
     job = new Worker(new URL('./bot.js', import.meta.url), {type:'module'});
@@ -286,6 +343,7 @@ function playComputer() {
   const finish = (move) => {
     if (worker !== job) return;
     stopComputer();
+    if (state.game !== game || game.fen() !== requestedFen || state.paused || importingBackup || online?.active) return;
     const legal = game.moves({verbose:true});
     const candidate = legal.find(option => option.from === move?.from && option.to === move?.to && option.promotion === move?.promotion);
     if (legal.length) commit(candidate ?? legal[0]);
@@ -295,13 +353,14 @@ function playComputer() {
   job.onerror = () => finish();
   job.onmessageerror = () => finish();
   try {
-    job.postMessage({fen:game.fen(), difficulty:state.difficulty});
+    job.postMessage({fen:requestedFen, difficulty:state.difficulty});
   } catch {
     finish();
   }
 }
 
 async function selectSquare(square) {
+  if (importingBackup || promotionPending) return;
   const {game, mode} = state;
   if (online?.active && !online.canMove(game.turn())) return;
   if (!square || state.paused || outcome(game) || (mode === 'computer' && game.turn() !== state.playerSide)) return;
@@ -316,11 +375,32 @@ async function selectSquare(square) {
   const options = game.moves({square:selected, verbose:true}).filter(move => move.to === square);
   if (!options.length) return;
   if (!options[0].promotion) return commit(options[0]);
+  const source = selected;
+  const previousPosition = game.fen();
+  const restoreBoardFocus = board.contains(document.activeElement);
+  const restoreCanvasFocus = document.activeElement === canvas;
+  for (const icon of promotion.querySelectorAll('.ch-promotion-icon')) {
+    icon.replaceChildren();
+    icon.classList.remove('piece-white', 'piece-black');
+    renderPieceArt(icon, {color:game.turn(), type:icon.parentElement.value}, names);
+  }
   promotion.returnValue = '';
   promotion.showModal();
+  promotionPending = true;
   await new Promise(resolve => promotion.addEventListener('close', resolve, {once:true}));
+  promotionPending = false;
   const chosen = options.find(move => move.promotion === promotion.returnValue);
-  if (chosen && state.game === game) commit(chosen);
+  const canCommit = chosen && state.game === game && game.fen() === previousPosition &&
+    !state.paused && !outcome(game);
+  if (canCommit) commit(chosen);
+  if (restoreBoardFocus && !board.hidden) {
+    board.querySelector('[data-square="' + (canCommit ? square : source) + '"]')?.focus({preventScroll:true});
+  }
+  if (restoreCanvasFocus && !canvas.hidden) {
+    focusSquare = canCommit ? square : source;
+    canvas.focus({preventScroll:true});
+    sync3DKeyboardFocus();
+  }
 }
 // Pointer drag is presentation-only: legal move validation remains in selectSquare
 // and the chess.js state. Taps and keyboard operation continue to work.
@@ -367,16 +447,12 @@ board.addEventListener('focusin', ({target}) => {
   target.tabIndex = 0;
 });
 board.addEventListener('keydown', event => {
-  const delta = {ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,1],ArrowDown:[0,-1]}[event.key];
+  const delta = boardArrows[event.key];
   const square = event.target.dataset.square;
   if (!delta || !square) return;
   event.preventDefault();
-  const direction = flipped ? -1 : 1;
-  const file = 'abcdefgh'.indexOf(square[0]) + delta[0] * direction;
-  const rank = Number(square[1]) + delta[1] * direction;
-  if (file < 0 || file > 7 || rank < 1 || rank > 8) return;
-  const next = board.querySelector('[data-square="' + 'abcdefgh'[file] + rank + '"]');
-  next.focus();
+  const next = adjacentSquare(square, delta);
+  if (next) board.querySelector('[data-square="' + next + '"]').focus();
 });
 let versusTimer;
 function closeVersus() {
@@ -400,7 +476,7 @@ function showVersus(white,black) {
 }
 
 function startLocalMatch(mode, preset, difficulty, side = 'w') {
-  if (online?.active) return;
+  if (online?.active || importingBackup) return;
   if (corruptMatchRaw && !confirm('The saved match cannot be restored. Starting a new game will replace its stored bytes. Export your raw recovery copy first if needed. Continue?')) return;
   corruptMatchRaw = undefined;
   if (state.game.history().length && !outcome(state.game) && !confirm('Replace this match?')) return;
@@ -468,6 +544,9 @@ appShell = mountAppShell({
   storagePersistent: gameStorage.durable,
   hasCorruptMatch(){return Boolean(corruptMatchRaw);},
   async preparePwaUpdate(){
+    if (importingBackup || corruptMatchRaw !== undefined) {
+      return {ok:false,reason:'Resolve the backup or saved-match recovery before applying an update.'};
+    }
     if (online?.active && !online.match.outcome) {
       return {ok:false,reason:'Finish your private online match before applying an update.'};
     }
@@ -479,8 +558,8 @@ appShell = mountAppShell({
       return {ok:false,reason:'This browser cannot persist local games. Finish this temporary session before reloading.'};
     }
     updateClock();
-    save();
     try {
+      if (!online?.active && !save()) throw new Error('Match save failed');
       await gameStorage.flush?.();
       return {ok:true};
     } catch {
@@ -488,13 +567,60 @@ appShell = mountAppShell({
     }
   },
   readSavedHistory(){ return readHistory(gameStorage); },
-  writeSavedHistory(entries){ gameStorage.setItem(historyKey,JSON.stringify(entries)); },
+  writeSavedHistory(entries){ return commitHistoryReplacement(gameStorage,historyKey,entries); },
   async clearCompletedHistory(){
-    gameStorage.setItem(historyKey,'[]');
-    if(gameStorage.durable !== false)await gameStorage.flush?.();
-    return {durable:gameStorage.durable !== false};
+    await commitHistoryReplacement(gameStorage,historyKey,[]);
+    return {durable:true};
   },
-  resignCurrentMatch(){
+  getProgressReport(){ return currentProgressReport(gameStorage,lessons,puzzles); },
+  async onNativeBackground(){
+    updateClock();
+    nativeBackgrounded=true;
+    wasVisible=false;
+    if (online?.active || importingBackup || corruptMatchRaw !== undefined) return;
+    stopComputer();
+    const started = state.preset !== undefined || state.game.history().length > 0;
+    if (!started || !save() || gameStorage.durable===false) return;
+    try { await gameStorage.flush(); }
+    catch { window.dispatchEvent(new Event('chess-storage-error')); }
+  },
+  onNativeForeground(){
+    nativeBackgrounded=false;
+    tickAt=performance.now();
+    wasVisible=!document.hidden;
+    render();
+    playComputer();
+  },
+  saveAndExitCurrentMatch(){
+    if (importingBackup || corruptMatchRaw !== undefined) {
+      return {ok:false,reason:'Resolve the backup or saved-match recovery before leaving.'};
+    }
+    if (online?.active && online.match.outcome) return {ok:true};
+    if (!online?.active && !state.game.history().length && state.preset === undefined) return {ok:true};
+    return finalizeOfflineExit({
+      isOnline:()=>Boolean(online?.active),
+      isDurable:()=>gameStorage.durable !== false,
+      prepare(){
+        updateClock();
+        if (!outcome(state.game)) {
+          stopComputer();
+          state.paused=true;
+          selected=undefined;
+        }
+      },
+      persist(){
+        const saved=save();
+        render();
+        return saved;
+      },
+      flush:()=>gameStorage.flush(),
+    });
+  },
+  async resignCurrentMatch(){
+    if (online?.active) {
+      if (!online.canResign() || !confirm('Resign this private match?')) return false;
+      return await online.resign() ? true : 'server-error';
+    }
     updateClock();
     if(online?.active || outcome(state.game) || (state.preset === undefined && !state.game.history().length))return false;
     const side=state.mode==='computer'?state.playerSide:state.game.turn();
@@ -518,7 +644,7 @@ appShell = mountAppShell({
   getMatchSummary(){
     return {
       outcome:outcome(state.game),mode:state.mode,
-      online:Boolean(online?.active),difficulty:state.difficulty,
+      online:Boolean(online?.active),canResignOnline:online?.canResign(),difficulty:state.difficulty,
       playerSide:state.playerSide,turn:state.game.turn(),moves:state.game.history().length,paused:state.paused,
       started:Boolean(online?.active) || state.preset !== undefined || state.game.history().length > 0,
     };
@@ -650,36 +776,49 @@ document.querySelector('#import-backup').onclick = () => {
 backupFile.onchange = async () => {
   const file = backupFile.files[0];
   backupFile.value = '';
-  if (!file) return;
+  if (!file || importingBackup) return;
+  let ownsImport = false;
   try {
     if (file.size > 2_000_000) throw new Error('Backup too large');
     const contents = await file.text();
-    if (online?.active) throw new Error('Online match in progress');
+    if (online?.active || importingBackup) return;
     const {summary} = previewBackup(contents);
     const summaryText = 'Validated backup: ' + summary.historyCount + ' completed games, ' +
       summary.activePly + ' half-moves in ' + summary.activeMode + ' mode.\\n\\n' +
+      (summary.exerciseEvents === undefined ? 'Existing exercise progress is preserved. ' : 'Exercise journal events: ' + summary.exerciseEvents + '. ') +
       'Replace this device’s current match and local history? Export a copy first if needed.';
     if (!confirm(summaryText)) { backupStatus.textContent = 'Import cancelled. Existing games were not changed.'; return; }
-    const restored = importBackup(gameStorage, contents);
+    importingBackup = true;
+    ownsImport = true;
     stopComputer();
+    const restored = await importBackupDurably(gameStorage, contents);
     state = restored;
+    flipped = restored.mode === 'computer' && restored.playerSide === 'b';
+    document.documentElement.classList.toggle('ch-board-flipped',flipped);
+    flip.setAttribute('aria-pressed',String(flipped));
     corruptMatchRaw = undefined;
     selected = undefined;
     tickAt = performance.now();
     notice = 'Backup restored.';
     historyDialog.close();
     render();
-    playComputer();
   } catch {
-    backupStatus.textContent = 'Could not restore this backup.';
+    backupStatus.textContent = 'Backup restore could not be confirmed.';
+  } finally {
+    if (ownsImport) {
+      importingBackup = false;
+      tickAt = performance.now();
+      playComputer();
+    }
   }
 };
 
-bindLearning(names);
+bindLearning(names,gameStorage);
 window.addEventListener('chess-appearance-changed', () => render());
 
-window.addEventListener('chess-storage-error', () => {
-  notice = 'Could not write the game save.';
+window.addEventListener('chess-storage-error', event => {
+  if (event.detail?.conflict) notice = storageConflictMessage;
+  else if (notice !== storageConflictMessage) notice = 'Could not write the game save.';
   render();
 });
 }
