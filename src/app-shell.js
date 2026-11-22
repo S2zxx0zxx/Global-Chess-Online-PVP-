@@ -236,9 +236,20 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
     avatar.dataset.frame=['gold','walnut','teal'].includes(frame)?frame:'gold';
     const total=historyCount();
     byId('ch-history-total').textContent=total===null?'Unavailable':String(total);
+    // One optional cosmetic recognition; never an Elo, currency or chess buff.
+    const badge=profile.querySelector('#ch-supporter-crest');
+    if(monetization?.status().earned){
+      if(!badge){
+        const mark=element('span','ch-supporter-mark','✦ Supporter Crest');
+        mark.id='ch-supporter-crest';
+        mark.setAttribute('aria-label','Optional supporter crest earned on this device');
+        profile.querySelector('.ch-profile-card')?.append(mark);
+      }
+    }else badge?.remove();
   }
   byId('profile-form').addEventListener('submit',()=>queueMicrotask(refreshProfile));
   window.addEventListener('chess-profile-changed',refreshProfile);
+  window.addEventListener('chess-monetization-changed',refreshProfile);
   function go(next, options = {}) {
     if (!views.has(next)) throw new Error('Unknown chess view: '+next);
     if (!options.fromHistory) {
