@@ -3,6 +3,7 @@ import { BOARD_THEMES, PIECE_THEMES } from './appearance.js';
 import { lessons, puzzles, dailyExercise } from './learning.js';
 import { mountScreenRoutes } from './screen-routes.js';
 import { bindNativeLifecycle } from './native-lifecycle.js';
+import { mountArcadeShell } from './arcade-shell.js';
 
 const byId = id => document.getElementById(id);
 
@@ -407,6 +408,8 @@ export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMo
   more.setAttribute('role','group');
   more.setAttribute('aria-label','Explore Global Chess');
   lobby.prepend(more);
+  // Original UI composition only: it reuses the controller and navigation above.
+  mountArcadeShell({lobby,play,learn,profile,match,go,openSetup,getMatchSummary,readSavedHistory,storagePersistent});
   document.documentElement.classList.add('ch-shell-ready');
   // Read-only deep links let QA visit each ZIP v3 screen without modifying
   // active game state. Invite hashes always take precedence.
