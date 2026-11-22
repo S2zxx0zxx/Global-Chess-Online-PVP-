@@ -9,9 +9,9 @@
 ## Current control
 
 - **Tasks closed:** `GC-B01-T01` — `DONE` (source pin); `GC-B01-T02` — `DONE` (historical PR reconciliation only)
-- **One active task:** `NONE` (between tasks; do not automatically start work)
-- **Next eligible task:** `GC-B01-T03` — `TODO`
-- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03–T08 pending)
+- **One active task:** `GC-B01-T03` — `BLOCKED_EXTERNAL` (main protection and post-integration verification pending)
+- **Next permitted command:** `RESUME GC-B01-T03` — no T04 eligibility until owner governance verified
+- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03 external blocker; T04–T08 pending)
 - **No change authority inferred:** no merges, force pushes, production changes, billing or other work approved by this document.
 
 ## Task closure: GC-B01-T01
@@ -105,13 +105,66 @@ next_task_requires_explicit_command: START GC-B01-T03
 
 **T02 detail:** [`GC-B01-T02_PR18_RECONCILIATION_2026-11-22.md`](GC-B01-T02_PR18_RECONCILIATION_2026-11-22.md)
 
+## GC-B01-T03 — Protection, history and CI checkpoint
+
+```yaml
+plan_id: GC-MASTER-EXEC-v1.0
+task_id: GC-B01-T03
+status: BLOCKED_EXTERNAL
+repository: S2zxx0zxx/Global-Chess-Online-PVP-
+canonical_branch: integration/global-chess-v3
+canonical_source_before_T01: 3d9467ada0eaf167eecc52d6c98ed126fa98c98c
+T01_baseline_PR: 19
+T01_merged_squash: 0a309ddf84cec42a42f52a546f87c6d1f95e7e41
+T02_clean_PR: 22
+T02_merged_squash: f614bdab2fbfb13a18c7e26ab77269f22a2e1520
+T02_old_stacked_PR20: merge_conflict_not_force_merged
+T03_clean_PR: 23
+T03_superseded_stacked_PR21: not_merged
+T03_base_SHA: f614bdab2fbfb13a18c7e26ab77269f22a2e1520
+T03_files:
+  - docs/execution/GC-B01-T03_CANONICAL_BRANCH_PR_POLICY_2026-11-22.md
+  - .github/PULL_REQUEST_TEMPLATE.md
+  - .github/workflows/verify.yml
+  - docs/execution/GC_EXECUTION_LEDGER.md
+ruleset_id: 27842501
+ruleset_name: Global Chess Protected Branches
+ruleset_enforcement: active
+ruleset_target_ref_names:
+  - refs/heads/integration/global-chess-v3
+canonical_protected: true
+main_protected: false
+rules_active:
+  - pull_request
+  - required_linear_history
+  - deletion
+  - non_fast_forward
+required_approving_review_count: 0
+bypass_actors: []
+blocked_outstanding:
+  - "owner add main to ACTIVE ruleset and prove main protected=true"
+  - "T03 policy/CI PR #23 must be safely reviewed and integrated"
+  - "canonical exact-head core workflow must run and pass"
+  - "owner manual signoff/review evidence not yet supplied"
+owner_review: pending
+production_or_release_ready: false
+next_command: RESUME GC-B01-T03
+next_task_GC_B01_T04_eligible: false
+rollback: "squash-revert on canonical via new PR after owner approval; no force pushes"
+```
+
+**Current source and rollback policy:** [`GC-B01-T03_CANONICAL_BRANCH_PR_POLICY_2026-11-22.md`](GC-B01-T03_CANONICAL_BRANCH_PR_POLICY_2026-11-22.md).  
+**PR #23:** https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/23.
+
+No `GC-B01-T03 DONE` assertion until `main` is targeted and the post-merge canonical CI checks actually succeed; no T04 work may be started early.
+
 ## Batch 01 sequential pointer
 
 | Task ID | Status | Evidence |
 |---|---|---|
 | `GC-B01-T01` | DONE | Exact-SHA baseline in this PR |
 | `GC-B01-T02` | DONE | `GC-B01-T02_PR18_RECONCILIATION_2026-11-22.md`; blocked features remain open under their own task IDs |
-| `GC-B01-T03` | TODO | No action started |
+| `GC-B01-T03` | BLOCKED_EXTERNAL | Ruleset active on canonical only, main unprotected; T03 PR #23 docs/CI integration and live CI confirmation pending |
 | `GC-B01-T04` | TODO | No action started |
 | `GC-B01-T05` | TODO | No action started |
 | `GC-B01-T06` | TODO | No action started |
@@ -122,7 +175,7 @@ next_task_requires_explicit_command: START GC-B01-T03
 ## Resume procedure
 
 1. Issue `STATUS GC-B01-T01` to verify source evidence if audit freshness is in doubt.
-2. Issue `START GC-B01-T03` for canonical branch and PR protocol *only after explicitly choosing to start that task*.
+2. Issue `RESUME GC-B01-T03` after `main` is protected and current canonical head CI verifies T03; T04 is NOT unlocked until T03 DONE.
 3. Re-fetch GitHub heads before edits, use exact SHA proofs and preserve all historic game code.
 4. Never mark subsequent tasks DONE by copying this ledger status.
 
