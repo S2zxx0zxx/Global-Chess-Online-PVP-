@@ -452,3 +452,51 @@ html.ch-sapphire-ready #lobby .gc-hero-copy[hidden]{display:none!important}
 @media(max-width:320px){.gs-home-logo{width:96px}}
 /* Primary CTA never inherits [hidden] from the old hero copy. */
 html.ch-sapphire-ready #lobby .gs-play-controls .gs-play-button{display:flex!important;visibility:visible;opacity:1}
+
+/* True on/off switches: retain native checkbox semantics and keyboard focus. */
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup{position:relative}
+html.ch-sapphire-ready #settings-dialog .gs-settings-close{
+  position:absolute;top:9px;right:10px;
+  width:42px;height:42px;min-height:42px;
+  border:2px solid #ffd5dc;border-radius:11px;
+  color:#fff;font:900 1.9rem/1 system-ui,sans-serif;
+  background:linear-gradient(#ff6478,#b81537);
+  box-shadow:inset 0 1px 0 #fff9,0 3px 5px #0005;
+  cursor:pointer;
+}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup h2{padding-right:40px;padding-left:40px}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox]{
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  display:block;
+  position:relative;
+  margin:1px auto;
+  width:58px;height:30px;
+  min-height:30px;
+  border-radius:30px;
+  border:2px solid #8191a9;
+  background:linear-gradient(#a3b6d2,#6c7e9d);
+  box-shadow:inset 0 2px 4px #14274565,0 1px 0 #fff9;
+  cursor:pointer;
+  transition:background .14s ease;
+}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox]::before{
+  content:'';
+  position:absolute;top:3px;left:4px;
+  width:20px;height:20px;
+  border-radius:50%;
+  background:linear-gradient(#fff,#d7ebff);
+  box-shadow:0 1px 3px #071d4b99;
+  transition:transform .14s ease;
+}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox]:checked{
+  border-color:#24f2be;
+  background:linear-gradient(#18da9f,#059e68);
+}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox]:checked::before{transform:translateX(26px)}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox]:disabled{opacity:.45;cursor:not-allowed}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox]:focus-visible{outline:3px solid #0639b8;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){
+  html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox],
+  html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox]::before{transition:none}
+}

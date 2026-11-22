@@ -106,6 +106,9 @@ function mountProfileDialog({main,go,readSavedHistory,refreshProfile,getProgress
 function mountSettings({main,go}){
   const settings=el('settings-dialog');
   settings.classList.add('gs-settings-popup');
+  const dismiss=action('×','gs-popup-close gs-settings-close',()=>settings.close());
+  dismiss.setAttribute('aria-label','Close settings');
+  settings.prepend(dismiss);
   const heading=settings.querySelector('h2');
   if(heading)heading.textContent='Settings';
   const sound=make('div','gs-audio-settings');

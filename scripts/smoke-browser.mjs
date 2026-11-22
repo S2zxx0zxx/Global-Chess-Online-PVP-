@@ -183,7 +183,18 @@ try {
   await waitUntil(()=>evaluate('document.querySelector("#settings-dialog[open]")?.querySelectorAll("input[data-gs-preference]").length===2'));
   const settingsPopupShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/sapphire-settings-popup.png',Buffer.from(settingsPopupShot.data,'base64'));
-  await evaluate('document.querySelector("#settings-dialog form[method=dialog] button").click();true');
+  await evaluate(`(() => {
+    for(const input of document.querySelectorAll('#settings-dialog input[data-gs-preference]')){
+      if(input.disabled)continue;
+      const before=input.checked;
+      input.click();
+      const persisted=JSON.parse(localStorage.getItem('global-chess.feedback.v1')||'{}');
+      if(persisted[input.dataset.gsPreference]!==!before)throw new Error('Preference not saved: '+input.dataset.gsPreference);
+      input.click();
+    }
+    return true;
+  })()`);
+  await evaluate('document.querySelector("#settings-dialog .gs-settings-close").click();true');
   await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=appearance]").click();true');
   await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-appearance") && !document.querySelector("#ch-extra-screen").hidden'));
   await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=home]").click();true');
