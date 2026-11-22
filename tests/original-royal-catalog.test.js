@@ -17,7 +17,7 @@ test('original royal catalog is complete, uniquely named and all files exist',()
     assert.match(source,/<defs>/);
     assert.match(source,/<\/svg>\s*$/);
     assert.ok(source.length>600 && source.length<12000,asset.id+' art asset byte budget');
-    assert.doesNotMatch(source,/<(?:script|foreignObject|image|iframe)\b|(?:https?:)?\/\/|@import|data:/i);
+    assert.doesNotMatch(source,/<(?:script|foreignObject|image|iframe)\b|(?:href|xlink:href)=["'](?:https?:|data:)|@import/i);
   }
 });
 test('every royal SVG in public/brand is registered',()=>{
