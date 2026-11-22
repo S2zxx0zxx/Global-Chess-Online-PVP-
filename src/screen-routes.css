@@ -347,3 +347,37 @@
   background: #191613;
 }
 .ch-shell-ready.ch-view-match .player-panel.active-player { border-color: #cfa463; }
+
+#board button.last-move:not(.in-check) {
+  box-shadow: inset 0 0 0 2px #f9dc96, inset 0 0 0 100px #e7b84826;
+}
+#board button.target:not(.capture-target)::after {
+  inset: 36%;
+  background: #79e6eb;
+  border-color: #143e43;
+  box-shadow: 0 0 0 1px #e6ffff;
+}
+#board button.capture-target::after {
+  border-color: #ffe0a0;
+  inset: 6%;
+}
+#board button:focus-visible { z-index: 2; }
+#board button.ch-piece-sliding { z-index: 3; }
+#board button.ch-capture-flash::before {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  border: 3px solid #fcd28b;
+  border-radius: 50%;
+  z-index: 2;
+  pointer-events: none;
+  animation: ch-capture-ring 280ms ease-out both;
+}
+@keyframes ch-capture-ring {
+  from { opacity: 1; transform: scale(.56); }
+  to { opacity: 0; transform: scale(1.15); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #board button.ch-capture-flash::before { content: none; }
+}
+.ch-reduce-motion #board button.ch-capture-flash::before { content: none; }

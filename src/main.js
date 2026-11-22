@@ -175,6 +175,33 @@ view.onclick = async () => {
   }
 };
 
+function animateBoardMove(move) {
+  if (board.hidden || !board.getClientRects().length ||
+      matchMedia('(prefers-reduced-motion: reduce)').matches ||
+      document.documentElement.classList.contains('ch-reduce-motion')) return;
+
+  const square = name => board.querySelector(`[data-square="${name}"]`);
+  const slide = (from, to) => {
+    const origin = square(from);
+    const destination = square(to);
+    const art = destination?.querySelector('.piece-art');
+    if (!origin || !art?.animate) return;
+    const start = origin.getBoundingClientRect();
+    const end = destination.getBoundingClientRect();
+    destination.classList.add('ch-piece-sliding');
+    const animation = art.animate([
+      { transform: `translate(${start.x - end.x}px, ${start.y - end.y}px)` },
+      { transform: 'translate(0, 0)' },
+    ], { duration: 180, easing: 'cubic-bezier(.18,.72,.28,1)' });
+    animation.finished.finally(() => destination.classList.remove('ch-piece-sliding')).catch(() => {});
+  };
+  slide(move.from, move.to);
+  const rank = move.to[1];
+  if (move.isKingsideCastle?.()) slide('h' + rank, 'f' + rank);
+  if (move.isQueensideCastle?.()) slide('a' + rank, 'd' + rank);
+  if (move.captured) square(move.to)?.classList.add('ch-capture-flash');
+}
+
 function render(move) {
   rematch.hidden = Boolean(online?.active) || !outcome(state.game);
   displayClock();
@@ -221,7 +248,8 @@ function render(move) {
     }
     return cell;
   })));
-  if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus();
+  if (move) animateBoardMove(move);
+  if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus({preventScroll:true});
   const storageNote = gameStorage.durable === false ? 'Session only · Progress will not be saved after closing' : '';
   status.textContent = [state.paused ? 'Match paused · Open Pause screen to resume' : (outcome(game) ?? (mode === 'computer' && game.turn() !== state.playerSide ? 'Computer thinking…' :
     (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : ''))), notice, storageNote].filter(Boolean).join(' · ');
