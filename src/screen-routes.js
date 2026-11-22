@@ -4,6 +4,7 @@ import {restoreGame} from './game.js';
 import {summarizeMatches} from './game-stats.js';
 import {renderPieceArt} from './piece-art.js';
 import {feedbackPreferences,setFeedbackPreference} from './feedback.js';
+import {BOARD_THEMES,PIECE_THEMES,ANIMATED_THEMES,applyBoardTheme,applyPieceTheme} from './appearance.js';
 
 const el=id=>document.getElementById(id);
 const ls=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback;}catch{return fallback;}};
@@ -27,9 +28,6 @@ const EXPORT=(data,name,type)=>{
   const a=mk('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1800);
 };
-const appearance=name=>{
-  document.documentElement.dataset.chTheme=['maple','walnut','forest'].includes(name)?name:'maple';
-};
 export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','settings','data','transfer','recovery','update','about']);
 
 export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
@@ -37,7 +35,8 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
   screen.id='ch-extra-screen';screen.hidden=true;
   main.insertBefore(screen,el('ch-tab-bar'));
   let selected=0,exercise=lessons[0],lastSolved=null,fault=false,ply=0;
-  appearance(ls('global-chess.appearance.v1','maple'));
+  applyBoardTheme(ls('global-chess.appearance.v1','maple'));
+  applyPieceTheme(ls('global-chess.pieces.v1','classic'));
 
   function records(){
     try{const x=readHistory();if(!Array.isArray(x))throw Error('Invalid records');return x;}catch{return null;}
@@ -280,28 +279,46 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
       section.append(btn('View player profile',()=>go('profile'),'primary'));
     }
     if(route==='appearance'){
-      title('Original color treatments','Appearance','Three free chessboard looks. No fabricated shop or currency.');
+      title('Royal visual collection','Appearance','Choose your board and pieces independently. Every look is free and works offline.');
+      section.append(mk('h2','ch-section-title','Chessboard collection'));
+      paragraph(section,'Five animated royal worlds plus three original boards. Effects are decorative and never hide legal moves.');
       const grid=mk('div','ch-theme-grid');section.append(grid);
-      for(const [name,title,detail] of [['maple','Classic Maple','Original warm maple'],['walnut','Royal Walnut','Deep brown for evening play'],['forest','Forest Teal','Green and warm ivory']]){
+      for(const {id:name,name:title,detail} of BOARD_THEMES){
         const tile=mk('button','ch-theme-card'+(ls('global-chess.appearance.v1','maple')===name?' ch-selected':''));tile.type='button';
-        tile.append(mk('span','ch-theme-preview ch-preview-'+name),mk('strong','',title),mk('small','',detail));
-        tile.onclick=()=>{appearance(name);if(!save('global-chess.appearance.v1',name))paragraph(section,'Theme is temporary because local storage is unavailable.','ch-inline-notice ch-notice-warning');for(const child of grid.children)child.classList.toggle('ch-selected',child===tile);};
+        tile.setAttribute('aria-pressed',String(ls('global-chess.appearance.v1','maple')===name));
+        const preview=mk('span','ch-theme-preview ch-preview-'+name);
+        if(ANIMATED_THEMES.includes(name)){
+          const mark=mk('img','ch-theme-preview-piece');mark.src='/brand/pieces/piece_white_king.svg';mark.alt='';
+          preview.append(mark);
+        }
+        tile.append(preview,mk('strong','',title),mk('small','',detail));
+        tile.onclick=()=>{
+          applyBoardTheme(name);
+          if(!save('global-chess.appearance.v1',name))paragraph(section,'Theme is temporary because local storage is unavailable.','ch-inline-notice ch-notice-warning');
+          for(const child of grid.children){child.classList.toggle('ch-selected',child===tile);child.setAttribute('aria-pressed',String(child===tile));}
+        };
         grid.append(tile);
       }
       section.append(mk('h2','ch-section-title','Piece collection'));
-      paragraph(section,'Choose between the existing classic artwork and the original SVG Crest set. Both are free.');
+      paragraph(section,'Five animated royal piece styles plus the original Classic and Crest sets. Tap a style to see it on your match.');
       const pieceGrid=mk('div','ch-piece-grid');section.append(pieceGrid);
-      for(const [name,label,detail] of [['classic','Classic','Traditional dimensional pieces'],['crest','Royal Crest','Original ivory and oxblood SVG family']]){
+      for(const {id:name,name:label,detail} of PIECE_THEMES){
         const item=mk('button','ch-piece-card'+(ls('global-chess.pieces.v1','classic')===name?' ch-selected':''));
         item.type='button';
+        item.setAttribute('aria-pressed',String(ls('global-chess.pieces.v1','classic')===name));
+        item.dataset.pieceStyle=name;
+        const display=mk('span','ch-piece-preview');
+        if(ANIMATED_THEMES.includes(name))display.append(mk('span','ch-piece-aura'));
         const preview=mk('img','ch-piece-example');preview.src=name==='crest'?'/brand/pieces/piece_white_knight.svg':'/chess-assets/pieces/white-knight.webp';
         preview.alt='';
-        item.append(preview,mk('strong','',label),mk('small','',detail));
+        if(ANIMATED_THEMES.includes(name))preview.src='/brand/pieces/piece_white_knight.svg';
+        display.append(preview);
+        item.append(display,mk('strong','',label),mk('small','',detail));
         item.onclick=()=>{
           if(!save('global-chess.pieces.v1',name))paragraph(section,'The piece choice will only last this session.','ch-inline-notice ch-notice-warning');
-          document.documentElement.dataset.chPieces=name;
+          applyPieceTheme(name);
           window.dispatchEvent(new Event('chess-appearance-changed'));
-          for(const child of pieceGrid.children)child.classList.toggle('ch-selected',child===item);
+          for(const child of pieceGrid.children){child.classList.toggle('ch-selected',child===item);child.setAttribute('aria-pressed',String(child===item));}
         };
         pieceGrid.append(item);
       }
@@ -356,7 +373,8 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         if(!confirm('Restore display settings? Your saved matches stay.'))return;
         for(const source of ['coordinate-setting','contrast-setting'])if(el(source)?.checked)el(source).click();
         save('global-chess.reduce-motion.v1',false);document.documentElement.classList.remove('ch-reduce-motion');
-        save('global-chess.appearance.v1','maple');appearance('maple');show('settings');
+        save('global-chess.appearance.v1','maple');applyBoardTheme('maple');
+        save('global-chess.pieces.v1','classic');applyPieceTheme('classic');window.dispatchEvent(new Event('chess-appearance-changed'));show('settings');
       }));
     }
     if(route==='data'||route==='transfer'){

@@ -12,6 +12,7 @@ import { startClock, remainingClock } from './clock.js';
 import './style.css';
 import './app-shell.css';
 import './screen-routes.css';
+import './royal-appearance.css';
 import { mountAppShell } from './app-shell.js';
 import { restoreGame, serializeGame, savedMatchOutcome, claimableDraw, intendedDraw, hasAvailableDrawClaim } from './game.js';
 
