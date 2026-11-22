@@ -29,7 +29,7 @@ This is an implementation/evidence ledger, **not** a claim that any contract is 
 | SCR-20 | Local Profile | src/app-shell.js #ch-profile-hub; src/lobby.js | PARTIAL | Guest ID visual QA, account migration policy |
 | SCR-21 | Progress | src/screen-routes.js ?screen=progress | PARTIAL | Event journal, history reconciliation and genuine streaks |
 | SCR-22 | Achievements | src/screen-routes.js ?screen=achievements | PARTIAL | Award once, event provenance and content versioning |
-| SCR-23 | Appearance | src/screen-routes.js ?screen=appearance; brand/pieces | PARTIAL | Original art final QA, 3D parity, low-memory skin switching |
+| SCR-23 | Appearance | Each animated piece set has a distinct 3D capture effect. Chromium picks all five sets from Appearance, compares each rendered impact with the settled board, and verifies the reduced-motion behavior. | PARTIAL | Physical GPU performance, 3D board appearance parity and low-memory skin switching |
 | SCR-24 | Settings | src/screen-routes.js ?screen=settings; src/lobby.js | PARTIAL | Audio/haptics/language/undo and complete persistence failures |
 | SCR-25 | Data & Privacy | src/screen-routes.js ?screen=data | PARTIAL | User-approved privacy/terms links and data deletion policy |
 | SCR-26 | Import / Export | src/screen-routes.js ?screen=transfer; src/backup.js | PARTIAL | Import preview, backup validation UI, storage transaction atomicity |
@@ -40,6 +40,7 @@ This is an implementation/evidence ledger, **not** a claim that any contract is 
 ## Executed browser evidence
 
 - PR #18 adds a 1366px desktop Home overflow regression and a mobile promotion test that exercises real moves and keyboard input. The suite captures the focused promotion dialog as `SCR-08-promotion.png`.
+- Chromium denies WebGL, opens 3D through the match menu and verifies the 2D fallback continues the existing game with Black's legal knight move.
 
 - [GitHub Actions #44947446464](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/44947446464): 42/42 unit tests, a production PWA build, real 2D move + Babylon 3D rendered-pixel smoke, 21 auxiliary-route screenshots, Black-side computer game, verified resignation/replay, persisted avatars/Crest pieces, browser Back, simulated blocked browser storage, 320/360/412/768 horizontal overflow checks, 200% text-scale check, landscape viewport, WASM and offline assets. Run applies to SHA `75b3c982b41b30a073426baa16c12987fff03ec9`.
 - Additional art modules: `public/brand/`, `public/brand/pieces/`; see `docs/V3_ARTWORK_PROVENANCE.md`.

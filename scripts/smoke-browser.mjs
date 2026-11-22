@@ -499,6 +499,84 @@ try {
   await waitUntil(() => evaluate('!document.querySelector("#board").hidden && document.querySelector("#board [data-square=d5].last-destination")?.getAttribute("aria-label") === "d5, White Pawn"'));
   console.log('3D keyboard moves, legal capture, flipped controls and 2D board continuity: passed');
 
+  async function captureWithPieceTheme(theme) {
+    await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=appearance'});
+    await waitUntil(() => evaluate('document.querySelector(".ch-appearance-categories button:nth-child(2)") !== null'));
+    await evaluate(`(() => {
+      document.querySelector('.ch-appearance-categories button:nth-child(2)').click();
+      document.querySelector('[data-piece-style=${theme}]').click();
+      document.getElementById('local').click();
+      const cell = square => document.querySelector('#board [data-square=' + square + ']');
+      for (const square of ['e2','e4','d7','d5']) cell(square).click();
+      cell('e4').focus();
+    })()`);
+    await evaluate('document.getElementById("ch-match-tools").click();true');
+    await waitUntil(() => evaluate('Boolean(document.querySelector("[data-board-view=mode-2d]"))'));
+    await evaluate('document.querySelector("[data-board-view=mode-2d]").click();true');
+    await waitUntil(() => evaluate('!document.querySelector("#scene").hidden && !document.documentElement.classList.contains("ch-loading-3d")'));
+    await evaluate('document.querySelector("#scene").focus()');
+    await expectSquare('e4, White Pawn');
+    const clip = await evaluate(`(() => {
+      const rect = document.querySelector('#scene').getBoundingClientRect();
+      return {x:rect.left+window.scrollX+3,y:rect.top+window.scrollY+3,width:rect.width-6,height:rect.height-6,scale:1};
+    })()`);
+    const grab = async () => Buffer.from((await send('Page.captureScreenshot',{format:'png',clip})).data,'base64');
+    await waitUntil(async () => (await grab()).length > 7000, 15000);
+    await pressKey('Enter',13);
+    await pressKey('ArrowUp',38);
+    await pressKey('ArrowLeft',37);
+    await expectSquare('d5, Black Pawn, legal capture');
+    await evaluate(`window.addEventListener('chess-move-committed', () => {
+      const committedAt = performance.now();
+      window.previewCaptureAt = milliseconds => {
+        Object.defineProperty(performance, 'now', {configurable:true,value:()=>committedAt + milliseconds});
+      };
+      window.previewCaptureAt(510);
+    }, {once:true})`);
+    await pressKey('Enter',13);
+    await expectSquare('d5, White Pawn');
+    // Hold the effect after the victim has disappeared so screenshots are
+    // comparable even when software WebGL cannot keep up with real time.
+    await waitUntil(() => evaluate('typeof window.previewCaptureAt === "function"'));
+    await sleep(250);
+    const impact = await grab();
+    await evaluate('window.previewCaptureAt(1500)');
+    await sleep(250);
+    const settled = await grab();
+    await evaluate('delete performance.now; delete window.previewCaptureAt');
+    return {impact, settled};
+  }
+  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
+  for (const theme of ['ember','mist','astral','frost','emerald']) {
+    const {impact, settled} = await captureWithPieceTheme(theme);
+    await writeFile('artifacts/3d-capture-'+theme+'.png',impact);
+    if (impact.equals(settled)) throw new Error('No rendered ' + theme + ' capture effect');
+  }
+  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  const reducedCapture = await captureWithPieceTheme('mist');
+  if (!reducedCapture.impact.equals(reducedCapture.settled)) {
+    throw new Error('Reduced motion still rendered a timed 3D capture effect');
+  }
+  await send('Emulation.setEmulatedMedia',{features:[]});
+  console.log('Rendered each royal 3D capture style and verified reduced-motion capture: passed');
+
+  const noWebGL = await send('Page.addScriptToEvaluateOnNewDocument',{source:`
+    const getContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function(type, ...options) {
+      return /webgl/i.test(type) ? null : getContext.call(this, type, ...options);
+    };
+  `});
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=match'});
+  await waitUntil(() => evaluate('document.getElementById("launch")?.hidden && document.querySelector("#board [data-square=d5].last-destination")'));
+  await evaluate('document.getElementById("ch-match-tools").click();true');
+  await waitUntil(() => evaluate('Boolean(document.querySelector("[data-board-view=mode-2d]"))'));
+  await evaluate('document.querySelector("[data-board-view=mode-2d]").click();true');
+  await waitUntil(() => evaluate('!document.querySelector("#board").hidden && document.querySelector("#scene").hidden && document.querySelector("#status").textContent.includes("3D could not start")'));
+  await evaluate('document.querySelector("#board [data-square=g8]").click(); document.querySelector("#board [data-square=f6]").click();true');
+  await waitUntil(() => evaluate('document.querySelector("#board [data-square=f6].last-destination")?.getAttribute("aria-label") === "f6, Black Knight"'));
+  await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:noWebGL.identifier});
+  console.log('WebGL disabled: 2D fallback continues the saved match: passed');
+
   // Screen contracts SCR-00/01: denied browser storage must not crash the app,
   // and the UI may NOT claim a durable save for temporary guest play.
   await send('Page.addScriptToEvaluateOnNewDocument',{source:
