@@ -123,10 +123,23 @@ export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, 
   document.querySelector('.layout>aside').id='ch-match-sidebar';
   const dock=element('section','ch-match-dock');
   dock.setAttribute('aria-label','Match status and controls');
-  for(const id of ['clocks','status','moves','result-open','rematch','claim','online-status','online-invite','online-copy']) {
+  for(const id of ['clocks','status','moves','result-open','rematch','claim']) {
     dock.append(byId(id));
   }
-  match.append(dock);
+  const room = element('section','ch-room-panel');
+  room.hidden = true;
+  room.setAttribute('aria-labelledby','ch-room-title');
+  const roomTitle=element('h2','','Private PvP');
+  roomTitle.id='ch-room-title';
+  room.append(roomTitle);
+  const roomActions=element('div','ch-room-actions');
+  for(const id of ['online-create','online-rejoin','online-leave','online-invite','online-copy']) roomActions.append(byId(id));
+  room.append(byId('online-status'),roomActions);
+  match.append(room,dock);
+  const syncRoomPanel=()=>{
+    room.hidden=!document.documentElement.classList.contains('ch-private-room') && byId('online-leave').hidden;
+  };
+  new MutationObserver(syncRoomPanel).observe(byId('online-leave'),{attributes:true,attributeFilter:['hidden']});
 
   const tutorial=element('section','ch-first-move-tip');
   tutorial.id='ch-first-move-tip';
@@ -196,7 +209,7 @@ export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, 
     sideRow.hidden=opponent.value!=='computer';
   });
   byId('ch-setup-cancel').addEventListener('click',()=>setup.close());
-  setup.addEventListener('cancel',()=>{});
+
   function openSetup(kind='computer') {
     if (kind==='classic'||kind==='quick') {
       time.value=kind;
@@ -210,6 +223,9 @@ export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, 
     playerSide.value=['w','b','random'].includes(last.playerSide)?last.playerSide:'w';
     difficultyRow.hidden=opponent.value!=='computer';
     sideRow.hidden=opponent.value!=='computer';
+    const titles={classic:'Classic Chess',quick:'Quick Chess',computer:'Vs Computer',local:'Local Friend'};
+    byId('ch-setup-title').textContent=titles[kind] ?? 'Match setup';
+    setup.dataset.format=kind;
     setup.showModal();
   }
   play.querySelectorAll('[data-setup]').forEach(button =>
@@ -318,6 +334,8 @@ export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, 
     play.hidden=next!=='play';
     learn.hidden=next!=='learn';
     profile.hidden=next!=='profile';
+    if(next!=='match') document.documentElement.classList.remove('ch-private-room');
+    syncRoomPanel();
     screenRoutes?.show(next);
     for(const tab of nav.querySelectorAll('button')){
       const active=tab.dataset.chView===next || (['history','review','progress','achievements','appearance','avatars','frames','settings','data','transfer','update','about'].includes(next)&&tab.dataset.chView==='profile') || (['lessons','lesson','puzzles','puzzle','puzzle-result','daily'].includes(next)&&tab.dataset.chView==='learn');
@@ -332,7 +350,12 @@ export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, 
     if(next==='match') match.focus({preventScroll:true});
   }
   byId('lobby-resume').addEventListener('click',()=>{resumeCurrentMatch();go('match');});
-  byId('lobby-online').addEventListener('click',()=>go('match'));
+  byId('lobby-online').addEventListener('click',()=>{
+    go('match');
+    document.documentElement.classList.add('ch-private-room');
+    syncRoomPanel();
+    room.scrollIntoView({block:'nearest'});
+  });
   byId('online-leave').addEventListener('click',()=>go('home'));
   screenRoutes=mountScreenRoutes({
     main,go,readHistory:readSavedHistory,writeHistory:writeSavedHistory,clearCompletedHistory,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch,

@@ -295,3 +295,55 @@
 }
 .ch-reduce-motion .ch-tab:active { transform: none; }
 .ch-reduce-motion .ch-tab[aria-current=page] .ch-tab-icon { animation: none; }
+
+/* Match setup and room controls share the board's visual hierarchy. */
+#ch-setup-dialog {
+  width: min(520px, calc(100vw - 28px));
+  background: radial-gradient(ellipse at top right, #4d3621, transparent 65%), #151210;
+}
+#ch-setup-dialog[data-format=quick] { background: radial-gradient(ellipse at top right, #254741, transparent 65%), #131816; }
+#ch-setup-dialog[data-format=computer] { background: radial-gradient(ellipse at top right, #353958, transparent 65%), #15141b; }
+#ch-setup-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+#ch-setup-form > :not(label) { grid-column: 1 / -1; margin: 0; }
+#ch-setup-form > label { margin: 0; min-width: 0; }
+#ch-setup-form select { width: 100%; background: #191615; }
+#ch-setup-form .ch-dialog-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+}
+@media (max-width: 365px) {
+  #ch-setup-form { grid-template-columns: minmax(0, 1fr); }
+}
+.ch-shell-ready.ch-view-match .ch-room-panel {
+  order: 0;
+  margin-bottom: 12px;
+  padding: 14px;
+  border: 1px solid #807050;
+  border-radius: 15px;
+  background: linear-gradient(120deg, #302b21, #151513);
+}
+.ch-room-panel h2 { margin: 0 0 8px; font: 600 1.3rem Georgia, serif; }
+.ch-room-panel #online-status { margin: 0 0 8px; color: #f6d79f; font-size: .85rem; }
+.ch-room-panel #online-status:empty { display: none; }
+.ch-room-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ch-room-actions > :is(a,button) {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #a28049;
+  border-radius: 9px;
+  background: #241d16;
+  color: #fff0d5;
+}
+.ch-room-actions #online-create { background: var(--ch-highlight); color: #25160b; font-weight: 750; }
+.ch-shell-ready.ch-view-match .ch-board-controls { order: 5; margin: 5px 0 0; }
+.ch-shell-ready.ch-view-match .ch-match-dock { order: 6; }
+.ch-shell-ready.ch-view-match .player-panel {
+  border-radius: 10px;
+  background: #191613;
+}
+.ch-shell-ready.ch-view-match .player-panel.active-player { border-color: #cfa463; }

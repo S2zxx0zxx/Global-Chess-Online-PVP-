@@ -61,11 +61,6 @@ export function bindLobby({startMatch, historyCount, storagePersistent = true}) 
   }
   element('lobby-computer').onclick = () =>
     document.dispatchEvent(new CustomEvent('chess-open-setup',{detail:{format:'computer'}}));
-  element('lobby-online').onclick = () => {
-    if (!element('online-leave').hidden) return focusBoard();
-    element('online-create').click();
-    element('online-status').scrollIntoView({block:'nearest'});
-  };
   element('lobby-resume').onclick = focusBoard;
   document.addEventListener('chess-edit-profile', () => {
     const {name, avatar} = apply();
