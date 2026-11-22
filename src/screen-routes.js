@@ -6,6 +6,7 @@ import {renderPieceArt} from './piece-art.js';
 import {feedbackPreferences,setFeedbackPreference} from './feedback.js';
 import {BOARD_THEMES,PIECE_THEMES,ANIMATED_THEMES,applyBoardTheme,applyPieceTheme} from './appearance.js';
 import {storageConflictMessage} from './storage.js';
+import {outcomeArtwork} from './outcome-artwork.js';
 
 const el=id=>document.getElementById(id);
 const ls=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback;}catch{return fallback;}};
@@ -118,7 +119,7 @@ export function mountScreenRoutes({main,go,leaveMatch,toggleBoardView,getBoardVi
       const outcome=match?.outcome||el('result-copy').textContent.trim();
       title('Match complete',outcome||'Match still in progress','Exact adjudication from the chess game engine.');
       if(outcome){
-        const image=mk('img','ch-celebration');image.src='/brand/victory-confetti.svg';image.alt='';section.append(image);
+        const image=mk('img','ch-celebration');image.src=outcomeArtwork(outcome)||'/brand/royal-versus.svg';image.alt='';section.append(image);
         const info=mk('div','ch-stats-grid');section.append(info);
         for(const [label,value] of [['Moves',Math.ceil((match?.moves||0)/2)],['Opponent',match?.online?'Private online player':match?.mode==='computer'?'Computer':'Local friend']]){
           const tile=mk('div','ch-stat');tile.append(mk('strong','',String(value)),mk('span','',label));info.append(tile);
