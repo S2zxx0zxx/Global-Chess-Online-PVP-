@@ -1,0 +1,46 @@
+slot_id,family,original_role,target_size_px,render_format,targets,status,rights_check
+GC-A001,brand,global app emblem,512x512,SVG+PNG,launch icon maskable,planned,pending
+GC-A002,brand,wordmark horizontal,1200x320,SVG+PNG,header about store,planned,pending
+GC-A003,background,original royal hall decorative background,840x1200,SVG,all screen shell,code_added,review
+GC-A004,background,premium splash hero,1080x1920,PNG+WebP,SCR-00,planned,pending
+GC-A005,background,mode selection backdrop,1080x1920,PNG+WebP,SCR-03-06,planned,pending
+GC-A006,board,classic wood chessboard material,1024x1024,PNG+WebP,SCR-07/23,planned,pending
+GC-A007,board,polished marble chessboard material,1024x1024,PNG+WebP,SCR-07/23,planned,pending
+GC-A008,board,carbon jade chessboard material,1024x1024,PNG+WebP,SCR-07/23,planned,pending
+GC-A009,board,2D board frame nine-slice,256x256,SVG+PNG,SCR-07,planned,pending
+GC-A010,board,move target hint vector,128x128,SVG+PNG,SCR-07,planned,pending
+GC-A011,board,check and last-move cues,128x128,SVG+PNG,SCR-07,planned,pending
+GC-A012,pieces,original white king,256x256,SVG+PNG,SCR-07/08,planned,pending
+GC-A013,pieces,original white queen,256x256,SVG+PNG,SCR-07/08,planned,pending
+GC-A014,pieces,original white rook,256x256,SVG+PNG,SCR-07/08,planned,pending
+GC-A015,pieces,original white bishop,256x256,SVG+PNG,SCR-07/08,planned,pending
+GC-A016,pieces,original white knight,256x256,SVG+PNG,SCR-07/08,planned,pending
+GC-A017,pieces,original white pawn,256x256,SVG+PNG,SCR-07/08,planned,pending
+GC-A018,pieces,original black king,256x256,SVG+PNG,SCR-07/08,planned,pending
+GC-A019,pieces,original black queen,256x256,SVG+PNG,SCR-07/08,planned,pending
+GC-A020,pieces,original black rook,256x256,SVG+PNG,SCR-07/08,planned,pending
+GC-A021,pieces,original black bishop,256x256,SVG+PNG,SCR-07/08,planned,pending
+GC-A022,pieces,original black knight,256x256,SVG+PNG,SCR-07/08,planned,pending
+GC-A023,pieces,original black pawn,256x256,SVG+PNG,SCR-07/08,planned,pending
+GC-A024,components,original primary button with responsive edges,320x96,SVG+CSS,SCR-01-29,planned,pending
+GC-A025,components,secondary button and tab family,320x96,SVG+CSS,SCR-01-29,planned,pending
+GC-A026,components,modal border and ornaments,640x640,SVG+CSS,SCR-05/08/09/10,planned,pending
+GC-A027,components,player clock frame,420x144,SVG+CSS,SCR-07,planned,pending
+GC-A028,components,avatar identity ring,256x256,SVG+PNG,SCR-03/07/20,planned,pending
+GC-A029,identity,original guest avatar family,238x238,SVG+PNG,SCR-20,planned,pending
+GC-A030,identity,royal profile frame family,256x256,SVG+PNG,SCR-20/23,planned,pending
+GC-A031,progress,rank badge originals,256x256,SVG+PNG,SCR-21/22,planned,pending
+GC-A032,progress,achievement medal set,256x256,SVG+PNG,SCR-22,planned,pending
+GC-A033,progress,streak marker,128x128,SVG+PNG,SCR-19/21,planned,pending
+GC-A034,result,win loss draw ornamental headers,640x256,SVG+PNG,SCR-11,planned,pending
+GC-A035,result,review timeline markers,64x64,SVG+PNG,SCR-12/13,planned,pending
+GC-A036,learn,lesson and puzzle art family,512x512,SVG+PNG,SCR-14-18,planned,pending
+GC-A037,learn,daily challenge illustration,512x512,SVG+PNG,SCR-19,planned,pending
+GC-A038,utilities,home play learn profile original icons,96x96,SVG+PNG,tab navigation,planned,pending
+GC-A039,utilities,settings history share data icons,96x96,SVG+PNG,SCR-12/24/25/26,planned,pending
+GC-A040,utilities,warning recovery update art,256x256,SVG+PNG,SCR-27/28,planned,pending
+GC-A041,animation,original match-start sweep,vector-motion,CSS,VS intro,planned,pending
+GC-A042,animation,original outcome particles,vector-motion,CSS+Canvas,result,planned,pending
+GC-A043,animation,original capture check cues,vector-motion,CSS+Babylon,gameplay,planned,pending
+GC-A044,store,Play Store feature graphic,1024x500,PNG,Android release,planned,pending
+GC-A045,store,Android adaptive foreground/background,432x432,PNG,Android release,planned,pending
