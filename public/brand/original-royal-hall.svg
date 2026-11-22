@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 1200" role="img" aria-label="Original abstract royal chess hall backdrop">
+<defs>
+<linearGradient id="sky" x2=".1" y2="1"><stop stop-color="#06161c"/><stop offset=".6" stop-color="#123c3b"/><stop offset="1" stop-color="#05151a"/></linearGradient>
+<linearGradient id="metal" x2="1" y2=".6"><stop stop-color="#846028"/><stop offset=".35" stop-color="#efd798"/><stop offset=".68" stop-color="#926a31"/><stop offset="1" stop-color="#382c1c"/></linearGradient>
+<radialGradient id="light"><stop stop-color="#60b2a1" stop-opacity=".35"/><stop offset="1" stop-color="#60b2a1" stop-opacity="0"/></radialGradient>
+<pattern id="floor" width="100" height="100" patternUnits="userSpaceOnUse" patternTransform="matrix(1 .25 -.25 1 0 0)"><rect width="100" height="100" fill="#0a2427"/><rect width="50" height="50" fill="#153b3b"/><rect x="50" y="50" width="50" height="50" fill="#153b3b"/><path d="M0 0H100V100H0Z" fill="none" stroke="#c6a25d" stroke-opacity=".2"/></pattern>
+</defs>
+<rect width="840" height="1200" fill="url(#sky)"/>
+<ellipse cx="420" cy="410" rx="380" ry="440" fill="url(#light)"/>
+<path d="M60 820V232Q420 -138 780 232V820" fill="none" stroke="#6f562e" stroke-width="56" opacity=".56"/>
+<path d="M85 815V245Q420 -82 755 245V815" fill="none" stroke="url(#metal)" stroke-width="12"/>
+<path d="M115 812V264Q420 -32 725 264V812" fill="none" stroke="#d1ad67" stroke-opacity=".36" stroke-width="3"/>
+<g fill="#08262c" stroke="url(#metal)" stroke-width="5"><rect x="50" y="252" width="88" height="620" rx="10"/><rect x="702" y="252" width="88" height="620" rx="10"/></g>
+<g fill="url(#metal)"><rect x="42" y="250" width="106" height="18" rx="4"/><rect x="694" y="250" width="106" height="18" rx="4"/><rect x="42" y="845" width="106" height="18" rx="4"/><rect x="694" y="845" width="106" height="18" rx="4"/></g>
+<path d="M0 864Q420 758 840 864V1200H0Z" fill="url(#floor)"/>
+<path d="M0 868Q420 772 840 868" fill="none" stroke="#d3ad68" stroke-width="6"/>
+<path d="M120 970Q420 884 720 970" fill="none" stroke="#b68f55" stroke-width="2" opacity=".6"/>
+<g fill="#dbbd7e" opacity=".62"><path d="M420 80l15 26h30l-23 19 9 32-31-17-31 17 9-32-23-19h30z"/><circle cx="420" cy="226" r="5"/></g>
+<g fill="#e9d0a0" opacity=".55"><path d="M132 780v-82l20-24 20 24v82z"/><path d="M668 780v-82l20-24 20 24v82z"/></g>
+</svg>
