@@ -121,6 +121,27 @@ export function createMonetizationController({
   return {status,optIn,requestConsent,privacyOptions,rewarded};
 }
 
+// Native Capacitor can expose plugins either through the registered JS proxy
+// or through its injected nativePromise bridge. Both routes are restricted to
+// Android with the REAL native AdMob plugin installed; no web mock is used.
+export function findNativeAdMob(cap){
+  if(!cap||typeof cap.getPlatform!=='function'||cap.getPlatform()!=='android')
+    return null;
+  if(typeof cap.isPluginAvailable==='function'&&!cap.isPluginAvailable('AdMob'))
+    return null;
+  const existing=cap.Plugins?.AdMob;
+  if(existing?.requestConsentInfo && existing?.showRewardVideoAd)return existing;
+  if(typeof cap.nativePromise!=='function')return null;
+  const call=(method,options={})=>cap.nativePromise('AdMob',method,options);
+  return {
+    requestConsentInfo:()=>call('requestConsentInfo'),
+    showConsentForm:()=>call('showConsentForm'),
+    showPrivacyOptionsForm:()=>call('showPrivacyOptionsForm'),
+    initialize:()=>call('initialize'),
+    prepareRewardVideoAd:options=>call('prepareRewardVideoAd',options),
+    showRewardVideoAd:options=>call('showRewardVideoAd',options),
+  };
+}
 export function createGameMonetization(storage, getMoment, onChange){
   const env=import.meta.env??{};
   const cap=globalThis.Capacitor;
@@ -129,7 +150,7 @@ export function createGameMonetization(storage, getMoment, onChange){
   try{preferences=globalThis.localStorage;}catch{preferences=null;}
   return createMonetizationController({
     env,platform,
-    getPlugin:()=>globalThis.Capacitor?.Plugins?.AdMob??null,
+    getPlugin:()=>findNativeAdMob(globalThis.Capacitor),
     preferences,storage,getMoment,onChange,
   });
 }
