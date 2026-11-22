@@ -13,7 +13,10 @@
     "overlay_Tasks_sheet_cell_values_equal_original": true,
     "original_source_workbook_status": "DESIGN_ONLY_ALL_NOT_STARTED",
     "status_last_read_utc_date": "2026-11-22",
-    "does_not_mean_current_app_has_zero_features": true
+    "does_not_mean_current_app_has_zero_features": true,
+    "original_task_id_sha256": "6538c660a1f4dd68a00c3154f4fcfd0e3b365490d1c9c816fd70387033ef7475",
+    "original_task_text_acceptance_sha256": "24d4729b94610ea24c58687f25a6b3d7ea17bad1e0a652d99a37b2c939b11ef4",
+    "fingerprint_algorithm": "SHA256 UTF-8, rows in source order; ids joined with LF; task text fingerprint rows joined LF with task_id TAB task TAB acceptance_evidence"
   },
   "canonical_pre_task_sha": "69d7e13c6904f13344c1195333f13f39741f09c1",
   "owner_command": "START GC-B01-T07 & START GC-B01-T08 start kro build and merge",
