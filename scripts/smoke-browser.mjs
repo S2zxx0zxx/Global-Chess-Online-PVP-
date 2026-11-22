@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 function browserBinary() {
+  if (process.env.CHESS_BROWSER) return process.env.CHESS_BROWSER;
   for (const name of ['google-chrome', 'chromium', 'chromium-browser']) {
     try {
       const candidate = execFileSync('which', [name], {encoding:'utf8'}).trim();
@@ -91,7 +92,7 @@ try {
   }
   async function evaluate(expression) {
     const result = await send('Runtime.evaluate', {expression, returnByValue:true, awaitPromise:true});
-    if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
+    if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? result.exceptionDetails.text);
     return result.result?.value;
   }
   await send('Page.enable');
@@ -145,15 +146,17 @@ try {
   await writeFile('artifacts/SCR-02-first-move.png',Buffer.from(tutorialShot.data,'base64'));
   await evaluate('document.querySelector("#board [data-square=e2]").click(); true');
   await evaluate('document.querySelector("#board [data-square=e4]").click(); true');
-  await waitUntil(() => evaluate('document.querySelector("#moves li")?.textContent?.includes("e4") === true'));
+  await waitUntil(() => evaluate('document.querySelector("#board [data-square=e4].last-destination")?.getAttribute("aria-label") === "e4, White Pawn"'));
   if (!(await evaluate('document.getElementById("claim").hidden === true')))
     throw new Error('A draw-claim button appeared without an eligible position');
   console.log('Mobile v3 Home, Play, Setup, Learn, Profile, local match: passed');
   console.log('Browser local chess move: passed');
 
-  await evaluate('document.getElementById("view").click(); true');
+  await evaluate('document.getElementById("ch-match-tools").click(); true');
+  await waitUntil(() => evaluate('document.documentElement.classList.contains("ch-view-menu") && document.querySelector("#board").getClientRects().length === 0 && document.querySelector(".ch-menu-moves li")?.textContent.includes("e4")'));
+  await evaluate('document.querySelector("[data-board-view=mode-2d]").click(); true');
   await waitUntil(() => evaluate(
-    'document.getElementById("view").textContent === "Use 2D board" && !document.getElementById("scene").hidden'
+    'document.documentElement.classList.contains("ch-view-match") && !document.getElementById("scene").hidden && !document.documentElement.classList.contains("ch-loading-3d")'
   ), 45000);
   if (errors.length) throw new Error('Browser exceptions: ' + errors.join(' | '));
   // A toggled canvas is not proof that the 3D scene drew a frame.
@@ -164,10 +167,14 @@ try {
     return Buffer.from(shot.data,'base64').length > 7000;
   },15000);
   if (!renderedCanvas) throw new Error('3D renderer never produced a detailed frame');
-  console.log('Browser Babylon/Havok 3D scene pixels: rendered');
+  console.log('Browser Babylon 3D scene pixels: rendered');
 
   const screenshot = await send('Page.captureScreenshot', {format:'png', captureBeyondViewport:false});
   await writeFile('artifacts/chess-3d-browser-smoke.png', Buffer.from(screenshot.data,'base64'));
+
+  await evaluate('document.getElementById("ch-match-tools").click(); true');
+  await evaluate('document.querySelector("[data-board-view=mode-3d]").click(); true');
+  await waitUntil(() => evaluate('!document.getElementById("board").hidden && document.querySelector("#board [data-square=e4].last-destination")?.getAttribute("aria-label") === "e4, White Pawn"'));
 
   // Start a real new game with the computer as White and player as Black.
   // The CDP dialog listener explicitly accepts replacement of the prior match.
@@ -175,7 +182,7 @@ try {
   await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-play")'));
   await evaluate('document.querySelector("[data-setup=computer]").click(); true');
   await evaluate('document.getElementById("ch-setup-side").value="b";document.getElementById("ch-setup-difficulty").value="easy";document.getElementById("ch-setup-start").click();true');
-  await waitUntil(()=>evaluate('document.getElementById("white-player").textContent.includes("Computer") && document.querySelector("#moves li") !== null && document.getElementById("board").classList.contains("flipped")'),25000);
+  await waitUntil(()=>evaluate('document.getElementById("white-player").textContent.includes("Computer") && document.querySelector("#board .last-destination") !== null && document.getElementById("board").classList.contains("flipped")'),25000);
   const blackPlacement=await evaluate('(() => {const a=document.getElementById("white-panel").getBoundingClientRect(), b=document.getElementById("black-panel").getBoundingClientRect(),c=document.getElementById("board").getBoundingClientRect();return a.bottom<c.top && b.top>c.bottom && document.documentElement.classList.contains("ch-board-flipped");})()');
   if(!blackPlacement)throw new Error('Player panels do not match Black-side board orientation');
   const blackShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
@@ -205,7 +212,7 @@ try {
   // ZIP v3 screen-by-screen visual regression: these are route renders,
   // not assertions that every release-gate behavior is finished.
   const screenNames=['history','review','lessons','lesson','puzzles','puzzle','puzzle-result',
-    'daily','progress','achievements','appearance','avatars','settings','data','transfer','recovery',
+    'daily','progress','achievements','appearance','avatars','frames','settings','data','transfer','recovery',
     'update','about','menu','pause','result'];
   await mkdir('artifacts/screens',{recursive:true});
   for (const name of screenNames) {
@@ -218,8 +225,8 @@ try {
   }
   console.log('Rendered and captured all '+screenNames.length+' additional v3 routes in Chromium');
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=appearance'});
-  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-appearance") && document.querySelectorAll(".ch-piece-card").length === 2'));
-  await evaluate('document.querySelectorAll(".ch-piece-card")[1].click();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-appearance") && document.querySelectorAll(".ch-theme-card").length === 8 && document.querySelectorAll(".ch-piece-card").length === 7'));
+  await evaluate('document.querySelector(".ch-appearance-categories button:nth-child(2)").click();document.querySelector("[data-piece-style=crest]").click();true');
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=match'});
   await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#board .piece-art") !== null'));
   const crest=await evaluate('Array.from(document.querySelectorAll("#board .piece-art")).some(img=>img.src.includes("/brand/pieces/"))');
@@ -231,7 +238,7 @@ try {
   // SCR-20 player customization uses actual locally persisted choices.
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=avatars'});
   await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelectorAll(".ch-avatar-card").length === 3'));
-  await evaluate('document.querySelectorAll(".ch-avatar-card")[1].click();document.querySelector(".ch-frame-teal").click();true');
+  await evaluate('document.querySelectorAll(".ch-avatar-card")[1].click();document.querySelector(".ch-profile-tabs button:last-child").click();document.querySelector(".ch-frame-teal").click();true');
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=profile'});
   await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#ch-profile-avatar img")?.src.includes("piece_white_rook.svg")===true && document.getElementById("ch-profile-avatar").dataset.frame === "teal"'));
   console.log('Original avatar and decorative frame persist across reload: passed');
@@ -277,7 +284,7 @@ try {
   await evaluate('document.getElementById("local").click();true');
   await evaluate('document.querySelector("#board [data-square=e2]").click();true');
   await evaluate('document.querySelector("#board [data-square=e4]").click();true');
-  await waitUntil(()=>evaluate('document.querySelector("#moves li")?.textContent?.includes("e4") === true'));
+  await waitUntil(()=>evaluate('document.querySelector("#board [data-square=e4].last-destination")?.getAttribute("aria-label") === "e4, White Pawn"'));
   const volatileShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/SCR-27-volatile-storage.png',Buffer.from(volatileShot.data,'base64'));
   console.log('Blocked browser storage: offline play and honest session-only warning passed');

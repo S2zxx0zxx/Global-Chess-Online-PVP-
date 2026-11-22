@@ -74,6 +74,7 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
           go('match');
           toggleBoardView();
         });
+      boardOption.dataset.boardView='mode-'+boardView;
       boardOption.disabled=boardView==='loading';
       card(items,'Flip board','Swap which side is closest',()=>{el('flip-board').click();go('match');});
       card(items,'Settings','Sound, motion and board controls',()=>go('settings'));
