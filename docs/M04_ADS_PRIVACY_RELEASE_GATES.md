@@ -22,6 +22,7 @@
 | M4-13 Live build gate | `CHESS_M4_ADS_LIVE=true` + `validate-live-ad-config.mjs` | Owner AdMob account, Play audience, policy/privacy signoffs, HTTPS privacy URL and genuine app+reward unit IDs must all be present |
 | M4-14 Native metadata | `configure-android-admob.mjs` after `cap sync` | AdMob app ID added only for **test** or **approved live** SDK builds |
 | M4-15 Separate QA workflows | Core PWA + Android debug + Android signing smoke + native AdMob test CI | Web/ad-free/SDK-enabled build surfaces validated independently |
+| M4-16 Bounded requests | 45s native load timeout, 180s reward callback timeout; 30s cooldown and maximum 3 app-session requests | Failed/dismissed native operations cannot indefinitely block game UI or trigger high-frequency ad loads |
 
 ### Technology / provider boundaries
 
