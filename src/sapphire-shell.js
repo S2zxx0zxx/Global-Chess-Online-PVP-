@@ -168,7 +168,7 @@ export function mountSapphireShell({lobby,play,learn,profile,match,main,nav,go,o
   const settingsBtn=action('Settings','gs-settings-trigger',()=>settingsPopup.open());
   settingsBtn.prepend(picture('/brand/royal-settings.svg','gs-small-icon'));
   const saved=make('span','gs-storage-tag',storagePersistent?'LOCAL SAVE':'SESSION ONLY');
-  top.append(settingsBtn,saved);
+  top.append(settingsBtn,picture('/brand/sapphire-global-chess.svg','gs-home-logo'),saved);
   const playerLine=make('div','gs-player-header');
   const player=action('','gs-user-chip',()=>profilePopup.open());
   const playerAvatar=picture('/brand/royal-avatar-guardian.svg','gs-user-avatar');
@@ -208,7 +208,7 @@ export function mountSapphireShell({lobby,play,learn,profile,match,main,nav,go,o
   if(showcase)stage.append(showcase);
   const stagedCaption=make('p','gs-board-caption','A new match is waiting.');
   stage.append(stagedCaption);
-  const actions=hero.querySelector('.gc-hero-actions');
+  const actions=originalCopy.querySelector('.gc-hero-actions');
   const begin=actions?.querySelector('.gc-primary-cta');
   if(begin){begin.replaceChildren(make('span','','PLAY CHESS'),make('span','gs-play-arrow','▶'));begin.classList.add('gs-play-button');}
   const controls=make('div','gs-play-controls');

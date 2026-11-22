@@ -22,6 +22,7 @@ test('five visible navigation actions map to actual registered routes',()=>{
   const source=read('src/sapphire-shell.js');
   for(const x of ["['appearance','Collection'","['learn','Learn'","['home','Home'","['play','Modes'","['profile','Profile'"])assert.ok(source.includes(x));
   assert.match(source,/nav\.replaceChildren\(\.\.\.nodes\)/);
+  assert.match(source,/originalCopy\.querySelector\('\.gc-hero-actions'\)/);
   assert.match(read('src/app-shell.js'),/mountSapphireShell/);
 });
 test('real guest identity, settings and profile commands are reused',()=>{

@@ -162,8 +162,17 @@ try {
   const homeShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/chess-v3-mobile-home.png',Buffer.from(homeShot.data,'base64'));
   // Midnight Sapphire's actual controls must work, not just appear in a screenshot.
-  if(!await evaluate('document.querySelectorAll(".gs-nav-tab").length===5 && !!document.querySelector(".gs-board-stage .gc-preview-board") && !!document.querySelector(".gs-play-button") && !!document.querySelector("#lobby-title") && !!document.querySelector("#guest-greeting")')) {
-    throw new Error('Sapphire Home controls, saved legacy IDs or board illustration missing');
+  const sapphireControls=await evaluate(`(() => ({
+    tabs:document.querySelectorAll('.gs-nav-tab').length,
+    board:!!document.querySelector('.gs-board-stage .gc-preview-board'),
+    play:!!document.querySelector('.gs-play-controls .gs-play-button'),
+    visiblePlay:(()=>{const r=document.querySelector('.gs-play-controls .gs-play-button')?.getBoundingClientRect();return !!r&&r.width>100&&r.height>45;})(),
+    title:!!document.querySelector('#lobby-title'),
+    greeting:!!document.querySelector('#guest-greeting'),
+    brand:!!document.querySelector('.gs-home-logo'),
+  }))()`);
+  if(sapphireControls.tabs!==5||!sapphireControls.board||!sapphireControls.play||!sapphireControls.visiblePlay||!sapphireControls.title||!sapphireControls.greeting||!sapphireControls.brand) {
+    throw new Error('Sapphire Home missing connected controls: '+JSON.stringify(sapphireControls));
   }
   await evaluate('document.querySelector(".gs-user-chip").click(); true');
   await waitUntil(()=>evaluate('document.querySelector("#gs-profile-popup[open]")?.querySelectorAll(".gs-stat").length===6'));

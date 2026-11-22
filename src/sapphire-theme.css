@@ -440,3 +440,15 @@ html.ch-sapphire-ready #lobby .gc-hero-copy[hidden]{display:none!important}
 @media(prefers-reduced-motion:reduce){
   #launch.gs-sapphire-launch .gs-loading-bar::before{animation:none}
 }
+
+/* The original sapphire logo is visible between settings and local-save status. */
+.gs-home-logo{
+  width:clamp(105px,32vw,160px);
+  max-height:61px;
+  object-fit:contain;
+  filter:drop-shadow(0 5px 8px #010921a8);
+  flex:none;
+}
+@media(max-width:320px){.gs-home-logo{width:96px}}
+/* Primary CTA never inherits [hidden] from the old hero copy. */
+html.ch-sapphire-ready #lobby .gs-play-controls .gs-play-button{display:flex!important;visibility:visible;opacity:1}
