@@ -23,7 +23,7 @@ test('five visible navigation actions map to actual registered routes',()=>{
 });
 test('real guest identity, settings and profile commands are reused',()=>{
   const source=read('src/sapphire-shell.js');
-  for(const token of ['feedbackPreferences','setFeedbackPreference','readSavedHistory','getProgressReport','chess-edit-profile','online-status','lobby-resume','lobby-online','ch-setup']) {
+  for(const token of ['feedbackPreferences','setFeedbackPreference','readSavedHistory','getProgressReport','chess-edit-profile','online-status','lobby-resume','gs-invite-button','ch-setup']) {
     if(token==='ch-setup')continue;
     assert.ok(source.includes(token),token);
   }

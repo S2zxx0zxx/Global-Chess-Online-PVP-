@@ -21,6 +21,7 @@ import './profile.css';
 import './board-motion.css';
 import './original-royal.css';
 import './arcade-shell.css';
+import './sapphire-theme.css';
 import { mountAppShell } from './app-shell.js';
 import { finalizeOfflineExit } from './session-exit.js';
 import { restoreGame, serializeGame, savedMatchOutcome, claimableDraw, intendedDraw, hasAvailableDrawClaim } from './game.js';

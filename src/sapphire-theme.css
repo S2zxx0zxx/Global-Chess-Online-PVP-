@@ -413,3 +413,30 @@ html.ch-sapphire-ready #settings-dialog.gs-settings-popup form[method=dialog] bu
  html.ch-sapphire-ready #lobby .gs-mode-list .gc-battle-card,.gs-user-chip,.gs-training-chip,.gs-quest,.gs-settings-switch{border:2px solid #fff4c2}
  .gs-quest-copy small,.gs-user-copy small{color:#fff0bf}
 }
+
+/* Accessible boot illustration: a real 8x8 chess texture, never a copied atlas. */
+.gs-launch-board-art{
+  position:relative;
+  width:min(69vw,298px);
+  aspect-ratio:1;
+  margin-inline:auto;
+  transform:perspective(600px) rotateX(23deg) rotateZ(-3deg);
+  border:12px ridge #f0c577;
+  border-radius:10px;
+  background:
+    conic-gradient(#183769 25%,#e2eef7 0 50%,#183769 0 75%,#e2eef7 0)
+    0 0/25% 25%;
+  box-shadow:0 0 0 5px #15499b,0 16px 35px #010924c9,0 0 48px #62d2f655;
+}
+.gs-launch-board-art img{
+  position:absolute;width:22%;height:22%;object-fit:contain;
+  filter:drop-shadow(0 3px 3px #0207228c);
+}
+.gs-launch-board-art img:first-child{left:16%;bottom:14%}
+.gs-launch-board-art img:last-child{right:15%;top:11%}
+html.ch-sapphire-ready #lobby #lobby-resume[hidden],
+html.ch-sapphire-ready #lobby .gs-resume-button[hidden]{display:none!important}
+html.ch-sapphire-ready #lobby .gc-hero-copy[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){
+  #launch.gs-sapphire-launch .gs-loading-bar::before{animation:none}
+}
