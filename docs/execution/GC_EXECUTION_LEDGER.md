@@ -180,3 +180,28 @@ next_command: RESUME GC-B01-T03
 4. Never mark subsequent tasks DONE by copying this ledger status.
 
 This evidence record does not claim that PR #18 is in `main`, that an Android app is published or that all release gates have passed.
+
+## GC-B01-T03 — Resume verification, 2026-11-22
+
+This is a **read-only live governance recheck**, not owner signoff:
+
+| Exact verification | Latest result |
+|---|---|
+| Canonical ref `integration/global-chess-v3` | `3d9467ada0eaf167eecc52d6c98ed126fa98c98c`, still identical to PR #18 |
+| `main` | `63462e20f97a64913836e361c0e9807604ac3d4a`, unchanged |
+| Repository rulesets list | `[]`, no active ruleset |
+| Canonical and main branch protected flags | both `false` |
+| PR #19 | `OPEN/DRAFT/UNMERGED`; head `d930d7ad88093a02bbb196b694a10fd9681dd3b7`, base canonical |
+| PR #20 | `OPEN/DRAFT/UNMERGED`; head `75e757fecc38082f78cc79dd4d2a386a3a632c23`, based on PR #19 branch |
+| PR #21 | `OPEN/DRAFT/UNMERGED`; pre-resume head `e9326a2f17851fedf768fe1c9f599b6572bfc2f9`, based on PR #20 branch |
+| Reviews | 0 submitted reviews on each of #19/#20/#21 |
+| Exact-head PR #21 workflow checks | 0 associated workflow runs and 0 combined statuses at pre-resume head |
+| Branch-protection direct API read | 403 Resource not accessible by integration |
+| Owner approvals/merge permission | Not supplied; no merge attempted |
+
+**Current conclusion:** `GC-B01-T03 = BLOCKED_EXTERNAL`; `GC-B01-GATE = NOT_ELIGIBLE`. No other task is unlocked. The PR #21 changed-file set remains `.github/PULL_REQUEST_TEMPLATE.md`, `.github/workflows/verify.yml`, T03 policy and this ledger; no gameplay/source change.
+
+**Owner's exact unblock sequence:** manually review and safely merge PR #19, then retarget/review/merge PR #20, then retarget/review/merge PR #21; confirm the canonical PR core check appears with the changed workflow; create an **Active** repository branch ruleset targeting `main` and `integration/global-chess-v3` with pull-request-only merging, no force-push/deletion and compatible status/check and review settings. Do not require a status check before it exists or a reviewer count the solo owner cannot satisfy. Confirm protected flags, enforceable rules and ledger approval before declaring `DONE`.
+
+**Available connected actions do not include GitHub branch-ruleset creation/update.** This checkpoint preserves the external blocker instead of claiming an enforced policy. To continue, use `RESUME GC-B01-T03` after the GitHub owner controls are applied. Do not begin T04.
+
