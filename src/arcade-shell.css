@@ -546,3 +546,19 @@ html.ch-shell-ready #lobby{
   .gc-profile-hero,.gc-match-ribbon{border-color:#ffe4a4;background:#07242a}
   .gc-card-eyebrow,.gc-hero-kicker,.gc-match-eyebrow{color:#ffebae}
 }
+
+/* Override the old two-wide cards and legacy per-ID background rules. */
+.ch-shell-ready #lobby .mode-cards button.gc-battle-card:nth-child(-n+2){
+  grid-column:auto!important;
+  min-height:150px;
+  justify-content:flex-end;
+}
+.ch-shell-ready #lobby #lobby-computer.gc-battle-card{
+  background:linear-gradient(155deg,#395b6d,#142c46);
+}
+.ch-shell-ready #lobby #lobby-online.gc-battle-card{
+  background:linear-gradient(155deg,#287c6e,#113d3d);
+}
+@media(max-width:390px){
+  .ch-shell-ready #lobby .mode-cards button.gc-battle-card:nth-child(-n+2){min-height:132px}
+}

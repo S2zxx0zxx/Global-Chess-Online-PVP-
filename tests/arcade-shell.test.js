@@ -22,7 +22,7 @@ test('arena label only describes real match modes',()=>{
 });
 test('arcade shell retains old command authority and legacy element IDs',()=>{
   const source=read('src/arcade-shell.js');
-  for(const marker of ['lobby-online','lobby-resume','ch-profile-title','ch-match-toolbar','ch-match-view-shown']) assert.ok(source.includes(marker),marker);
+  for(const marker of ['lobby-online','lobby-resume','ch-profile-title','ch-match-toolbar','chess-match-view-shown']) assert.ok(source.includes(marker),marker);
   assert.doesNotMatch(source,/new Chess\(|fetch\(|WebSocket\(|window\.location\s*=|localStorage\.setItem\(/);
   assert.match(read('src/app-shell.js'),/mountArcadeShell/);
 });
