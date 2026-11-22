@@ -3,14 +3,29 @@ import {
  isNaturalAdBreak,isValidNativeReward,readSupporterReward,commitSupporterReward,
 } from './monetization-policy.js';
 
+// A native plugin is allowed to fail, reject or never return (notably if a
+// rewarded view is dismissed before its reward callback). Never leave the
+// game's consent button disabled forever when a native promise hangs.
+export function awaitNativeAdResult(promise,timeoutMs=180000){
+  if(!Number.isFinite(timeoutMs)||timeoutMs<1)throw Error('Invalid native timeout');
+  return new Promise((resolve,reject)=>{
+    const timer=setTimeout(()=>reject(new Error('Native ad callback timed out')),timeoutMs);
+    Promise.resolve(promise).then(
+      value=>{clearTimeout(timer);resolve(value);},
+      error=>{clearTimeout(timer);reject(error);},
+    );
+  });
+}
+
 // Provider-neutral business boundary. No ads initialize when disabled, on
 // browser/PWA, without explicit opt-in, or until native UMP permits requests.
 export function createMonetizationController({
   env={},platform='web',getPlugin=()=>null,preferences,storage,
-  getMoment=()=>({}),onChange=()=>{},now=()=>Date.now(),
+  getMoment=()=>({}),onChange=()=>{},now=()=>Date.now(),showTimeoutMs=180000,
 }={}){
   const config=resolveMonetizationConfig(env,platform);
   let consent=null,initialized=false,busy=false;
+  let sessionRequests=0,lastRequestAt=-Infinity;
   let optedIn=false;
   try{optedIn=preferences?.getItem(M4_AD_PREFERENCE_KEY)==='yes';}
   catch{/* Browser privacy mode is opt-out, not automatic opt-in. */}
@@ -88,6 +103,10 @@ export function createMonetizationController({
     const before=status();
     if(!before.enabled)return {ok:false,reason:'Optional native ads are unavailable, off, or not safely persisted'};
     if(before.earned)return {ok:false,reason:'The optional supporter crest has already been earned'};
+    if(sessionRequests>=3)
+      return {ok:false,reason:'Optional ad attempt limit reached for this app session. Chess remains free.'};
+    if(now()-lastRequestAt<30000)
+      return {ok:false,reason:'An optional ad was requested recently. Retry after a short break.'};
     busy=true;publish();
     try{
       const allowed=await requestConsent();
@@ -97,11 +116,13 @@ export function createMonetizationController({
         initialized=true;
       }
       const native=plugin();
-      await native.prepareRewardVideoAd({
+      sessionRequests++;
+      lastRequestAt=now();
+      await awaitNativeAdResult(native.prepareRewardVideoAd({
         adId:config.rewardedId,isTesting:config.mode==='test',
-      });
+      }),45000);
       // Use the resolved show result, NOT an event as well: one reward source.
-      const reward=await native.showRewardVideoAd({adId:config.rewardedId});
+      const reward=await awaitNativeAdResult(native.showRewardVideoAd({adId:config.rewardedId}),showTimeoutMs);
       if(!isValidNativeReward(reward)){
         return {ok:false,reason:'Ad ended without a confirmed reward. Gameplay is unchanged.'};
       }
