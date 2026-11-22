@@ -135,7 +135,25 @@ try {
   await waitUntil(()=>evaluate('document.getElementById("learn-dialog").open === true'));
   const lessonShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/SCR-15-lesson-player.png',Buffer.from(lessonShot.data,'base64'));
+  // M-03: solve a real legal exercise and wait for the IndexedDB commit
+  // before inspecting credited local XP and persistent achievement state.
+  await evaluate('document.querySelector("#lesson-board [data-square=e2]").click();document.querySelector("#lesson-board [data-square=e4]").click();true');
+  await waitUntil(()=>evaluate('document.getElementById("lesson-feedback")?.textContent?.startsWith("Correct.") && document.getElementById("lesson-progress")?.textContent?.includes("10 local XP")'),20000);
+  await evaluate('document.getElementById("lesson-reset").click();document.querySelector("#lesson-board [data-square=e2]").click();document.querySelector("#lesson-board [data-square=e4]").click();true');
+  await waitUntil(()=>evaluate('document.getElementById("lesson-feedback")?.textContent?.includes("replay does not award XP twice")'),20000);
+  if(!(await evaluate('document.getElementById("lesson-progress").textContent.includes("10 local XP")')))
+    throw new Error('Replaying the same exercise minted duplicate XP');
+  console.log('M03 once-only lesson XP from real legal board moves: passed');
   await evaluate('document.querySelector("#learn-dialog form[method=dialog] button").click(); true');
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=progress'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-progress")'));
+  const committedXP=await evaluate('Array.from(document.querySelectorAll("#ch-extra-screen .ch-stat")).some(x=>x.textContent.includes("Local practice XP") && x.textContent.includes("10"))');
+  if(!committedXP)throw new Error('Committed XP did not survive reload on the progress screen');
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=achievements'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-achievements")'));
+  const firstAward=await evaluate('Array.from(document.querySelectorAll(".ch-achievement.ch-unlocked")).some(x=>x.textContent.includes("First Steps")&&x.textContent.includes("Earned"))');
+  if(!firstAward)throw new Error('Real exercise completion did not unlock its first achievement');
+  console.log('M03 XP and achievement persisted after full browser reload: passed');
   await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=profile]").click(); true');
   if (!(await evaluate('document.getElementById("ch-profile-hub").hidden === false'))) {
     throw new Error('Local profile screen did not open');
