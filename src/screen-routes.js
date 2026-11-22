@@ -286,7 +286,7 @@ export function mountScreenRoutes({main,go,leaveMatch,toggleBoardView,getBoardVi
       section.append(tabs);
     }
     if(route==='avatars'){
-      const icons=[['♞','Knight','/brand/guest-avatar.svg'],['♜','Rook','/brand/pieces/piece_white_rook.svg'],['♛','Queen','/brand/pieces/piece_white_queen.svg']];
+      const icons=[['♞','Guardian','/brand/royal-avatar-guardian.svg'],['♜','Scholar','/brand/royal-avatar-scholar.svg'],['♛','Traveler','/brand/royal-avatar-traveler.svg']];
       const gallery=mk('div','ch-avatar-gallery');section.append(gallery);
       const current=ls('global-chess.preferences.v1',{});
       const selected=['♞','♜','♛'].includes(current.avatar)?current.avatar:'♞';
