@@ -2,9 +2,11 @@ import { renderPieceArt } from './piece-art.js';
 import { prepareMoveEffect } from './board-motion.js';
 import { emitFeedback } from './feedback.js';
 import { loadBrowserMateSolver } from './mate-solver.js';
-import { bindLearning } from './learning.js';
+import { bindLearning, lessons, puzzles } from './learning.js';
 import { bindLobby } from './lobby.js';
 import { openGameStorage } from './storage.js';
+import { commitHistoryReplacement } from './history-mutation.js';
+import { progressKey, legacyProgressKey, migrateLegacyProgress, currentProgressReport } from './progression.js';
 import { bindOnline } from './online.js';
 import { Chess } from 'chess.js';
 import { readHistory, recordMatch } from './history.js';
@@ -20,7 +22,7 @@ import './board-motion.css';
 import { mountAppShell } from './app-shell.js';
 import { restoreGame, serializeGame, savedMatchOutcome, claimableDraw, intendedDraw, hasAvailableDrawClaim } from './game.js';
 
-import { matchKey as key, historyKey, exportBackup, importBackup, previewBackup } from './backup.js';
+import { matchKey as key, historyKey, exportBackup, importBackupDurably, previewBackup } from './backup.js';
 async function initialize() {
 // The optional WASM mating solver must not delay guest-first gameplay.
 const gameStorage = await openGameStorage();
@@ -39,6 +41,16 @@ const promotion = document.querySelector('#promotion');
 const names = { k:'King', q:'Queen', r:'Rook', b:'Bishop', n:'Knight', p:'Pawn' };
 let state = restoreGame();
 let notice = '';
+try {
+  let legacy = null;
+  try { legacy = localStorage.getItem(legacyProgressKey); } catch {}
+  if (legacy !== null && gameStorage.getItem(progressKey) === null) {
+    migrateLegacyProgress(gameStorage, legacy, lessons, puzzles);
+    if (gameStorage.durable !== false) await gameStorage.flush();
+  }
+} catch {
+  notice = 'Exercise progress migration could not be confirmed.';
+}
 let corruptMatchRaw;
 try {
   state = restoreGame(gameStorage.getItem(key));
@@ -49,6 +61,7 @@ try {
 }
 if (state.mode === 'computer') document.querySelector('#difficulty').value = state.difficulty;
 let selected;
+let importingBackup = false;
 const claim = document.querySelector('#claim');
 const outcome = game => {
   if (online?.active) return online.match.outcome;
@@ -76,7 +89,7 @@ function updateClock() {
   const elapsed = wasVisible ? now - tickAt : 0;
   tickAt = now;
   wasVisible = !document.hidden;
-  if (online?.active || state.paused) { displayClock(); return; }
+  if (online?.active || state.paused || importingBackup) { displayClock(); return; }
   const { clock, game } = state;
   if (clock && !outcome(game) && elapsed > 0) {
     state.clock = remainingClock(clock, game.turn(), elapsed);
@@ -302,6 +315,7 @@ function playComputer() {
 }
 
 async function selectSquare(square) {
+  if (importingBackup) return;
   const {game, mode} = state;
   if (online?.active && !online.canMove(game.turn())) return;
   if (!square || state.paused || outcome(game) || (mode === 'computer' && game.turn() !== state.playerSide)) return;
@@ -400,7 +414,7 @@ function showVersus(white,black) {
 }
 
 function startLocalMatch(mode, preset, difficulty, side = 'w') {
-  if (online?.active) return;
+  if (online?.active || importingBackup) return;
   if (corruptMatchRaw && !confirm('The saved match cannot be restored. Starting a new game will replace its stored bytes. Export your raw recovery copy first if needed. Continue?')) return;
   corruptMatchRaw = undefined;
   if (state.game.history().length && !outcome(state.game) && !confirm('Replace this match?')) return;
@@ -488,12 +502,12 @@ appShell = mountAppShell({
     }
   },
   readSavedHistory(){ return readHistory(gameStorage); },
-  writeSavedHistory(entries){ gameStorage.setItem(historyKey,JSON.stringify(entries)); },
+  writeSavedHistory(entries){ return commitHistoryReplacement(gameStorage,historyKey,entries); },
   async clearCompletedHistory(){
-    gameStorage.setItem(historyKey,'[]');
-    if(gameStorage.durable !== false)await gameStorage.flush?.();
-    return {durable:gameStorage.durable !== false};
+    await commitHistoryReplacement(gameStorage,historyKey,[]);
+    return {durable:true};
   },
+  getProgressReport(){ return currentProgressReport(gameStorage,lessons,puzzles); },
   async resignCurrentMatch(){
     if (online?.active) {
       if (!online.canResign() || !confirm('Resign this private match?')) return false;
@@ -654,32 +668,44 @@ document.querySelector('#import-backup').onclick = () => {
 backupFile.onchange = async () => {
   const file = backupFile.files[0];
   backupFile.value = '';
-  if (!file) return;
+  if (!file || importingBackup) return;
+  let ownsImport = false;
   try {
     if (file.size > 2_000_000) throw new Error('Backup too large');
     const contents = await file.text();
-    if (online?.active) throw new Error('Online match in progress');
+    if (online?.active || importingBackup) return;
     const {summary} = previewBackup(contents);
     const summaryText = 'Validated backup: ' + summary.historyCount + ' completed games, ' +
       summary.activePly + ' half-moves in ' + summary.activeMode + ' mode.\\n\\n' +
+      (summary.exerciseEvents === undefined ? 'Existing exercise progress is preserved. ' : 'Exercise journal events: ' + summary.exerciseEvents + '. ') +
       'Replace this device’s current match and local history? Export a copy first if needed.';
     if (!confirm(summaryText)) { backupStatus.textContent = 'Import cancelled. Existing games were not changed.'; return; }
-    const restored = importBackup(gameStorage, contents);
+    importingBackup = true;
+    ownsImport = true;
     stopComputer();
+    const restored = await importBackupDurably(gameStorage, contents);
     state = restored;
+    flipped = restored.mode === 'computer' && restored.playerSide === 'b';
+    document.documentElement.classList.toggle('ch-board-flipped',flipped);
+    flip.setAttribute('aria-pressed',String(flipped));
     corruptMatchRaw = undefined;
     selected = undefined;
     tickAt = performance.now();
     notice = 'Backup restored.';
     historyDialog.close();
     render();
-    playComputer();
   } catch {
-    backupStatus.textContent = 'Could not restore this backup.';
+    backupStatus.textContent = 'Backup restore could not be confirmed.';
+  } finally {
+    if (ownsImport) {
+      importingBackup = false;
+      tickAt = performance.now();
+      playComputer();
+    }
   }
 };
 
-bindLearning(names);
+bindLearning(names,gameStorage);
 window.addEventListener('chess-appearance-changed', () => render());
 
 window.addEventListener('chess-storage-error', () => {

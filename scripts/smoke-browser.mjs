@@ -136,6 +136,8 @@ try {
   await waitUntil(()=>evaluate('document.getElementById("learn-dialog").open === true'));
   const lessonShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/SCR-15-lesson-player.png',Buffer.from(lessonShot.data,'base64'));
+  await evaluate('document.querySelector("#lesson-board [data-square=e2]").click();document.querySelector("#lesson-board [data-square=e4]").click();true');
+  await waitUntil(()=>evaluate('document.querySelector("#lesson-feedback")?.textContent.startsWith("Correct.") && /[1-9][0-9]* local XP/.test(document.querySelector("#lesson-progress")?.textContent)'));
   await evaluate('document.querySelector("#learn-dialog form[method=dialog] button").click(); true');
   await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=profile]").click(); true');
   if (!(await evaluate('document.getElementById("ch-profile-hub").hidden === false'))) {
@@ -242,6 +244,9 @@ try {
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=profile'});
   await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#ch-profile-avatar img")?.src.includes("piece_white_rook.svg")===true && document.getElementById("ch-profile-avatar").dataset.frame === "teal"'));
   console.log('Original avatar and decorative frame persist across reload: passed');
+  await evaluate('document.querySelector("[data-profile-link=progress]").click();true');
+  await waitUntil(()=>evaluate('Array.from(document.querySelectorAll(".ch-stat")).some(tile=>tile.textContent.includes("Exercise XP") && Number(tile.querySelector("strong")?.textContent)>0)'));
+  console.log('Exercise completion and local XP survive browser reload: passed');
   for(const width of [320,360,412,768]){
     await send('Emulation.setDeviceMetricsOverride',{width,height:800,deviceScaleFactor:1,mobile:true});
     await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=home'});

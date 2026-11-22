@@ -14,14 +14,6 @@ const btn=(title,fn,cls='')=>{const x=mk('button','ch-action '+cls,title);x.type
 const paragraph=(parent,content,cls='ch-support')=>{const x=mk('p',cls,content);parent.append(x);return x;};
 const heading=(parent,group,title,summary,fn)=>{parent.append(btn('← Back',fn,'ch-back-button'));paragraph(parent,group.toUpperCase(),'ch-eyebrow');parent.append(mk('h1','',title));if(summary)paragraph(parent,summary);};
 const card=(parent,title,detail,fn,cls='')=>{const x=btn('',fn,'ch-feature-card '+cls);x.append(mk('strong','',title),mk('small','',detail));parent.append(x);return x;};
-const ALL=[...lessons,...puzzles];
-const KNOWN=new Set(ALL.map(x=>x.id));
-const report=()=>{
-  const list=ls('global-chess.learning.v1',[]);
-  const completed=[...new Set(Array.isArray(list)?list:[])].filter(x=>KNOWN.has(x));
-  const daily=[...new Set(Array.isArray(list)?list:[])].filter(x=>/^daily-\d{4}-\d{2}-\d{2}$/.test(x));
-  return {completed,daily};
-};
 const days=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const EXPORT=(data,name,type)=>{
   const url=URL.createObjectURL(new Blob([data],{type}));
@@ -30,7 +22,7 @@ const EXPORT=(data,name,type)=>{
 };
 export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','frames','settings','data','transfer','recovery','update','about']);
 
-export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMoves,replayTutorial,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
+export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMoves,replayTutorial,readHistory,getProgressReport,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
   main.insertBefore(screen,el('ch-tab-bar'));
@@ -38,6 +30,9 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
   applyBoardTheme(ls('global-chess.appearance.v1','maple'));
   applyPieceTheme(ls('global-chess.pieces.v1','classic'));
 
+  function report(){
+    try{return getProgressReport();}catch{return {completed:[],daily:[],invalid:true};}
+  }
   function records(){
     try{const x=readHistory();if(!Array.isArray(x))throw Error('Invalid records');return x;}catch{return null;}
   }
@@ -155,9 +150,9 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
             const x=restoreGame(item.snapshot);
             copy.append(mk('small','',x.mode==='computer'?'Vs computer':'Local friend'),mk('small','',x.game.history().length+' half-moves'));
           }catch{copy.append(mk('small','ch-error','Unable to load this save'));}
-          buttons.append(btn('Review',()=>{selected=i;go('review');}),btn('Delete',()=>{
+          buttons.append(btn('Review',()=>{selected=i;go('review');}),btn('Delete',async()=>{
             if(!confirm('Permanently delete only this recorded match?'))return;
-            try{writeHistory(full.filter((_,index)=>index!==i));redraw();}
+            try{await writeHistory(full.filter((_,index)=>index!==i));redraw();}
             catch{paragraph(section,'Delete failed. Existing records were preserved.','ch-inline-notice ch-notice-warning');}
           }));
           row.append(copy,buttons);result.append(row);
@@ -232,6 +227,7 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
       title('Local player record','Your progress','Validated offline results. Local two-player games are not counted as personal wins.');
       const progress=report(),saved=records(),stats=summarizeMatches(saved),grid=mk('div','ch-stats-grid');
       section.append(grid);
+      if(progress.invalid)paragraph(section,'Exercise progress is unavailable. Existing records were retained.','ch-inline-notice ch-notice-warning');
       if(saved===null)paragraph(section,'Match history is unavailable. No saved data was cleared.','ch-inline-notice ch-notice-warning');
       const values=[
         ['Completed games',saved===null?'Unavailable':stats.completed],
@@ -240,9 +236,10 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
         ['Vs Computer win rate',saved===null?'Unavailable':stats.winRate+'%'],
         ['Current bot win streak',saved===null?'Unavailable':stats.currentWinStreak],
         ['Best bot win streak',saved===null?'Unavailable':stats.bestWinStreak],
-        ['Lessons completed',progress.completed.filter(x=>lessons.some(y=>y.id===x)).length+'/'+lessons.length],
-        ['Puzzles completed',progress.completed.filter(x=>puzzles.some(y=>y.id===x)).length+'/'+puzzles.length],
-        ['Daily challenges',progress.daily.length],
+        ['Lessons completed',progress.invalid?'Unavailable':progress.lessonsSolved+'/'+lessons.length],
+        ['Puzzles completed',progress.invalid?'Unavailable':progress.puzzlesSolved+'/'+puzzles.length],
+        ['Daily challenges',progress.invalid?'Unavailable':progress.daily.length],
+        ['Exercise XP',progress.invalid?'Unavailable':progress.xp+(progress.persisted?'':' (session only)')],
       ];
       for(const [label,value] of values){
         const tile=mk('div','ch-stat');
@@ -253,7 +250,7 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
     }
     if(route==='achievements'){
       title('Proven milestones','Achievements','Unlocks are computed from real local records, not simulated leaderboards.');
-      const p=report(),seen=new Set(p.completed),stats=summarizeMatches(records());
+      const p=report(),seen=new Set(p.completed),saved=records(),stats=summarizeMatches(saved);
       const awards=[
         ['First Steps','Complete one practice exercise',p.completed.length>=1],
         ['Chess Basics','Complete all twelve lessons',lessons.every(x=>seen.has(x.id))],
@@ -264,11 +261,12 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
         ['Winning Run','Win three verified computer games in a row',stats.bestWinStreak>=3],
       ];
       const list=mk('div','ch-feature-list');section.append(list);
-      for(const [name,desc,earned] of awards){
+      for(const [index,[name,desc,earned]] of awards.entries()){
+        const unavailable=index<4 ? p.invalid : saved===null;
         const row=mk('div','ch-achievement '+(earned?'ch-unlocked':'ch-locked'));
         row.append(mk('span','ch-achievement-symbol',earned?'★':'◇'));
         const copy=mk('div');copy.append(mk('strong','',name),mk('small','',desc));
-        row.append(copy,mk('span','ch-achievement-state',earned?'Earned':'Locked'));list.append(row);
+        row.append(copy,mk('span','ch-achievement-state',unavailable?'Unavailable':earned?'Earned':'Locked'));list.append(row);
       }
     }
     if(route==='avatars'||route==='frames'){

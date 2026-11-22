@@ -14,7 +14,7 @@ function element(tag, className, text) {
 
 // The v3 M0 shell intentionally calls existing, tested game commands rather
 // than keeping a separate copy of chess state in the presentation layer.
-export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMoves, readSavedHistory, writeSavedHistory, clearCompletedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, preparePwaUpdate,hasCorruptMatch, storagePersistent = true}) {
+export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMoves, readSavedHistory, getProgressReport, writeSavedHistory, clearCompletedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, preparePwaUpdate,hasCorruptMatch, storagePersistent = true}) {
   const main = document.querySelector('main');
   const lobby = byId('lobby');
   const match = byId('match-area');
@@ -347,7 +347,7 @@ export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMo
   byId('online-leave').addEventListener('click',()=>go('home'));
   screenRoutes=mountScreenRoutes({
     main,go,toggleBoardView,getBoardView,readMoves,replayTutorial:()=>startTutorial(true),
-    readHistory:readSavedHistory,writeHistory:writeSavedHistory,clearCompletedHistory,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch,
+    readHistory:readSavedHistory,getProgressReport,writeHistory:writeSavedHistory,clearCompletedHistory,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch,
     openExercise(exercise){
       byId('learn').click();
       const list=[...lessons,...puzzles,dailyExercise()];
