@@ -8,10 +8,10 @@
 
 ## Current control
 
-- **Tasks closed:** `GC-B01-T01` — `DONE` (source pin); `GC-B01-T02` — `DONE` (reconciliation); `GC-B01-T04` — `DONE` (owner scope); **`GC-B01-T05` — `DONE` (architecture ADR and source/CI guard only, not a product rewrite)**.
-- **One active task:** `NONE` after T05 architecture/guard verification; PR #25 documentation-closure commit and protected squash-merge require final exact-head checks. T03 remains owner-skipped for NONRELEASE planning only, not DONE.
-- **Next permitted action:** verify final PR #25 exact-head CI and squash-merge, then `RESUME GC-B01-T03` or obtain an explicit new T06 planning-only exception; T06 not started.
-- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03 unresolved; T04/T05 source-scoped DONE; T06–T08 TODO)
+- **Tasks closed:** T01 source baseline `DONE`, T02 reconciliation `DONE`, T04 owner-approved scope `DONE`, T05 architecture guard `DONE`, **T06 data/identity contract preflight `DONE` (design/schema only; no sync or migration)**.
+- **One active task:** `NONE` — T06 contract design accepted subject to final PR #26 exact-head CI and protected squash-merge. T03 remains blocked / owner-skipped only for nonrelease contracts; NOT DONE.
+- **Next permitted action:** verify final T06 exact-head PR #26 checks, protected squash-merge and post-merge CI. T03 still unresolved; T07 not started or implicitly unlocked.
+- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03 unresolved; T04/T05/T06 scoped DONE; T07/T08 TODO)
 - **No change authority inferred:** no merges, force pushes, production changes, billing or other work approved by this document.
 
 ## Task closure: GC-B01-T01
@@ -288,6 +288,71 @@ rollback: New_revert_PR_only__no_force_push__preserve_saves
 
 **T05 exact-head engineering verification:** [Core 45034747296](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45034747296) **SUCCESS** (104/104, architecture guard and Chromium/Workers); [Android debug 45034747291](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45034747291) **SUCCESS**; [ephemeral signing 45034747265](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45034747265) **SUCCESS**, all on source SHA `d5b511142aa5f03248ca4a5df7036a71e5b73e24`. The final ledger/ADR textual edit requires a fresh exact-head CI run before protected merge. No TypeScript, React, paid service, Android release or stored data migration was performed.
 
+## GC-B01-T06 — Data/identity preflight checkpoint (one-task exception)
+
+**Explicit user instruction:** `START GC-B01-T06`, after T05. This is authority to draft/verify T06 **contracts only**, not to waive T03, promote batch, enable cloud login, sync user data or deploy a service.
+
+```yaml
+plan: GC-MASTER-EXEC-v1.0
+task: GC-B01-T06
+task_status: DONE_CONTRACT_PREFLIGHT_ONLY
+scope: Versioned data schemas, immutable event ID design, account/link boundary, server authority, privacy and migration threat model
+canonical_pre_task_sha: 1c0dfd7d8b1b3ab35c15de3be7ea80ad3dace394
+task_branch: docs/gc-b01-t06-data-identity-contracts
+contract_document: docs/contracts/GC-B01-T06_DATA_IDENTITY_CONTRACT_v1.md
+machine_manifest: docs/contracts/GC-B01-T06_CONTRACT_MANIFEST.v1.json
+schema_dir: docs/contracts/schemas/
+schema_count: 6
+existing_schema_descriptors: 4
+future_only_schema_proposals: 2
+contract_tests: tests/data-identity-contract.test.js
+contract_test_count: 13
+new_dependencies: 0
+existing_match_save_version: 1
+existing_indexeddb_db_version: 1
+existing_progress_version: 1
+backup_export_version: 2
+backup_legacy_import_version: 1
+live_room_match_version_semantic: monotonic_move_counter_not_schema_version
+existing_local_progress_event_id_semantic: kind_colon_exerciseId_derived_not_stored
+existing_match_history_immutable_id: false
+runtime_migration_executed: false
+live_account_link_or_sync_implemented: false
+real_user_data_accessed: false
+production_credentials_created: false
+ui_or_chess_game_code_changed: false
+requirements:
+  - Immutable ID policy preserving legacy progress and missing history IDs
+  - Future migration copy-on-write, crash-idempotence, backwards read
+  - Guest-first opt-in verified server-side account identity
+  - Server-only online game authority and client version checks
+  - Privacy data taxonomy and sensitive seat credentials
+  - Conflict policy for cross-tab, cross-device, merges, tombstones
+  - Threat assumption matrix with documented open security gaps
+user_directed_exception:
+  task: GC-B01-T03
+  status: BLOCKED_EXTERNAL
+  allowed_work: T06_nonrelease_contracts_only
+  not_marked_done: true
+  main_protected: false
+batch: GC-B01
+batch_gate: NOT_ELIGIBLE
+next_task: GC-B01-T07
+next_task_started: false
+verification: FINAL_HEAD_CI_AND_SAFE_MERGE_REQUIRED_BEFORE_INTEGRATION_CLAIM
+PR_number: 26
+PR_url: https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/26
+current_node_baseline: 104
+contract_test_increment: 13
+expected_total_node_tests_if_all_pass: 117
+metadata_only_or_test_only_changes: true
+rollback: Close_unmerged_PR_or_reviewed_squash_revert_no_data_wipes
+```
+
+**Scope reference:** [T06 contract MD](../contracts/GC-B01-T06_DATA_IDENTITY_CONTRACT_v1.md) and [schema manifest](../contracts/GC-B01-T06_CONTRACT_MANIFEST.v1.json). Existing file formats remain byte-compatible; future event/account proposals are not implemented. This T06 signoff does not assert completeness of 602 original task rows or published Data Safety/Privacy Policy.
+
+**T06 closing evidence boundary:** Source `1c0dfd7d8b1b3ab35c15de3be7ea80ad3dace394` pinned; no secrets/user records touched, no JS runtime edits, 13 source-to-contract synthetic tests added, no dependencies. The independent GitHub CI at **final PR #26 head** and **post-merge canonical** must be checked before asserting integration success. Do not confuse JSON schema definitions with online migration or authenticated account sync.
+
 ## Batch 01 sequential pointer
 
 | Task ID | Status | Evidence |
@@ -297,7 +362,7 @@ rollback: New_revert_PR_only__no_force_push__preserve_saves
 | `GC-B01-T03` | BLOCKED_EXTERNAL (OWNER-SKIPPED FOR T04) | PR #23 merged, exact-head CI attempt 2 succeeded; only canonical protected; `main` unprotected and owner signoff pending; not DONE |
 | `GC-B01-T04` | DONE (SCOPE LOCK ONLY) | Explicit owner approval command; 16/16 PRDs, SCR-00–29, 12 deferrals and M0–M5 scope signed in PR #24; final CI/merge tracked in GitHub PR |
 | `GC-B01-T05` | DONE (ARCHITECTURE ADR + GUARDS) | Retain Vite/ESM decision, isolated TypeScript 5.8.3 pilot, 6 guard tests; PR #25 core 104/104 + Android debug/signing CI SUCCESS; final docs merge verification separately required |
-| `GC-B01-T06` | TODO | No action started |
+| `GC-B01-T06` | DONE (DATA/IDENTITY CONTRACTS ONLY) | Six versioned schemas, manifest, 13 synthetic tests, immutable IDs/migration/account-link/privacy threat MD. PR #26 final CI + merge evidence required; NO data migration or cloud identity |
 | `GC-B01-T07` | TODO | No action started |
 | `GC-B01-T08` | TODO | No action started |
 | `GC-B01-GATE` | NOT_ELIGIBLE | Requires every T01–T08 task DONE and batch review |
@@ -305,7 +370,7 @@ rollback: New_revert_PR_only__no_force_push__preserve_saves
 ## Resume procedure
 
 1. Issue `STATUS GC-B01-T01` to verify source evidence if audit freshness is in doubt.
-2. `GC-B01-T05` architecture/guard scope is marked DONE subject to final docs-only exact-head CI/merge verification. T03 remains unresolved; T06 not started.
+2. T06 contract preflight complete under a separate one-task exception; verify final PR #26 SHA, CI and protected merge. T03 remains unresolved; T07 is TODO and not started.
 3. Re-fetch GitHub heads before edits, use exact SHA proofs and preserve all historic game code.
 4. Never mark subsequent tasks DONE by copying this ledger status.
 
