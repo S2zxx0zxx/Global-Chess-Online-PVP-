@@ -67,10 +67,12 @@ test('no GO while T03 blocked, and future T08 can start only after T07 closes',(
   falseGo.ledgerText=falseGo.ledgerText.replace('| `GC-B01-GATE` | NOT_ELIGIBLE','| `GC-B01-GATE` | BATCH_GO');
   assert.throws(()=>verifySourceTracker(falseGo),/Cannot mark B01 GO/);
   const premature=structuredClone(original);
+  // The actual T07 inventory is already DONE in the ledger; simulate a bad
+  // future edit that reopens T07 before advancing T08.
+  premature.ledgerText=premature.ledgerText.replace('| `GC-B01-T07` | DONE (602 SOURCE INVENTORY ONLY)','| `GC-B01-T07` | TODO');
   premature.ledgerText=premature.ledgerText.replace('| `GC-B01-T08` | TODO','| `GC-B01-T08` | IN_PROGRESS');
   assert.throws(()=>verifySourceTracker(premature),/T08 progression cannot predate T07/);
   const legitimate=structuredClone(original);
-  legitimate.ledgerText=legitimate.ledgerText.replace('| `GC-B01-T07` | TODO','| `GC-B01-T07` | DONE (SOURCE INVENTORY)');
   legitimate.ledgerText=legitimate.ledgerText.replace('| `GC-B01-T08` | TODO','| `GC-B01-T08` | IN_PROGRESS');
   assert.equal(verifySourceTracker(legitimate).tasks,602);
 });
