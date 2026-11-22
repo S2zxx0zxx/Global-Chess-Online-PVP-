@@ -38,6 +38,10 @@ jobs:
           find src server scripts tests -type f -name '*.js' -print0 | xargs -0 -n1 node --check
       - name: Check architecture boundaries
         run: npm run check:architecture
+      - name: Check source-task traceability
+        run: node scripts/verify-source-tracker.mjs
+      - name: Check regression gate baseline
+        run: npm run check:regressions
       - name: Run automated tests
         run: npm test
       - name: Build production PWA
