@@ -1,6 +1,7 @@
 // GC-B01-T07: strict, dependency-free provenance and acceptance ledger guard.
 // Current source row status is historical, not proof of present implementation.
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -71,6 +72,13 @@ export function verifySourceTracker({manifest,taskRows,gateRows,screenRows,testR
     counts[r.batch_candidate]=(counts[r.batch_candidate]||0)+1;
     phases.add(r.phase_id);
   }
+  const digest=text=>createHash('sha256').update(text,'utf8').digest('hex');
+  const idsFingerprint=digest(taskRows.map(r=>r.task_id).join('\n'));
+  const textFingerprint=digest(taskRows.map(r=>[r.task_id,r.task,r.acceptance_evidence].join('\t')).join('\n'));
+  check(idsFingerprint===manifest.source_provenance.original_task_id_sha256,
+    'Original source task IDs fingerprint mismatch');
+  check(textFingerprint===manifest.source_provenance.original_task_text_acceptance_sha256,
+    'Original source task/acceptance fingerprint mismatch');
   const expect=(actual,want,label)=>check(JSON.stringify(Object.fromEntries(Object.entries(actual).sort()))===
     JSON.stringify(Object.fromEntries(Object.entries(want).sort())),label+' registry count disagreement');
   expect(origins,{V2_UPLOADED_PRESERVED:418,V3_REFERENCE_REFINEMENT:184},'Origin');
@@ -94,9 +102,18 @@ export function verifySourceTracker({manifest,taskRows,gateRows,screenRows,testR
   check(screenRows.every(x=>x.status==='NOT_STARTED'),'Source screen historical status altered');
   check(testRows.every(x=>x.status==='NOT_RUN'),'Source test historical status altered');
   check(assetRows.every(x=>x.status==='NOT_STARTED'),'Source asset historical status altered');
-  check(ledgerText.includes('GC-B01-T03')&&ledgerText.includes('BLOCKED_EXTERNAL'),'Unresolved T03 lost');
-  check(ledgerText.includes('GC-B01-GATE')&&ledgerText.includes('NOT_ELIGIBLE'),'Batch NO_GO lost');
-  check(ledgerText.includes('GC-B01-T08')&&ledgerText.includes('TODO'),'T08 started before T07 closed');
+  const rowStatus=id=>{
+    const match=ledgerText.match(new RegExp('^\\|\\s*`'+id+'`\\s*\\|\\s*([^|]+)\\|','m'));
+    return match?.[1]?.trim() ?? null;
+  };
+  const t03=rowStatus('GC-B01-T03'),t07=rowStatus('GC-B01-T07'),t08=rowStatus('GC-B01-T08'),gate=rowStatus('GC-B01-GATE');
+  check(t03!==null&&t07!==null&&t08!==null&&gate!==null,'Required T03/T07/T08/B01 gate ledger row missing');
+  if(!t03.startsWith('DONE'))check(!gate.startsWith('BATCH_GO'),'Cannot mark B01 GO when T03 remains unresolved');
+  if(!t08.startsWith('TODO'))check(t07.startsWith('DONE'),'T08 progression cannot predate T07 evidence closure');
+  if(gate.startsWith('BATCH_GO')){
+    check(t03.startsWith('DONE')&&t07.startsWith('DONE')&&t08.startsWith('DONE'),'B01 GO requires T03, T07 and T08 closed');
+    check(ledgerText.includes('BATCH_GO_APPROVED')&&ledgerText.includes('reviewer'),'B01 GO needs explicit reviewer signoff');
+  }
   return {tasks:taskRows.length,phases:phases.size,sourceGates:gateRows.length,
     sourceScreens:screenRows.length,sourceTests:testRows.length,sourceAssets:assetRows.length,
     originalV2:origins.V2_UPLOADED_PRESERVED,refinementsV3:origins.V3_REFERENCE_REFINEMENT,
