@@ -1,3 +1,5 @@
+import { summarizeMatches } from './game-stats.js';
+import { BOARD_THEMES, PIECE_THEMES } from './appearance.js';
 import { lessons, puzzles, dailyExercise } from './learning.js';
 import { mountScreenRoutes } from './screen-routes.js';
 
@@ -12,7 +14,7 @@ function element(tag, className, text) {
 
 // The v3 M0 shell intentionally calls existing, tested game commands rather
 // than keeping a separate copy of chess state in the presentation layer.
-export function mountAppShell({startMatch, historyCount, readSavedHistory, writeSavedHistory, clearCompletedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, preparePwaUpdate,hasCorruptMatch, storagePersistent = true}) {
+export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, clearCompletedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, preparePwaUpdate,hasCorruptMatch, storagePersistent = true}) {
   const main = document.querySelector('main');
   const lobby = byId('lobby');
   const match = byId('match-area');
@@ -27,8 +29,13 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   }
 
   const hero = element('div', 'ch-hero');
-  hero.innerHTML = '<div class="ch-hero-mark"><img class="ch-brand-art" src="/brand/global-chess-emblem.svg" alt="Global Chess emblem"></div><p class="ch-eyebrow">THE CLASSIC GAME, REIMAGINED</p><h2>GLOBAL CHESS</h2><p>Play your way. Learn every game.</p>';
-  lobby.insertBefore(hero, lobby.firstChild);
+  hero.innerHTML = '<div class="ch-hero-copy"></div><div class="ch-hero-mark"><img class="ch-brand-art" src="/brand/global-chess-emblem.svg" alt=""></div>';
+  const greeting = byId('guest-greeting');
+  const lobbyTitle = byId('lobby-title');
+  const intro = lobbyTitle.parentElement;
+  hero.querySelector('.ch-hero-copy').append(greeting, lobbyTitle);
+  intro.replaceWith(hero);
+  hero.after(byId('lobby-resume'));
 
   const play = element('section', 'ch-screen ch-play-hub');
   play.id = 'ch-play-hub';
@@ -47,7 +54,32 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   const profile = element('section', 'ch-screen ch-profile-hub');
   profile.id = 'ch-profile-hub';
   profile.setAttribute('aria-labelledby', 'ch-profile-title');
-  profile.innerHTML = '<p class="ch-eyebrow">YOUR LOCAL JOURNEY</p><h1 id="ch-profile-title">Player profile</h1><div class="ch-profile-card"><div class="ch-profile-avatar" id="ch-profile-avatar" aria-hidden="true">♞</div><div><strong id="ch-profile-name">Guest player</strong><small>Local player · saved on this device</small></div></div><div class="ch-profile-stat"><span>Completed matches in history</span><strong id="ch-history-total">0</strong></div><p class="ch-support">Clearing browser data may remove your local progress. Export backups from Match History.</p><div class="ch-profile-actions"><button type="button" id="ch-edit-profile">Edit profile</button><button type="button" id="ch-profile-history">Match history</button><button type="button" id="ch-profile-settings">Settings</button></div>';
+  profile.innerHTML = `
+    <h1 id="ch-profile-title">Profile</h1>
+    <div class="ch-profile-card">
+      <div class="ch-profile-avatar" id="ch-profile-avatar" aria-hidden="true"></div>
+      <div class="ch-profile-identity">
+        <strong id="ch-profile-name"></strong>
+        <small id="ch-profile-storage"></small>
+      </div>
+      <button class="ch-action" type="button" id="ch-edit-profile">Edit</button>
+    </div>
+    <nav class="ch-profile-tabs" aria-label="Profile sections">
+      <span class="ch-action" aria-current="page">Info</span>
+      <button class="ch-action" type="button" id="ch-profile-avatars">Avatars</button>
+      <button class="ch-action" type="button" id="ch-profile-frames">Frames</button>
+    </nav>
+    <div class="ch-profile-equipment">
+      <div><span>Pieces</span><strong id="ch-profile-pieces"></strong></div>
+      <div><span>Board</span><strong id="ch-profile-board"></strong></div>
+      <button class="ch-action" type="button" id="ch-profile-appearance">Edit appearance</button>
+    </div>
+    <h2 class="ch-section-title">Vs Computer</h2>
+    <dl class="ch-profile-results" id="ch-profile-results"></dl>
+    <div class="ch-profile-actions">
+      <button type="button" id="ch-profile-history">Match history</button>
+      <button type="button" id="ch-profile-settings">Settings</button>
+    </div>`;
   learn.after(profile);
 
   const nav = element('nav', 'ch-tab-bar');
@@ -217,6 +249,9 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
 
   byId('ch-edit-profile').addEventListener('click',()=>byId('profile-open').click());
   byId('ch-profile-history').addEventListener('click',()=>go('history'));
+  byId('ch-profile-avatars').addEventListener('click',()=>go('avatars'));
+  byId('ch-profile-frames').addEventListener('click',()=>go('frames'));
+  byId('ch-profile-appearance').addEventListener('click',()=>go('appearance'));
   byId('ch-profile-settings').addEventListener('click',()=>go('settings'));
 
   // The core still owns profile and match state. The shell only reads truthful,
@@ -232,8 +267,29 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
     avatar.replaceChildren(icon);
     const frame=(()=>{try{return JSON.parse(localStorage.getItem('global-chess.avatar-frame.v1')||'null');}catch{return null;}})();
     avatar.dataset.frame=['gold','walnut','teal'].includes(frame)?frame:'gold';
-    const total=historyCount();
-    byId('ch-history-total').textContent=total===null?'Unavailable':String(total);
+    byId('ch-profile-storage').textContent=storagePersistent?'Local profile':'Temporary session';
+    const {chTheme,chPieces}=document.documentElement.dataset;
+    byId('ch-profile-board').textContent=(BOARD_THEMES.find(theme=>theme.id===chTheme) ?? BOARD_THEMES[0]).name;
+    byId('ch-profile-pieces').textContent=(PIECE_THEMES.find(theme=>theme.id===chPieces) ?? PIECE_THEMES[0]).name;
+    let stats;
+    try {
+      const history=readSavedHistory();
+      if(Array.isArray(history)) stats=summarizeMatches(history);
+    } catch { /* Keep unreadable history distinct from zero games. */ }
+    const values=stats ? [
+      ['Games won',stats.wins+' of '+stats.computerGames],
+      ['Win rate',stats.computerGames?stats.winRate+'%':'No games yet'],
+      ['Current win streak',stats.currentWinStreak],
+      ['Best win streak',stats.bestWinStreak],
+      ['Verified matches in history',stats.completed],
+    ] : [['Match statistics','History unavailable']];
+    byId('ch-profile-results').replaceChildren(...values.map(([label,value])=>{
+      const row=element('div','ch-profile-result');
+      row.append(element('dt','',label),element('dd','',String(value)));
+      return row;
+    }));
+    if(stats?.invalid) byId('ch-profile-results').append(element('div','ch-profile-result-note',stats.invalid+' unverified records excluded.'));
+
   }
   byId('profile-form').addEventListener('submit',()=>queueMicrotask(refreshProfile));
   window.addEventListener('chess-profile-changed',refreshProfile);
@@ -260,7 +316,7 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
     profile.hidden=next!=='profile';
     screenRoutes?.show(next);
     for(const tab of nav.querySelectorAll('button')){
-      const active=tab.dataset.chView===next || (['history','review','progress','achievements','appearance','avatars','settings','data','transfer','update','about'].includes(next)&&tab.dataset.chView==='profile') || (['lessons','lesson','puzzles','puzzle','puzzle-result','daily'].includes(next)&&tab.dataset.chView==='learn');
+      const active=tab.dataset.chView===next || (['history','review','progress','achievements','appearance','avatars','frames','settings','data','transfer','update','about'].includes(next)&&tab.dataset.chView==='profile') || (['lessons','lesson','puzzles','puzzle','puzzle-result','daily'].includes(next)&&tab.dataset.chView==='learn');
       tab.setAttribute('aria-current',active?'page':'false');
     }
     if(next==='profile') refreshProfile();
@@ -294,7 +350,9 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   for(const [label,route] of [['Daily Challenge','daily'],['Puzzles','puzzles'],['Achievements','achievements'],['Appearance','appearance']]){
     const link=element('button','ch-home-shortcut',label);link.type='button';link.addEventListener('click',()=>go(route));more.append(link);
   }
-  lobby.append(more);
+  more.setAttribute('role','group');
+  more.setAttribute('aria-label','Explore Global Chess');
+  lobby.prepend(more);
   document.documentElement.classList.add('ch-shell-ready');
   // Read-only deep links let QA visit each ZIP v3 screen without modifying
   // active game state. Invite hashes always take precedence.

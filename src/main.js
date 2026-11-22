@@ -13,6 +13,8 @@ import './style.css';
 import './app-shell.css';
 import './screen-routes.css';
 import './royal-appearance.css';
+import './home.css';
+import './profile.css';
 import { mountAppShell } from './app-shell.js';
 import { restoreGame, serializeGame, savedMatchOutcome, claimableDraw, intendedDraw, hasAvailableDrawClaim } from './game.js';
 
@@ -452,9 +454,6 @@ lobby = bindLobby({
 });
 appShell = mountAppShell({
   startMatch:startLocalMatch,
-  historyCount() {
-    try { return summarizeMatches(readHistory(gameStorage)).completed; } catch { return null; }
-  },
   storagePersistent: gameStorage.durable,
   hasCorruptMatch(){return Boolean(corruptMatchRaw);},
   async preparePwaUpdate(){

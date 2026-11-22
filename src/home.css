@@ -1,0 +1,197 @@
+.ch-shell-ready #lobby {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: #000;
+  box-shadow: none;
+}
+
+#lobby .ch-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 180px;
+  margin: 8px 0 0;
+  padding: clamp(18px, 5vw, 36px);
+  border: 1px solid #554230;
+  border-radius: 26px 26px 26px 6px;
+  background: radial-gradient(ellipse at 92% 0%, #43301d, transparent 72%), #131110;
+  text-align: left;
+}
+
+#lobby #guest-greeting {
+  margin: 0 0 8px;
+  color: #e2c39b;
+  font: 600 .85rem/1.4 system-ui, sans-serif;
+  overflow-wrap: anywhere;
+}
+
+#lobby #lobby-title {
+  margin: 0;
+  color: #fff1d9;
+  font: 500 clamp(2rem, 7vw, 3.9rem)/1.03 Georgia, serif;
+  letter-spacing: -.045em;
+  text-wrap: balance;
+}
+
+#lobby .ch-hero-mark {
+  min-height: 0;
+}
+
+#lobby .ch-brand-art {
+  width: clamp(70px, 23vw, 150px);
+}
+
+.ch-shell-ready #lobby .mode-cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.ch-shell-ready #lobby .mode-cards button {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  grid-column: auto !important;
+  min-height: 126px;
+  padding: 14px;
+  border-radius: 18px 18px 18px 5px;
+  box-shadow: none;
+}
+
+.ch-shell-ready #lobby .mode-cards button::after {
+  top: 7px;
+  right: 6px;
+  bottom: auto;
+  width: 48%;
+  height: 48%;
+  background-position: right center;
+}
+
+.ch-shell-ready #lobby .mode-cards strong,
+.ch-shell-ready #lobby .mode-cards small {
+  max-width: 100%;
+}
+
+.ch-shell-ready #lobby .mode-cards strong {
+  font: 750 clamp(1rem, 3.8vw, 1.35rem)/1.15 system-ui, sans-serif;
+  letter-spacing: -.025em;
+}
+
+.ch-shell-ready #lobby .mode-cards small {
+  font: 550 .76rem/1.35 system-ui, sans-serif;
+  opacity: 1;
+}
+
+#lobby #lobby-resume {
+  background: #251d15;
+  border-color: #a58352;
+}
+
+#lobby .ch-home-section-title {
+  margin: 22px 0 8px;
+  color: #fff1d9;
+  font: 500 1.45rem/1.2 Georgia, serif;
+}
+
+#lobby .ch-home-shortcuts {
+  gap: 8px;
+  margin: 0;
+}
+
+#lobby .ch-home-shortcut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 46px;
+  background: #121212;
+  text-align: left;
+  font: 650 .82rem/1.3 system-ui, sans-serif;
+}
+
+#lobby .ch-home-shortcut::after {
+  content: '';
+  flex: 0 0 6px;
+  height: 6px;
+  border: solid #d7b482;
+  border-width: 1px 1px 0 0;
+  transform: rotate(45deg);
+}
+
+@media (min-width: 650px) {
+  .ch-shell-ready #lobby .mode-cards,
+  #lobby .ch-home-shortcuts {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Portrait arcade layout with Global Chess's existing artwork and routes. */
+.ch-shell-ready #lobby {
+  max-width: 610px;
+  margin-inline: auto;
+  padding: clamp(10px, 3vw, 22px);
+  border: 1px solid #654c35;
+  border-radius: 24px;
+  background:
+    repeating-conic-gradient(#ffd38c08 0% 25%, transparent 0% 50%) 0 0 / 104px 104px,
+    radial-gradient(ellipse at 50% 37%, #403023, #141210 81%);
+}
+#lobby .ch-home-shortcuts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+#lobby .ch-home-shortcut {
+  background: linear-gradient(#382b22, #201913);
+  border-color: #6c5036;
+}
+#lobby .ch-hero {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: center;
+  gap: 4px;
+  min-height: clamp(165px, 33vw, 215px);
+  padding: 12px;
+  margin-block: 6px;
+  text-align: center;
+  border: 0;
+  background: radial-gradient(ellipse at 50% 49%, #ad782c38, transparent 63%);
+}
+#lobby .ch-brand-art {
+  width: clamp(82px, 23vw, 118px);
+}
+#lobby #lobby-title {
+  font-size: clamp(1.65rem, 6vw, 2.45rem);
+}
+#lobby #guest-greeting {
+  margin-bottom: 3px;
+}
+.ch-shell-ready #lobby .mode-cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-inline: clamp(0px, 3vw, 24px);
+}
+.ch-shell-ready #lobby .mode-cards button:nth-child(-n+2) {
+  grid-column: 1 / -1 !important;
+  min-height: clamp(78px, 15vw, 102px);
+  justify-content: center;
+}
+.ch-shell-ready #lobby .mode-cards button {
+  min-height: 96px;
+  border: 2px solid #ffffff42;
+  border-radius: 15px;
+  box-shadow: inset 0 2px #ffffff30, 0 4px 0 #100c08;
+}
+.ch-shell-ready #lobby .mode-cards button:nth-child(-n+2)::after {
+  top: 0;
+  right: 9px;
+  height: 100%;
+  width: 37%;
+}
+.ch-shell-ready #lobby .mode-cards button:nth-child(-n+2) :is(strong,small) {
+  max-width: 65%;
+}
+.ch-shell-ready #lobby .mode-cards button:nth-child(-n+2) strong {
+  font-size: clamp(1.32rem, 5.4vw, 1.9rem);
+}
+.ch-shell-ready #lobby #lobby-computer { background: linear-gradient(#954b40,#602620); }
+.ch-shell-ready #lobby #lobby-online { background: linear-gradient(#42745d,#244539); }

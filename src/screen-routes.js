@@ -28,7 +28,7 @@ const EXPORT=(data,name,type)=>{
   const a=mk('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1800);
 };
-export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','settings','data','transfer','recovery','update','about']);
+export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','frames','settings','data','transfer','recovery','update','about']);
 
 export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
   const screen=mk('section','ch-screen ch-extra-screen');
@@ -47,7 +47,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
     screen.replaceChildren();
     const section=mk('div','ch-extra-body');
     screen.append(section);
-    const parents={menu:'match',pause:'match',result:'match',review:'history',history:'profile',lessons:'learn',lesson:'lessons',puzzles:'learn',puzzle:'puzzles','puzzle-result':'puzzles',daily:'learn',progress:'profile',achievements:'profile',appearance:'profile',avatars:'profile',settings:'profile',data:'settings',transfer:'data',recovery:'match',update:'settings',about:'settings'};
+    const parents={menu:'match',pause:'match',result:'match',review:'history',history:'profile',lessons:'learn',lesson:'lessons',puzzles:'learn',puzzle:'puzzles','puzzle-result':'puzzles',daily:'learn',progress:'profile',achievements:'profile',appearance:'profile',avatars:'profile',frames:'profile',settings:'profile',data:'settings',transfer:'data',recovery:'match',update:'settings',about:'settings'};
     const title=(group,name,sub)=>heading(section,group,name,sub,()=>go(parents[route]||'home'));
     const group=()=>{const x=mk('div','ch-feature-grid');section.append(x);return x;};
     const stack=()=>{const x=mk('div','ch-button-stack');section.append(x);return x;};
@@ -237,8 +237,18 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         row.append(copy,mk('span','ch-achievement-state',earned?'Earned':'Locked'));list.append(row);
       }
     }
+    if(route==='avatars'||route==='frames'){
+      title('Profile',route==='avatars'?'Avatars':'Frames','Your selection is saved on this device.');
+      const tabs=mk('nav','ch-profile-tabs');
+      tabs.setAttribute('aria-label','Profile sections');
+      for(const [name,target] of [['Info','profile'],['Avatars','avatars'],['Frames','frames']]){
+        const tab=btn(name,()=>go(target));
+        if(target===route)tab.setAttribute('aria-current','page');
+        tabs.append(tab);
+      }
+      section.append(tabs);
+    }
     if(route==='avatars'){
-      title('Free local customization','Avatars & frames','Original icon and frame choices are stored on this device. No locked items or coins.');
       const icons=[['♞','Knight','/brand/guest-avatar.svg'],['♜','Rook','/brand/pieces/piece_white_rook.svg'],['♛','Queen','/brand/pieces/piece_white_queen.svg']];
       const gallery=mk('div','ch-avatar-gallery');section.append(gallery);
       const current=ls('global-chess.preferences.v1',{});
@@ -260,7 +270,8 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         });
         gallery.append(button);
       }
-      section.append(mk('h2','ch-section-title','Decorative frames'));
+    }
+    if(route==='frames'){
       const frames=mk('div','ch-frame-gallery');section.append(frames);
       for(const [value,label] of [['gold','Antique Gold'],['walnut','Royal Walnut'],['teal','Forest Teal']]){
         const selectedFrame=ls('global-chess.avatar-frame.v1','gold')===value;
@@ -276,7 +287,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         });
         frames.append(button);
       }
-      section.append(btn('View player profile',()=>go('profile'),'primary'));
+
     }
     if(route==='appearance'){
       title('Royal visual collection','Appearance','Choose your board and pieces independently. Every look is free and works offline.');

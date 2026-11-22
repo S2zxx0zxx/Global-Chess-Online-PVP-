@@ -1,0 +1,68 @@
+.ch-shell-ready #ch-profile-hub {
+  padding: clamp(14px, 4vw, 32px);
+  background: radial-gradient(ellipse at 50% 0%, #332519, #101010 60%);
+}
+#ch-profile-title {
+  font: 500 clamp(2rem, 6vw, 3rem)/1 Georgia, serif;
+}
+#ch-profile-hub .ch-profile-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: clamp(8px, 3vw, 18px);
+  align-items: center;
+  margin: 16px 0 12px;
+  background: #191511;
+}
+#ch-profile-hub .ch-profile-avatar {
+  width: clamp(56px, 15vw, 90px);
+  height: clamp(56px, 15vw, 90px);
+}
+.ch-profile-identity { overflow-wrap: anywhere; }
+.ch-profile-identity strong { font-size: clamp(1rem, 4vw, 1.4rem); }
+.ch-profile-identity small { display: block; color: #d5bc9c; margin-top: 4px; }
+.ch-profile-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-block: 8px 16px;
+}
+.ch-profile-tabs .ch-action { padding-inline: 4px; }
+.ch-profile-tabs [aria-current=page] {
+  display: grid;
+  place-items: center;
+  background: #e6bf80;
+  color: #23170e;
+  font-weight: 750;
+}
+.ch-profile-equipment {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 8px;
+}
+.ch-profile-equipment > div {
+  display: grid;
+  gap: 5px;
+  background: #191511;
+  border: 1px solid #584332;
+  border-radius: 14px;
+  padding: 12px;
+}
+.ch-profile-equipment span { color: #d5bc9c; font-size: .84rem; }
+.ch-profile-equipment button { grid-column: 1 / -1; }
+.ch-profile-results {
+  padding: 4px 12px;
+  border: 1px solid #584332;
+  border-radius: 14px;
+  background: #191511;
+}
+.ch-profile-result {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding-block: 9px;
+}
+.ch-profile-result + .ch-profile-result { border-top: 1px solid #ffffff15; }
+.ch-profile-result dd { margin: 0; text-align: right; color: #f0ca89; font-weight: 700; }
+#ch-profile-hub:has(.ch-profile-result-note) .ch-profile-results { margin-bottom: 18px; }
+.ch-profile-result-note { margin-block: 8px; color: #d5bc9c; font-size: .8rem; }
