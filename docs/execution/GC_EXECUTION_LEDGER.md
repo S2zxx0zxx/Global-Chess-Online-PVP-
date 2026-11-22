@@ -9,9 +9,9 @@
 ## Current control
 
 - **Tasks closed:** `GC-B01-T01` — `DONE` (source pin); `GC-B01-T02` — `DONE` (historical PR reconciliation only)
-- **One active task:** `NONE` (between tasks; do not automatically start work)
-- **Next eligible task:** `GC-B01-T03` — `TODO`
-- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03–T08 pending)
+- **One active task:** `GC-B01-T03` — `BLOCKED_EXTERNAL` (admin ruleset protection and manual PR reviews outstanding; no other task allowed)
+- **Next eligible action:** `RESUME GC-B01-T03` after owner enforces GitHub rulesets and reviews docs/CI PRs; **T04 is not eligible**
+- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03 blocked; T04–T08 pending)
 - **No change authority inferred:** no merges, force pushes, production changes, billing or other work approved by this document.
 
 ## Task closure: GC-B01-T01
@@ -105,13 +105,66 @@ next_task_requires_explicit_command: START GC-B01-T03
 
 **T02 detail:** [`GC-B01-T02_PR18_RECONCILIATION_2026-11-22.md`](GC-B01-T02_PR18_RECONCILIATION_2026-11-22.md)
 
+## GC-B01-T03 — Resumable owner-governance checkpoint
+
+```yaml
+plan_id: GC-MASTER-EXEC-v1.0
+batch_id: GC-B01
+task_id: GC-B01-T03
+status: BLOCKED_EXTERNAL
+scope: canonical_source_branch_PR_merge_review_and_rollback_policy
+source_app_sha: 3d9467ada0eaf167eecc52d6c98ed126fa98c98c
+canonical_branch: integration/global-chess-v3
+canonical_created_from: feat/chess-release-integration
+canonical_bootstrap_ahead: 0
+canonical_bootstrap_behind: 0
+canonical_git_protection: NOT_ENFORCED
+rulesets_api_result: empty_array
+main_protected: false
+approval_evidence: NOT_OBTAINED
+verified_baseline_source_pr: https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/18
+previous_tasks:
+  - "GC-B01-T01 DONE: PR #19, retargeted to canonical without changing head"
+  - "GC-B01-T02 DONE: PR #20, stacked on T01"
+task_work_branch: docs/gc-b01-t03-canonical-pr-policy
+task_draft_pr: https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/21
+task_changed_files:
+  - docs/execution/GC-B01-T03_CANONICAL_BRANCH_PR_POLICY_2026-11-22.md
+  - .github/PULL_REQUEST_TEMPLATE.md
+  - .github/workflows/verify.yml
+  - docs/execution/GC_EXECUTION_LEDGER.md
+done_so_far:
+  - "Canonical exact-SHA source branch physically created"
+  - "Original PR #19 safely retargeted to identical canonical source"
+  - "Branch ownership, naming, PR-only review and safe rollback documented"
+  - "One-task PR template proposed"
+  - "Core CI workflow proposed to trigger on integration/global-chess-v3"
+  - "Historical #2/#12 protected from blind merge"
+  - "Existing PR #17 ads remain unmerged and not authorized"
+not_yet_done:
+  - "GitHub owner creates ACTIVE branch ruleset covering canonical and main"
+  - "Review and safely merge stacked documentation/CI PRs #19 #20 #21"
+  - "Verify core status check actually appears for a PR targeting canonical"
+  - "Configure required exact core status check without deadlocking skipped jobs"
+  - "Confirm branch protected=true and owner reviewed/signed policy"
+current_head_tests: "No new app-code change; current PR #18 head previously verified by CI"
+new_ci_workflow_effective_on_canonical: false
+rollback: "Close draft PR #21/delete only docs task branch; canonical remains pinned to original SHA until owner merges; never force push"
+promotion_to_GC_B01_T04: DENIED
+next_command: RESUME GC-B01-T03
+```
+
+**T03 documentation:** [`GC-B01-T03_CANONICAL_BRANCH_PR_POLICY_2026-11-22.md`](GC-B01-T03_CANONICAL_BRANCH_PR_POLICY_2026-11-22.md).
+
+**STOP rule:** T03 cannot be declared DONE merely because its branch, Markdown and PR exist. GitHub rulesets are not configured, and no owner review was provided. T04–T08 stay TODO.
+
 ## Batch 01 sequential pointer
 
 | Task ID | Status | Evidence |
 |---|---|---|
 | `GC-B01-T01` | DONE | Exact-SHA baseline in this PR |
 | `GC-B01-T02` | DONE | `GC-B01-T02_PR18_RECONCILIATION_2026-11-22.md`; blocked features remain open under their own task IDs |
-| `GC-B01-T03` | TODO | No action started |
+| `GC-B01-T03` | BLOCKED_EXTERNAL | Canonical branch + T03 policy and CI patch prepared; PR #21 pending review; GitHub active ruleset not configured |
 | `GC-B01-T04` | TODO | No action started |
 | `GC-B01-T05` | TODO | No action started |
 | `GC-B01-T06` | TODO | No action started |
@@ -122,7 +175,7 @@ next_task_requires_explicit_command: START GC-B01-T03
 ## Resume procedure
 
 1. Issue `STATUS GC-B01-T01` to verify source evidence if audit freshness is in doubt.
-2. Issue `START GC-B01-T03` for canonical branch and PR protocol *only after explicitly choosing to start that task*.
+2. Issue `RESUME GC-B01-T03` after enabling protected-branch rulesets and reviewing/merging stacked PR #19–#21; DO NOT issue `START GC-B01-T04` until T03 is independently verified DONE.
 3. Re-fetch GitHub heads before edits, use exact SHA proofs and preserve all historic game code.
 4. Never mark subsequent tasks DONE by copying this ledger status.
 
