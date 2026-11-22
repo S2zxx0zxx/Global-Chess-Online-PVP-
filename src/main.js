@@ -16,6 +16,7 @@ import './app-shell.css';
 import './screen-routes.css';
 import { mountAppShell } from './app-shell.js';
 import { finalizeOfflineExit } from './session-exit.js';
+import { createGameMonetization } from './monetization.js';
 import { restoreGame, serializeGame, savedMatchOutcome, claimableDraw, intendedDraw, hasAvailableDrawClaim } from './game.js';
 
 import { matchKey as key, historyKey, exportBackup, importBackupDurably, previewBackup } from './backup.js';
@@ -470,7 +471,13 @@ lobby = bindLobby({
     try { return summarizeMatches(readHistory(gameStorage)).completed; } catch { return null; }
   },
 });
+const monetization = createGameMonetization(gameStorage,()=>({
+  screen:appShell?.view,
+  outcome:outcome(state.game),
+  online:Boolean(online?.active),
+}),()=>window.dispatchEvent(new Event('chess-monetization-changed')));
 appShell = mountAppShell({
+  monetization,
   startMatch:startLocalMatch,
   historyCount() {
     try { return summarizeMatches(readHistory(gameStorage)).completed; } catch { return null; }
