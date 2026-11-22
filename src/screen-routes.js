@@ -478,6 +478,12 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
           privacy.disabled=false;
         });
         section.append(privacy);
+        if(monetizationStatus.privacyUrl){
+          const link=mk('a','ch-privacy-link','Read advertising privacy policy');
+          link.href=monetizationStatus.privacyUrl;
+          link.target='_blank';link.rel='noopener noreferrer';
+          section.append(link);
+        }
         if(monetizationStatus.earned)
           paragraph(section,'Supporter Crest earned locally · purely decorative, no extra moves, chess hints, XP or competitive benefit.','ch-inline-notice');
       }
