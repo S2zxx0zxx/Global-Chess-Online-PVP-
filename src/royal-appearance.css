@@ -1,0 +1,218 @@
+/* Five original CSS treatments. No remote art, video, canvas loop, or extra download. */
+:root[data-ch-theme=ember],.ch-preview-ember{
+  --royal-light:#f5ce90;--royal-light-glint:#fff2c3;--royal-dark:#652c25;--royal-dark-glint:#b4472e;
+  --royal-frame-a:#ffcb70;--royal-frame-b:#612120;--royal-glow:#ff8c36;--royal-veil:#ffb45469;
+}
+:root[data-ch-theme=mist],.ch-preview-mist{
+  --royal-light:#d8d6d0;--royal-light-glint:#f8f6f0;--royal-dark:#3b4654;--royal-dark-glint:#617086;
+  --royal-frame-a:#a8b8c6;--royal-frame-b:#25303e;--royal-glow:#b3d5ee;--royal-veil:#c8d9ec80;
+}
+:root[data-ch-theme=astral],.ch-preview-astral{
+  --royal-light:#e2c9d9;--royal-light-glint:#fff4ec;--royal-dark:#46315e;--royal-dark-glint:#765099;
+  --royal-frame-a:#e8b7fa;--royal-frame-b:#28183f;--royal-glow:#d994ff;--royal-veil:#eab5ff80;
+}
+:root[data-ch-theme=frost],.ch-preview-frost{
+  --royal-light:#e0f1f4;--royal-light-glint:#fff;--royal-dark:#3b7085;--royal-dark-glint:#69a8bb;
+  --royal-frame-a:#b9f5fb;--royal-frame-b:#235069;--royal-glow:#8df4ff;--royal-veil:#b7fcff8c;
+}
+:root[data-ch-theme=emerald],.ch-preview-emerald{
+  --royal-light:#dfd6a9;--royal-light-glint:#fff3ca;--royal-dark:#255e55;--royal-dark-glint:#428d6c;
+  --royal-frame-a:#e7ca75;--royal-frame-b:#194438;--royal-glow:#82e4a3;--royal-veil:#b7f3aa80;
+}
+
+:root:is([data-ch-theme=ember],[data-ch-theme=mist],[data-ch-theme=astral],[data-ch-theme=frost],[data-ch-theme=emerald]) .board:not(.ch-review-board){
+  box-shadow:0 14px 42px #080510a8,0 0 28px color-mix(in srgb,var(--royal-glow) 32%,transparent);
+}
+:root:is([data-ch-theme=ember],[data-ch-theme=mist],[data-ch-theme=astral],[data-ch-theme=frost],[data-ch-theme=emerald]) .board:not(.ch-review-board)::before{
+  filter:none;
+  background:radial-gradient(circle at 17% 8%,var(--royal-frame-a),transparent 39%),
+    radial-gradient(circle at 89% 91%,var(--royal-glow),transparent 37%),
+    linear-gradient(135deg,var(--royal-frame-b),var(--royal-frame-a) 48%,var(--royal-frame-b));
+  box-shadow:inset 0 0 0 2px var(--royal-frame-a),inset 0 0 18px #070608b0;
+}
+:root:is([data-ch-theme=ember],[data-ch-theme=mist],[data-ch-theme=astral],[data-ch-theme=frost],[data-ch-theme=emerald]) .board:not(.ch-review-board)::after{
+  content:'';position:absolute;inset:1.4%;z-index:2;pointer-events:none;border:2px solid var(--royal-veil);border-radius:4px;
+  box-shadow:inset 0 0 17px color-mix(in srgb,var(--royal-glow) 45%,transparent),0 0 13px var(--royal-veil);
+  animation:royal-frame-breathe 4.5s ease-in-out infinite alternate;
+}
+:root:is([data-ch-theme=ember],[data-ch-theme=mist],[data-ch-theme=astral],[data-ch-theme=frost],[data-ch-theme=emerald]) .board:not(.ch-review-board) .light{
+  background:radial-gradient(circle at 20% 14%,var(--royal-light-glint),transparent 72%),var(--royal-light);
+}
+:root:is([data-ch-theme=ember],[data-ch-theme=mist],[data-ch-theme=astral],[data-ch-theme=frost],[data-ch-theme=emerald]) .board:not(.ch-review-board) .dark{
+  background:radial-gradient(circle at 14% 12%,var(--royal-dark-glint),transparent 76%),var(--royal-dark);
+}
+:root:is([data-ch-theme=ember],[data-ch-theme=mist],[data-ch-theme=astral],[data-ch-theme=frost],[data-ch-theme=emerald]) .board:not(.ch-review-board) button[aria-pressed=true]{
+  background:color-mix(in srgb,var(--ch-color-board-select) 78%,var(--royal-light));
+}
+:root:is([data-ch-theme=ember],[data-ch-theme=mist],[data-ch-theme=astral],[data-ch-theme=frost],[data-ch-theme=emerald]) .board:not(.ch-review-board) .dark .file-label,
+:root:is([data-ch-theme=ember],[data-ch-theme=mist],[data-ch-theme=astral],[data-ch-theme=frost],[data-ch-theme=emerald]) .board:not(.ch-review-board) .dark .rank-label{color:#fff8e7;text-shadow:0 1px 3px #000c}
+:root.high-contrast:is([data-ch-theme=ember],[data-ch-theme=mist],[data-ch-theme=astral],[data-ch-theme=frost],[data-ch-theme=emerald]) .board:not(.ch-review-board) .light{background:#fff1ce}
+:root.high-contrast:is([data-ch-theme=ember],[data-ch-theme=mist],[data-ch-theme=astral],[data-ch-theme=frost],[data-ch-theme=emerald]) .board:not(.ch-review-board) .dark{background:#67463d}
+
+/* The cards show the same board palette and a miniature crowned piece. */
+.ch-theme-preview:is(.ch-preview-ember,.ch-preview-mist,.ch-preview-astral,.ch-preview-frost,.ch-preview-emerald){
+  position:relative;display:grid;place-items:center;overflow:hidden;border-color:var(--royal-frame-a);
+  background-color:var(--royal-light);
+  background-image:conic-gradient(var(--royal-dark) 25%,var(--royal-light) 0 50%,var(--royal-dark) 0 75%,var(--royal-light) 0);
+  box-shadow:inset 0 0 0 1px #fff8,0 0 16px color-mix(in srgb,var(--royal-glow) 45%,transparent);
+}
+.ch-theme-preview:is(.ch-preview-ember,.ch-preview-mist,.ch-preview-astral,.ch-preview-frost,.ch-preview-emerald)::after{
+  content:'';position:absolute;inset:0;border:2px solid var(--royal-veil);box-shadow:inset 0 0 17px var(--royal-glow);
+  animation:royal-frame-breathe 4s ease-in-out infinite alternate;pointer-events:none;
+}
+.ch-theme-preview-piece{position:relative;z-index:1;width:57%;height:57%;object-fit:contain;filter:drop-shadow(0 3px 3px #000b);animation:royal-preview-float 3s ease-in-out infinite alternate}
+.ch-preview-ember .ch-theme-preview-piece{filter:sepia(.6) saturate(2.1) drop-shadow(0 0 8px #ff792e)}
+.ch-preview-mist .ch-theme-preview-piece{filter:grayscale(.7) drop-shadow(0 0 8px #c3e5ff)}
+.ch-preview-astral .ch-theme-preview-piece{filter:hue-rotate(205deg) saturate(1.2) drop-shadow(0 0 8px #d99bff)}
+.ch-preview-frost .ch-theme-preview-piece{filter:hue-rotate(150deg) saturate(.9) drop-shadow(0 0 8px #8eeaff)}
+.ch-preview-emerald .ch-theme-preview-piece{filter:hue-rotate(90deg) saturate(1.4) drop-shadow(0 0 8px #80edab)}
+
+/* An aura is part of each rendered piece, never a separate clickable layer. */
+:root[data-ch-pieces=ember],.ch-piece-card[data-piece-style=ember]{--piece-glow:#ff8d32;--piece-core:#ffe1a0;--piece-filter:sepia(.5) saturate(1.9) hue-rotate(-12deg)}
+:root[data-ch-pieces=mist],.ch-piece-card[data-piece-style=mist]{--piece-glow:#b4d9ed;--piece-core:#f3fbff;--piece-filter:grayscale(.58) brightness(1.08)}
+:root[data-ch-pieces=astral],.ch-piece-card[data-piece-style=astral]{--piece-glow:#ce91fb;--piece-core:#f5d8ff;--piece-filter:hue-rotate(205deg) saturate(1.4)}
+:root[data-ch-pieces=frost],.ch-piece-card[data-piece-style=frost]{--piece-glow:#83e8f4;--piece-core:#edffff;--piece-filter:hue-rotate(145deg) saturate(.8) brightness(1.15)}
+:root[data-ch-pieces=emerald],.ch-piece-card[data-piece-style=emerald]{--piece-glow:#7cdfa2;--piece-core:#e8ffb9;--piece-filter:hue-rotate(86deg) saturate(1.45)}
+.ch-animated-pieces .board:not(.ch-review-board) button.has-piece .piece-art{
+  position:relative;z-index:1;filter:var(--piece-filter) drop-shadow(0 3px 2px #08070bb5) drop-shadow(0 0 5px var(--piece-glow));
+}
+.ch-piece-preview{position:relative;display:grid;place-items:center;width:94px;height:94px;isolation:isolate}
+.ch-piece-card[data-piece-style] .ch-piece-example{position:relative;z-index:1}
+.ch-piece-card:is([data-piece-style=ember],[data-piece-style=mist],[data-piece-style=astral],[data-piece-style=frost],[data-piece-style=emerald]) .ch-piece-example{
+  filter:var(--piece-filter) drop-shadow(0 4px 3px #000a) drop-shadow(0 0 7px var(--piece-glow));
+  animation:royal-preview-float 2.8s ease-in-out infinite alternate;
+}
+.ch-piece-card[data-piece-style=ember]{background:radial-gradient(circle at 50% 29%,#833c24,#2f171b 73%)}
+.ch-piece-card[data-piece-style=mist]{background:radial-gradient(circle at 50% 29%,#526376,#202634 73%)}
+.ch-piece-card[data-piece-style=astral]{background:radial-gradient(circle at 50% 29%,#644879,#24172f 73%)}
+.ch-piece-card[data-piece-style=frost]{background:radial-gradient(circle at 50% 29%,#426e84,#172a3a 73%)}
+.ch-piece-card[data-piece-style=emerald]{background:radial-gradient(circle at 50% 29%,#31715b,#142d27 73%)}
+.ch-piece-aura{position:absolute;inset:3%;z-index:0;pointer-events:none;isolation:isolate}
+.ch-piece-aura::before,.ch-piece-aura::after{content:'';position:absolute;pointer-events:none}
+.ch-piece-aura::before{
+  inset:13%;border-radius:48%;background:radial-gradient(ellipse at 50% 67%,var(--piece-core),var(--piece-glow) 42%,transparent 72%);
+  opacity:.52;filter:blur(3px);animation:royal-aura-breathe 2.7s ease-in-out infinite alternate;animation-play-state:paused;
+}
+.ch-piece-aura::after{
+  inset:4% 10%;opacity:.85;
+  background:radial-gradient(circle at 23% 72%,var(--piece-core) 0 2px,transparent 3px),
+    radial-gradient(circle at 76% 55%,var(--piece-glow) 0 2px,transparent 3px),
+    radial-gradient(circle at 50% 16%,var(--piece-core) 0 1px,transparent 2px);
+  animation:royal-sparks 2.8s linear infinite;animation-play-state:paused;
+}
+.ch-piece-card .ch-piece-aura::before,.ch-piece-card .ch-piece-aura::after,
+.ch-animated-pieces .board button:is(.piece-k,.piece-q,:hover,:focus-visible,.last-move,[aria-pressed=true]) .ch-piece-aura::before,
+.ch-animated-pieces .board button:is(.piece-k,.piece-q,:hover,:focus-visible,.last-move,[aria-pressed=true]) .ch-piece-aura::after{animation-play-state:running}
+:root[data-ch-pieces=ember] .ch-piece-aura::before,.ch-piece-card[data-piece-style=ember] .ch-piece-aura::before{
+  border-radius:45% 45% 52% 52%;clip-path:polygon(5% 100%,24% 38%,37% 63%,48% 5%,64% 58%,79% 22%,97% 100%);
+  animation-name:royal-flame;
+}
+:root[data-ch-pieces=mist] .ch-piece-aura::before,.ch-piece-card[data-piece-style=mist] .ch-piece-aura::before{
+  inset:2%;border-radius:54% 38% 57% 36%;filter:blur(7px);animation-name:royal-smoke;
+}
+:root[data-ch-pieces=astral] .ch-piece-aura::after,.ch-piece-card[data-piece-style=astral] .ch-piece-aura::after{animation-name:royal-orbit}
+:root[data-ch-pieces=frost] .ch-piece-aura::after,.ch-piece-card[data-piece-style=frost] .ch-piece-aura::after{animation-name:royal-snow}
+:root[data-ch-pieces=emerald] .ch-piece-aura::after,.ch-piece-card[data-piece-style=emerald] .ch-piece-aura::after{animation-name:royal-orbit}
+
+@keyframes royal-frame-breathe{from{opacity:.46}to{opacity:.95}}
+@keyframes royal-preview-float{from{transform:translateY(2px)}to{transform:translateY(-3px)}}
+@keyframes royal-aura-breathe{from{transform:scale(.91);opacity:.34}to{transform:scale(1.09);opacity:.7}}
+@keyframes royal-flame{from{transform:translateY(3px) scaleX(.9);opacity:.42}to{transform:translateY(-6px) scaleX(1.08);opacity:.8}}
+@keyframes royal-smoke{from{transform:translate(-2px,3px) rotate(-8deg);opacity:.3}to{transform:translate(3px,-9px) rotate(8deg);opacity:.63}}
+@keyframes royal-sparks{from{transform:translateY(3px);opacity:.18}50%{opacity:.9}to{transform:translateY(-7px);opacity:.12}}
+@keyframes royal-orbit{from{transform:rotate(0deg);opacity:.4}to{transform:rotate(360deg);opacity:.95}}
+@keyframes royal-snow{from{transform:translateY(-4px) rotate(0deg);opacity:.7}to{transform:translateY(6px) rotate(20deg);opacity:.28}}
+
+@media(max-width:600px){.ch-theme-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){
+  .board::after,.ch-theme-preview::after,.ch-theme-preview-piece,.ch-piece-card .ch-piece-example,.ch-piece-aura::before,.ch-piece-aura::after{animation:none!important}
+}
+
+/* Neutral surroundings let the board and controls supply the color. */
+:root.ch-shell-ready,
+.ch-shell-ready body,
+.ch-shell-ready :is(.lobby,.ch-screen,.ch-tab-bar,.ch-match-dock,.player-panel),
+.ch-shell-ready.ch-view-match .layout > aside {
+  background: #000;
+}
+
+.ch-appearance-categories {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-block: 12px 4px;
+}
+.ch-appearance-categories button[aria-pressed=true] {
+  border-color: #ffd18a;
+  background: #553622;
+}
+.ch-animated-pieces .board:not(.ch-review-board) button.has-piece .piece-art {
+  filter: drop-shadow(0 2px 2px #000c);
+}
+.ch-piece-card .ch-piece-example {
+  filter: drop-shadow(0 3px 3px #000a);
+}
+
+/* Spawn the plume at the foot of the piece and let it expand above the head. */
+.ch-piece-aura {
+  inset: 0;
+}
+.ch-piece-aura::before {
+  inset: auto 12% 14%;
+  height: 84%;
+  border-radius: 0;
+  clip-path: none;
+  background: var(--plume, radial-gradient(ellipse at 50% 88%, var(--piece-glow), transparent 67%));
+  filter: blur(2px);
+  transform-origin: 50% 93%;
+  opacity: .22;
+  animation: royal-plume-rise 2.4s ease-out infinite paused;
+}
+.ch-piece-aura::after {
+  inset: auto 13% 19%;
+  height: 80%;
+  transform-origin: 50% 90%;
+  animation: royal-plume-rise 2.4s ease-out -.95s infinite paused;
+}
+:is(.ch-animated-pieces .board button,.ch-piece-card) .ch-piece-aura::before,
+:is(.ch-animated-pieces .board button,.ch-piece-card) .ch-piece-aura::after {
+  animation-name: royal-plume-rise;
+}
+:is(.ch-piece-card,.ch-animated-pieces .board button:is(.piece-k,.piece-q,.last-move,:hover,:focus-visible,[aria-pressed=true])) .ch-piece-aura::before,
+:is(.ch-piece-card,.ch-animated-pieces .board button:is(.piece-k,.piece-q,.last-move,:hover,:focus-visible,[aria-pressed=true])) .ch-piece-aura::after {
+  animation-play-state: running;
+}
+:is(:root[data-ch-pieces=mist] .board,.ch-piece-card[data-piece-style=mist]) .ch-piece-aura::before,
+:is(:root[data-ch-pieces=mist] .board,.ch-piece-card[data-piece-style=mist]) .ch-piece-aura::after {
+  inset: auto 3% 13%;
+  height: 91%;
+  clip-path: none;
+  filter: blur(2px);
+  background:
+    radial-gradient(ellipse at 24% 32%, #becfe3a6, transparent 31%),
+    radial-gradient(ellipse at 71% 51%, #b1bdcde0, transparent 34%),
+    radial-gradient(ellipse at 38% 71%, #dce7f3ef, transparent 32%),
+    radial-gradient(ellipse at 55% 92%, #8794aaa8, transparent 49%);
+  animation-duration: 3.1s;
+}
+:is(:root[data-ch-pieces=ember] .board,.ch-piece-card[data-piece-style=ember]) .ch-piece-aura::before {
+  clip-path: none;
+  border-radius: 0;
+  --plume:
+    radial-gradient(ellipse at 28% 62%, #ff9d36, transparent 25%),
+    radial-gradient(ellipse at 70% 49%, #ff5c27, transparent 28%),
+    radial-gradient(ellipse at 53% 80%, #fff0a6, #ff8628 29%, transparent 62%);
+}
+@keyframes royal-plume-rise {
+  0% { transform: translateY(9%) scale(.58, .52); opacity: .12; }
+  27% { opacity: .92; }
+  68% { opacity: .61; }
+  100% { transform: translate(-7%, -52%) rotate(-11deg) scale(1.26, 1.32); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.ch-animated-pieces .board button,.ch-piece-card) .ch-piece-aura::before,
+  :is(.ch-animated-pieces .board button,.ch-piece-card) .ch-piece-aura::after {
+    animation: none !important;
+  }
+}
+.ch-reduce-motion .ch-piece-aura { display: none; }

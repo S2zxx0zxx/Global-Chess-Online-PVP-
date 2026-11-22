@@ -4,6 +4,7 @@ import {restoreGame} from './game.js';
 import {summarizeMatches} from './game-stats.js';
 import {renderPieceArt} from './piece-art.js';
 import {feedbackPreferences,setFeedbackPreference} from './feedback.js';
+import {BOARD_THEMES,PIECE_THEMES,ANIMATED_THEMES,applyBoardTheme,applyPieceTheme} from './appearance.js';
 
 const el=id=>document.getElementById(id);
 const ls=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback;}catch{return fallback;}};
@@ -27,17 +28,15 @@ const EXPORT=(data,name,type)=>{
   const a=mk('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1800);
 };
-const appearance=name=>{
-  document.documentElement.dataset.chTheme=['maple','walnut','forest'].includes(name)?name:'maple';
-};
-export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','settings','data','transfer','recovery','update','about']);
+export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','frames','settings','data','transfer','recovery','update','about']);
 
-export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
+export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMoves,replayTutorial,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
   main.insertBefore(screen,el('ch-tab-bar'));
   let selected=0,exercise=lessons[0],lastSolved=null,fault=false,ply=0;
-  appearance(ls('global-chess.appearance.v1','maple'));
+  applyBoardTheme(ls('global-chess.appearance.v1','maple'));
+  applyPieceTheme(ls('global-chess.pieces.v1','classic'));
 
   function records(){
     try{const x=readHistory();if(!Array.isArray(x))throw Error('Invalid records');return x;}catch{return null;}
@@ -48,7 +47,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
     screen.replaceChildren();
     const section=mk('div','ch-extra-body');
     screen.append(section);
-    const parents={menu:'match',pause:'match',result:'match',review:'history',history:'profile',lessons:'learn',lesson:'lessons',puzzles:'learn',puzzle:'puzzles','puzzle-result':'puzzles',daily:'learn',progress:'profile',achievements:'profile',appearance:'profile',avatars:'profile',settings:'profile',data:'settings',transfer:'data',recovery:'match',update:'settings',about:'settings'};
+    const parents={menu:'match',pause:'match',result:'match',review:'history',history:'profile',lessons:'learn',lesson:'lessons',puzzles:'learn',puzzle:'puzzles','puzzle-result':'puzzles',daily:'learn',progress:'profile',achievements:'profile',appearance:'profile',avatars:'profile',frames:'profile',settings:'profile',data:'settings',transfer:'data',recovery:'match',update:'settings',about:'settings'};
     const title=(group,name,sub)=>heading(section,group,name,sub,()=>go(parents[route]||'home'));
     const group=()=>{const x=mk('div','ch-feature-grid');section.append(x);return x;};
     const stack=()=>{const x=mk('div','ch-button-stack');section.append(x);return x;};
@@ -56,28 +55,52 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
     if(route==='menu'||route==='pause'){
       const details=getMatchSummary();
       const paused=route==='pause'&&!details?.online&&pauseCurrentMatch();
-      title('Game session',route==='pause'?(paused?'Match paused':'Pause unavailable'):'Match menu','Your chessboard and moves remain owned by the game engine.');
-      if(route==='pause')paragraph(section,paused?'Local clock and opponent processing are frozen until you resume.':details?.online?'Online matches cannot be paused; server clocks continue.':'No active offline match is available to pause.','ch-inline-notice');
-      if (!details?.started) {
-        const empty=group();
-        card(empty,'Choose a game mode','Start a new offline chess match',()=>go('play'));
-        card(empty,'Home','Return to the main chess lobby',()=>go('home'));
-        return;
+      const headingText=route==='pause'?(paused?'Match paused':'Pause unavailable'):'Match options';
+      title('Game session',headingText,'');
+      section.querySelector('h1').tabIndex=-1;
+      if(route==='pause'){
+        paragraph(section,paused?'Your local clock and opponent are paused.':details?.online?'Online clocks keep running.':'There is no active local match to pause.','ch-inline-notice');
       }
+      if(details?.online&&!details.outcome) paragraph(section,'Online clock keeps running while this menu is open.');
+      section.append(btn(details?.paused||paused?'Resume match':'Back to board',()=>{
+        resumeCurrentMatch();
+        go('match');
+      },'primary ch-menu-return'));
       const items=group();
-      card(items,'Resume match','Return to the chessboard',()=>{resumeCurrentMatch();go('match');});
-      card(items,'Flip board','Rotate the viewpoint only',()=>{el('flip-board').click();go('match');});
-      card(items,'Save & exit','Return Home without replacing this game',()=>go('home'));
-      card(items,'Restart match','Existing confirmation protects unfinished games',()=>{go('match');el('rematch').click();});
-      card(items,'Settings','Accessibility and board preferences',()=>go('settings'));
-      if(route==='menu' && !getMatchSummary()?.online && !getMatchSummary()?.outcome){
-        card(items,'Pause match','Freeze the local clock and computer until resumed',()=>go('pause'));
+      items.classList.add('ch-match-menu-grid');
+      const boardView=getBoardView();
+      const boardOption=card(items,boardView==='3d'?'Use 2D board':'Use 3D board',
+        boardView==='loading'?'Loading 3D view':'Switch the live board view',()=>{
+          go('match');
+          toggleBoardView();
+        });
+      boardOption.dataset.boardView='mode-'+boardView;
+      boardOption.disabled=boardView==='loading';
+      card(items,'Flip board','Swap which side is closest',()=>{el('flip-board').click();go('match');});
+      card(items,'Settings','Sound, motion and board controls',()=>go('settings'));
+      card(items,'Home','Return to the lobby',()=>go('home'));
+      if(!details?.started){
+        card(items,'Choose a game mode','Set up a new match',()=>go('play'));
+      } else if(!details.online){
+        card(items,'Restart match','Start a fresh game with these settings',()=>{go('match');el('rematch').click();});
+        if(!details.outcome && !paused && !details.paused){
+          card(items,'Pause match','Stop the local clock',()=>go('pause'));
+        }
+        if(!details.outcome){
+          card(items,'Resign game','End your current match',()=>{
+            if(resignCurrentMatch())go('result');
+          },'ch-danger-card');
+        }
+        if(!details.outcome) card(items,'How to move','Replay the move and capture guide',()=>{go('match');replayTutorial();});
       }
-      const match=getMatchSummary();
-      if(!match?.online && !match?.outcome){
-        card(items,'Resign game','Ends the current offline match after confirmation',()=>{
-          if(resignCurrentMatch())go('result');
-        },'ch-danger-card');
+      const moves=readMoves();
+      if(moves.length){
+        const moveList=mk('details','ch-match-move-list');
+        moveList.append(mk('summary','','Moves this game'));
+        const list=mk('ol','ch-menu-moves');
+        for(let i=0;i<moves.length;i+=2)list.append(mk('li','',moves.slice(i,i+2).join('  ')));
+        moveList.append(list);
+        section.append(moveList);
       }
     }
     if(route==='result'){
@@ -238,8 +261,18 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         row.append(copy,mk('span','ch-achievement-state',earned?'Earned':'Locked'));list.append(row);
       }
     }
+    if(route==='avatars'||route==='frames'){
+      title('Profile',route==='avatars'?'Avatars':'Frames','Your selection is saved on this device.');
+      const tabs=mk('nav','ch-profile-tabs');
+      tabs.setAttribute('aria-label','Profile sections');
+      for(const [name,target] of [['Info','profile'],['Avatars','avatars'],['Frames','frames']]){
+        const tab=btn(name,()=>go(target));
+        if(target===route)tab.setAttribute('aria-current','page');
+        tabs.append(tab);
+      }
+      section.append(tabs);
+    }
     if(route==='avatars'){
-      title('Free local customization','Avatars & frames','Original icon and frame choices are stored on this device. No locked items or coins.');
       const icons=[['♞','Knight','/brand/guest-avatar.svg'],['♜','Rook','/brand/pieces/piece_white_rook.svg'],['♛','Queen','/brand/pieces/piece_white_queen.svg']];
       const gallery=mk('div','ch-avatar-gallery');section.append(gallery);
       const current=ls('global-chess.preferences.v1',{});
@@ -261,7 +294,8 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         });
         gallery.append(button);
       }
-      section.append(mk('h2','ch-section-title','Decorative frames'));
+    }
+    if(route==='frames'){
       const frames=mk('div','ch-frame-gallery');section.append(frames);
       for(const [value,label] of [['gold','Antique Gold'],['walnut','Royal Walnut'],['teal','Forest Teal']]){
         const selectedFrame=ls('global-chess.avatar-frame.v1','gold')===value;
@@ -277,31 +311,56 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         });
         frames.append(button);
       }
-      section.append(btn('View player profile',()=>go('profile'),'primary'));
+
     }
     if(route==='appearance'){
-      title('Original color treatments','Appearance','Three free chessboard looks. No fabricated shop or currency.');
-      const grid=mk('div','ch-theme-grid');section.append(grid);
-      for(const [name,title,detail] of [['maple','Classic Maple','Original warm maple'],['walnut','Royal Walnut','Deep brown for evening play'],['forest','Forest Teal','Green and warm ivory']]){
+      title('Royal visual collection','Appearance','Choose your board and pieces independently. Every look is free and works offline.');
+      const categories=mk('div','ch-appearance-categories');
+      const grid=mk('div','ch-theme-grid');
+      const pieceGrid=mk('div','ch-piece-grid');
+      const boardsButton=btn('Chessboards',()=>showCollection(false));
+      const piecesButton=btn('Chess pieces',()=>showCollection(true));
+      function showCollection(showPieces){
+        grid.hidden=showPieces;
+        pieceGrid.hidden=!showPieces;
+        boardsButton.setAttribute('aria-pressed',String(!showPieces));
+        piecesButton.setAttribute('aria-pressed',String(showPieces));
+      }
+      categories.append(boardsButton,piecesButton);
+      section.append(categories,grid,pieceGrid);
+      showCollection(false);
+      for(const {id:name,name:title,detail} of BOARD_THEMES){
         const tile=mk('button','ch-theme-card'+(ls('global-chess.appearance.v1','maple')===name?' ch-selected':''));tile.type='button';
-        tile.append(mk('span','ch-theme-preview ch-preview-'+name),mk('strong','',title),mk('small','',detail));
-        tile.onclick=()=>{appearance(name);if(!save('global-chess.appearance.v1',name))paragraph(section,'Theme is temporary because local storage is unavailable.','ch-inline-notice ch-notice-warning');for(const child of grid.children)child.classList.toggle('ch-selected',child===tile);};
+        tile.setAttribute('aria-pressed',String(ls('global-chess.appearance.v1','maple')===name));
+        const preview=mk('span','ch-theme-preview ch-preview-'+name);
+        if(ANIMATED_THEMES.includes(name)){
+          const mark=mk('img','ch-theme-preview-piece');mark.src='/chess-assets/pieces/white-king.webp';mark.alt='';
+          preview.append(mark);
+        }
+        tile.append(preview,mk('strong','',title),mk('small','',detail));
+        tile.onclick=()=>{
+          applyBoardTheme(name);
+          if(!save('global-chess.appearance.v1',name))paragraph(section,'Theme is temporary because local storage is unavailable.','ch-inline-notice ch-notice-warning');
+          for(const child of grid.children){child.classList.toggle('ch-selected',child===tile);child.setAttribute('aria-pressed',String(child===tile));}
+        };
         grid.append(tile);
       }
-      section.append(mk('h2','ch-section-title','Piece collection'));
-      paragraph(section,'Choose between the existing classic artwork and the original SVG Crest set. Both are free.');
-      const pieceGrid=mk('div','ch-piece-grid');section.append(pieceGrid);
-      for(const [name,label,detail] of [['classic','Classic','Traditional dimensional pieces'],['crest','Royal Crest','Original ivory and oxblood SVG family']]){
+      for(const {id:name,name:label,detail} of PIECE_THEMES){
         const item=mk('button','ch-piece-card'+(ls('global-chess.pieces.v1','classic')===name?' ch-selected':''));
         item.type='button';
+        item.setAttribute('aria-pressed',String(ls('global-chess.pieces.v1','classic')===name));
+        item.dataset.pieceStyle=name;
+        const display=mk('span','ch-piece-preview');
+        if(ANIMATED_THEMES.includes(name))display.append(mk('span','ch-piece-aura'));
         const preview=mk('img','ch-piece-example');preview.src=name==='crest'?'/brand/pieces/piece_white_knight.svg':'/chess-assets/pieces/white-knight.webp';
         preview.alt='';
-        item.append(preview,mk('strong','',label),mk('small','',detail));
+        display.append(preview);
+        item.append(display,mk('strong','',label),mk('small','',detail));
         item.onclick=()=>{
           if(!save('global-chess.pieces.v1',name))paragraph(section,'The piece choice will only last this session.','ch-inline-notice ch-notice-warning');
-          document.documentElement.dataset.chPieces=name;
+          applyPieceTheme(name);
           window.dispatchEvent(new Event('chess-appearance-changed'));
-          for(const child of pieceGrid.children)child.classList.toggle('ch-selected',child===item);
+          for(const child of pieceGrid.children){child.classList.toggle('ch-selected',child===item);child.setAttribute('aria-pressed',String(child===item));}
         };
         pieceGrid.append(item);
       }
@@ -356,7 +415,8 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         if(!confirm('Restore display settings? Your saved matches stay.'))return;
         for(const source of ['coordinate-setting','contrast-setting'])if(el(source)?.checked)el(source).click();
         save('global-chess.reduce-motion.v1',false);document.documentElement.classList.remove('ch-reduce-motion');
-        save('global-chess.appearance.v1','maple');appearance('maple');show('settings');
+        save('global-chess.appearance.v1','maple');applyBoardTheme('maple');
+        save('global-chess.pieces.v1','classic');applyPieceTheme('classic');window.dispatchEvent(new Event('chess-appearance-changed'));show('settings');
       }));
     }
     if(route==='data'||route==='transfer'){
@@ -473,5 +533,5 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
     go('puzzle-result');
   });
   if(ls('global-chess.reduce-motion.v1',false))document.documentElement.classList.add('ch-reduce-motion');
-  return {routes:EXTRA_ROUTES,show,openExerciseById(x){exercise=x;}};
+  return {routes:EXTRA_ROUTES,show,heading:()=>screen.querySelector('h1'),openExerciseById(x){exercise=x;}};
 }

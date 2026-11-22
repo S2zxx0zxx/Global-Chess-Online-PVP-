@@ -61,20 +61,15 @@ export function bindLobby({startMatch, historyCount, storagePersistent = true}) 
   }
   element('lobby-computer').onclick = () =>
     document.dispatchEvent(new CustomEvent('chess-open-setup',{detail:{format:'computer'}}));
-  element('lobby-online').onclick = () => {
-    if (!element('online-leave').hidden) return focusBoard();
-    element('online-create').click();
-    element('online-status').scrollIntoView({block:'nearest'});
-  };
   element('lobby-resume').onclick = focusBoard;
-  element('profile-open').onclick = () => {
+  document.addEventListener('chess-edit-profile', () => {
     const {name, avatar} = apply();
     element('guest-name').value = name;
     element('guest-avatar').value = avatar;
     const count = historyCount();
     element('profile-stats').textContent = count === null ? 'Match history unavailable' : 'Saved completed matches: ' + count;
     profile.showModal();
-  };
+  });
   element('profile-form').onsubmit = event => {
     event.preventDefault();
     preferences.name = element('guest-name').value.trim();

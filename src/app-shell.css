@@ -69,8 +69,7 @@ html.ch-shell-ready{scroll-padding-bottom:100px}
 #ch-match-home{display:block;min-height:46px;max-width:190px;margin:0 0 10px;padding:9px 16px;border:1px solid var(--ch-card-stroke);border-radius:12px;background:#4a2b25;color:var(--ch-color-brand-cream);font-weight:800}
 .ch-shell-ready.ch-view-match .player-panel{min-height:56px;border:1px solid var(--ch-card-stroke);border-radius:13px;background:linear-gradient(120deg,#512c2c,#2b191a);padding:11px 13px}
 .ch-shell-ready.ch-view-match #board{margin:0 auto;box-shadow:0 18px 40px #08040595}
-.ch-shell-ready.ch-view-match #flip-board,.ch-shell-ready.ch-view-match #view{min-height:44px;margin-bottom:10px;border-radius:12px}
-.ch-shell-ready.ch-view-match #moves{max-height:120px}
+.ch-shell-ready.ch-view-match #flip-board{min-height:44px;margin-bottom:10px;border-radius:12px}
 .ch-setup-dialog{width:min(420px,calc(100vw - 28px));max-height:min(90dvh,750px);overflow:auto;padding:24px 20px;border:1px solid var(--ch-color-brand-gold);border-radius:22px;background:linear-gradient(135deg,#5b352d,#251619);box-shadow:0 30px 80px #080405cc;color:var(--ch-color-brand-cream)}
 .ch-setup-dialog::backdrop{background:rgba(12,5,7,.77);backdrop-filter:blur(5px)}
 .ch-setup-dialog h2{font:800 1.6rem var(--ch-font-display,Georgia,serif);margin:8px 0 18px;color:#fff1d1}
@@ -109,20 +108,14 @@ html.ch-shell-ready{scroll-padding-bottom:100px}
 #ch-match-home{margin:0;flex:0 0 auto}
 #ch-match-tools{min-height:46px;padding:9px 14px;border-radius:12px;border:1px solid var(--ch-card-stroke);background:#4a2b25;color:#fff0d5;font-weight:700}
 .ch-shell-ready.ch-view-match .layout>aside{display:none}
-.ch-shell-ready.ch-view-match.ch-tools-open .layout>aside{display:block}
 .ch-match-dock{display:grid;gap:8px;width:100%;margin:13px 0 8px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,#4a2826,#291718);border:1px solid var(--ch-card-stroke)}
 .ch-match-dock #clocks{margin:0;text-align:center;font-size:1rem;font-weight:900;font-variant-numeric:tabular-nums;color:#f9d48b}
 .ch-match-dock #status{margin:0;min-height:21px;font-size:.84rem;color:#f4ddc1;line-height:1.4}
-.ch-match-dock #moves{display:flex;gap:12px;min-height:25px;margin:0;padding:0;list-style:none;overflow-x:auto;max-height:56px;white-space:nowrap;scrollbar-width:thin}
-.ch-match-dock #moves:empty{display:none}
-.ch-match-dock #moves li{padding:4px 9px;background:#1b0f12;border-radius:8px;font-size:.78rem}
 .ch-match-dock #claim,.ch-match-dock #rematch,.ch-match-dock #result-open,.ch-match-dock #online-copy{margin:0;min-height:44px;border:1px solid var(--ch-card-stroke);border-radius:10px;background:#63402e;color:#fff0d5;padding:8px 12px}
 .ch-match-dock #rematch,.ch-match-dock #result-open{background:var(--ch-highlight);color:#31170e;font-weight:800}
 .ch-match-dock #online-status{margin:0;font-size:.78rem;line-height:1.4;color:#f7d594}
 .ch-match-dock #online-invite{font-size:.82rem;color:#f8d390;overflow-wrap:anywhere}
-.ch-shell-ready.ch-view-match #ch-match-sidebar{box-shadow:0 12px 24px #0004}
 @media(min-width:800px){
- .ch-shell-ready.ch-view-match.ch-tools-open .layout>aside{display:block}
  .ch-shell-ready.ch-view-match .layout{display:flex;flex-direction:column}
  .ch-shell-ready.ch-view-match #match-area{width:min(100%,620px)}
  .ch-shell-ready.ch-view-match .layout>aside{width:min(100%,620px)}
@@ -134,3 +127,74 @@ html.ch-shell-ready{scroll-padding-bottom:100px}
 .ch-first-move-tip button,.ch-tutorial-replay{min-height:44px;padding:9px 10px;border:1px solid var(--ch-card-stroke);border-radius:10px;background:#73432f;color:#ffe7c2;white-space:nowrap;font-weight:700}
 .ch-tutorial-replay{display:block;width:100%;margin-bottom:10px;text-align:center}
 @media(max-width:359px){.ch-first-move-tip{align-items:stretch;flex-direction:column}.ch-first-move-tip button{width:100%}}
+
+/* Learn cards use distinct palettes and existing chess artwork. */
+.ch-shell-ready .ch-learn-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ch-learn-grid .ch-learn-tile {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 154px;
+  justify-content: flex-end;
+  padding: 16px;
+  border-color: var(--learn-edge);
+  background:
+    radial-gradient(ellipse at 95% 0%, var(--learn-light), transparent 75%),
+    linear-gradient(145deg, var(--learn-base), #10100f 87%);
+}
+
+.ch-learn-grid .ch-learn-tile::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: repeating-conic-gradient(#ffffff09 0% 25%, transparent 0% 50%) 0 0 / 46px 46px;
+  pointer-events: none;
+}
+
+.ch-learn-grid .ch-learn-tile::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: 8px;
+  right: 10px;
+  width: 36%;
+  height: 44%;
+  background: var(--learn-art) right center / contain no-repeat;
+  filter: drop-shadow(0 5px 7px #0009);
+  pointer-events: none;
+}
+
+.ch-learn-grid .ch-learn-tile span { color: var(--learn-edge); font-size: 1.45rem; }
+.ch-learn-grid .ch-learn-tile strong { font-size: clamp(1.05rem, 4vw, 1.32rem); }
+.ch-learn-grid .ch-learn-tile small { color: #f1e3d5; }
+.ch-learn-grid .ch-learn-tile:hover { border-color: #fff0d5; }
+
+#ch-open-lessons {
+  --learn-base: #412711;
+  --learn-light: #ad713d;
+  --learn-edge: #e2b17a;
+  --learn-art: url('/brand/classic-royal.svg');
+}
+
+#ch-open-puzzles {
+  --learn-base: #172b34;
+  --learn-light: #3e7281;
+  --learn-edge: #8cc7d4;
+  --learn-art: url('/chess-assets/pieces/white-knight.webp');
+}
+
+#ch-open-daily {
+  --learn-base: #302039;
+  --learn-light: #82536f;
+  --learn-edge: #daa5cb;
+  --learn-art: url('/brand/quick-clock.svg');
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 340px) {
+  .ch-shell-ready .ch-learn-grid { grid-template-columns: 1fr; }
+}

@@ -1,25 +1,19 @@
 // Use Babylon's pure tree-shakeable imports to avoid bundling unrelated 3D systems.
 import {
-  ArcRotateCamera, Color3, CreateBox, CreateGround, CreateLathe, CreateSphere,
-  DirectionalLight, Engine, HavokPlugin, HemisphericLight, PhysicsAggregate,
-  PhysicsMotionType, PhysicsShapeType, Scene, StandardMaterial, Texture, Vector3, VertexBuffer,
-  RegisterStandardEngineExtensions, RegisterJoinedPhysicsEngineComponent,
-  RegisterPhysicsV2PhysicsEngineComponent, RegisterStandardMaterial, RegisterTexture, RegisterRay,
+  ArcRotateCamera, Color3, Color4, CreateBox, CreateGround, CreateLathe, CreateSphere, CreateTorus,
+  DirectionalLight, Engine, HemisphericLight, PointerEventTypes, Scene, StandardMaterial, Texture, Vector3, VertexBuffer,
+  RegisterStandardEngineExtensions, RegisterStandardMaterial, RegisterTexture, RegisterRay,
 } from '@babylonjs/core/pure.js';
 
 RegisterStandardEngineExtensions();
-RegisterJoinedPhysicsEngineComponent();
-RegisterPhysicsV2PhysicsEngineComponent();
 RegisterStandardMaterial();
 RegisterTexture();
 RegisterRay();
-import HavokPhysics from '@babylonjs/havok';
-import havokWasm from '@babylonjs/havok/lib/esm/HavokPhysics.wasm?url';
 
 const profiles = {
   p: [[.27,0],[.29,.09],[.17,.17],[.12,.36],[.16,.39],[.17,.43],[.10,.46],[0,.46]],
   r: [[.34,0],[.34,.12],[.23,.22],[.23,.55],[.34,.59],[.34,.75],[0,.75]],
-  n: [[.33,0],[.33,.1],[.2,.2],[.18,.75],[0,.8]],
+  n: [[.33,0],[.33,.1],[.22,.18],[.17,.42],[.14,.57],[0,.6]],
   b: [[.31,0],[.32,.1],[.18,.23],[.13,.55],[.25,.69],[.16,.83],[0,.91]],
   q: [[.34,0],[.34,.1],[.19,.22],[.15,.64],[.3,.87],[.25,.95],[.12,.98],[0,1.08]],
   k: [[.35,0],[.35,.11],[.21,.24],[.16,.67],[.28,.81],[.24,.91],[.1,.94],[0,.98]],
@@ -30,22 +24,21 @@ export async function mountBoard(canvas, selectSquare) {
   const engine = new Engine(canvas, true);
   const scene = new Scene(engine);
   try {
-    const havok = await HavokPhysics({ locateFile: () => havokWasm });
-    scene.enablePhysics(new Vector3(0, -9.81, 0), new HavokPlugin(true, havok));
-    scene.getPhysicsEngine().setTimeStep(1 / 60);
-    const camera = new ArcRotateCamera('camera', -Math.PI / 2, .48, 11.6, Vector3.Zero(), scene);
+    scene.clearColor = new Color4(.045, .04, .036, 1);
+    const camera = new ArcRotateCamera('camera', -Math.PI / 2, .65, 13.7, new Vector3(0,.12,0), scene);
     camera.fov = .86;
     camera.lowerRadiusLimit = 10;
     camera.upperRadiusLimit = 15;
     scene.activeCamera = camera;
     const light = new HemisphericLight('room', new Vector3(-.4, 1, -.3), scene);
-    light.intensity = .78;
+    light.intensity = .72;
     const keyLight = new DirectionalLight('key', new Vector3(-.5,-1,.4), scene);
-    keyLight.intensity = .92;
+    keyLight.intensity = .66;
     const theme = getComputedStyle(canvas);
     const color = name => theme.getPropertyValue('--ch-color-' + name).trim();
-    const moveDuration = Number.parseFloat(theme.getPropertyValue('--ch-motion-piece')) || 160;
+    const moveDuration = 235;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    const motionOff = () => reducedMotion.matches || document.documentElement.classList.contains('ch-reduce-motion');
     const moving = new Map();
     let needsFrame = true;
     // WebGL shader compilation and texture upload can outlast the first scene
@@ -58,10 +51,18 @@ export async function mountBoard(canvas, selectSquare) {
     scene.onBeforeRenderObservable.add(() => {
       const now = performance.now();
       for (const [mesh, {start,end,since}] of moving) {
-        const progress = Math.min(1, (now-since)/moveDuration);
+        const progress = motionOff() ? 1 : Math.min(1, (now-since)/moveDuration);
         Vector3.LerpToRef(start,end,1-(1-progress)**3,mesh.position);
-        mesh.position.y += Math.sin(Math.PI*progress)*.12;
+        mesh.position.y += Math.sin(Math.PI*progress)*.2;
         if (progress === 1) moving.delete(mesh);
+      }
+      for (const effect of effects) {
+        const progress = motionOff() ? 1 : Math.min(1, Math.max(0, (now-effect.start)/effect.duration));
+        effect.update(progress);
+        if (progress === 1) {
+          effect.dispose();
+          effects.delete(effect);
+        }
       }
     });
 
@@ -80,19 +81,28 @@ export async function mountBoard(canvas, selectSquare) {
       warmupUntil = Math.max(warmupUntil, performance.now() + 650);
     });
     const marked = material('selected', color('board-select'));
-    const target = material('legal move', color('board-hint'));
+    const target = material('legal move', '#7AF2E8');
+    target.emissiveColor = Color3.FromHexString('#2BABAE');
+    const capture = material('capture', '#FFC482');
+    capture.emissiveColor = Color3.FromHexString('#E98136');
+    const captureTile = material('capture square', '#AD572C');
+    const rim = material('selection rim', '#FFE3A1');
+    rim.emissiveColor = Color3.FromHexString('#947047');
     const previous = material('last move', color('board-last'));
     const check = material('check', color('board-check'));
     const frame = material('frame', color('brand-walnut'));
+    const lightTile = material('themed light tile', '#EFD9BD');
+    const darkTile = material('themed dark tile', '#976242');
 
-    const pieces = { w: material('ivory', color('brand-cream')), b: material('oxblood', '#4B171B') };
+    const pieces = { w: material('ivory', '#E5CCA1'), b: material('ebony', '#332927') };
     const tiles = new Map();
     const active = new Map();
-    const effects = new Map();
+    const effects = new Set();
+    const cues = new Map();
     const base = CreateBox('frame', {width:8.4,depth:8.4,height:.32}, scene);
     base.material = frame;
-    base.position.y = -.16;
-    new PhysicsAggregate(base, PhysicsShapeType.BOX, {mass:0, friction:.65}, scene);
+    // Keep the top of the frame below the tile plane to avoid depth fighting.
+    base.position.y = -.185;
 
     for (let rank = 0; rank < 8; rank++) {
       for (let file = 0; file < 8; file++) {
@@ -105,9 +115,8 @@ export async function mountBoard(canvas, selectSquare) {
           uv[index + 1] = (24 + (rank + uv[index + 1]) * 56) / 496;
         }
         mesh.setVerticesData(VertexBuffer.UVKind,uv);
-        const color = boardArt;
         mesh.metadata = {square};
-        tiles.set(square, {mesh, color});
+        tiles.set(square, {mesh, isLight:(file+rank)%2 === 1});
       }
     }
     function makePiece(piece, square) {
@@ -150,27 +159,102 @@ export async function mountBoard(canvas, selectSquare) {
           detail('crown point',.09,.14,.09,.22*Math.cos(angle),.97,.22*Math.sin(angle));
         }
       }
-      if (piece.type === 'n') detail('horse head', .24,.22,.36,0,.71,-.1).rotation.x = -.28;
+      if (piece.type === 'n') {
+        const sculpt = (name, position, scale, angle) => {
+          const mesh = CreateSphere(name, {diameter:1, segments:12}, scene);
+          mesh.parent = root;
+          mesh.position.set(...position);
+          mesh.scaling.set(...scale);
+          mesh.rotation.x = angle;
+          mesh.material = root.material;
+          return mesh;
+        };
+        sculpt('arched neck',[0,.49,.05],[.29,.58,.34],-.25);
+        sculpt('horse head',[0,.72,-.06],[.26,.31,.37],.5);
+        sculpt('horse muzzle',[0,.64,-.25],[.22,.19,.31],.56);
+        for (const side of [-1,1]) {
+          sculpt('ear',[side*.077,.875,.025],[.07,.21,.09],-.16);
+          const eye = sculpt('eye',[side*.113,.755,-.14],[.035,.038,.038],0);
+          eye.material = pieces[piece.color === 'w' ? 'b' : 'w'];
+        }
+        if(piece.color==='b') root.rotation.y=Math.PI;
+      }
+      for(const child of root.getChildMeshes()) {
+        child.isPickable = true;
+        child.metadata = {pieceRoot:root};
+      }
       root.metadata = {square};
       return root;
     }
-    function scatter(mesh) {
+    function ring(name, square, diameter, thickness, finish) {
+      const mesh = CreateTorus(name, {diameter, thickness, tessellation:24}, scene);
+      mesh.position.copyFrom(tiles.get(square).mesh.position);
+      mesh.position.y = .06;
+      mesh.material = finish;
+      mesh.isPickable = false;
+      return mesh;
+    }
+
+    function syncCue(square, kind) {
+      const current = cues.get(square);
+      if (current?.kind === kind) return;
+      current?.mesh.dispose();
+      cues.delete(square);
+      if (!kind) return;
+      const mesh = kind === 'target' ? CreateSphere('legal destination', {diameter:.24, segments:10}, scene)
+        : ring(kind, square, kind === 'capture' ? .9 : .78, .065, kind === 'capture' ? capture : rim);
+      if (kind === 'target') {
+        mesh.position.copyFrom(tiles.get(square).mesh.position);
+        mesh.position.y = .042;
+        mesh.scaling.y = .35;
+        mesh.material = target;
+        mesh.isPickable = false;
+      }
+      cues.set(square, {kind, mesh});
+    }
+
+    function retirePiece(mesh, start) {
       const travel = moving.get(mesh);
       if (travel) mesh.position.copyFrom(travel.end);
       moving.delete(mesh);
       mesh.isPickable = false;
       mesh.getChildMeshes().forEach(child => { child.isPickable = false; });
-      const body = new PhysicsAggregate(mesh, PhysicsShapeType.CONVEX_HULL,
-        {mass:.15, friction:.65, restitution:.27}, scene);
-      body.body.setMotionType(PhysicsMotionType.DYNAMIC);
-      body.body.applyImpulse(new Vector3(.24,.38,-.16), mesh.position.add(new Vector3(0,.3,0)));
-      const timer = setTimeout(() => {
-        body.dispose();
-        mesh.dispose();
-        effects.delete(body);
-        needsFrame = true;
-      }, 1100);
-      effects.set(body, {timer,mesh});
+      effects.add({
+        start, duration:280,
+        update(progress) {
+          mesh.scaling.setAll(Math.max(.01, 1-progress));
+          mesh.position.y = Math.sin(Math.PI*progress)*.26;
+          mesh.rotation.z = -.9*progress;
+        },
+        dispose:()=>mesh.dispose(),
+      });
+    }
+
+    function impact(square, start, captured) {
+      const pulse = ring('landing pulse', square, .34, .055, captured ? capture : rim);
+      const center = pulse.position.clone();
+      const sparks = captured ? Array.from({length:8}, (_, index) => {
+        const angle = index * Math.PI / 4;
+        const mesh = CreateSphere('capture spark', {diameter:.072, segments:5}, scene);
+        mesh.material = capture;
+        mesh.isPickable = false;
+        return {mesh, x:Math.cos(angle), z:Math.sin(angle)};
+      }) : [];
+      const meshes = [pulse, ...sparks.map(spark=>spark.mesh)];
+      meshes.forEach(mesh=>mesh.setEnabled(false));
+      effects.add({
+        start, duration:320,
+        update(progress) {
+          if (!progress) return;
+          meshes.forEach(mesh=>mesh.setEnabled(true));
+          pulse.scaling.set(.45+2.7*progress, Math.max(.01,1-progress), .45+2.7*progress);
+          for (const {mesh,x,z} of sparks) {
+            mesh.position.set(center.x+x*progress*.7, center.y+Math.sin(Math.PI*progress)*.52, center.z+z*progress*.7);
+            mesh.scaling.setAll(1-progress);
+          }
+        },
+        dispose:()=>meshes.forEach(mesh=>mesh.dispose()),
+      });
     }
     function animateMove(from,to) {
       const mesh = active.get(from);
@@ -179,32 +263,57 @@ export async function mountBoard(canvas, selectSquare) {
       active.set(to,mesh);
       mesh.metadata.square = to;
       const end = tiles.get(to).mesh.position.clone();
-      if (reducedMotion.matches) mesh.position.copyFrom(end);
+      if (motionOff()) mesh.position.copyFrom(end);
       else moving.set(mesh,{start:mesh.position.clone(),end,since:performance.now()});
+    }
+
+    let styleKey;
+    let texturedBoard = true;
+    function syncAppearance() {
+      const root = document.documentElement;
+      const {chTheme, chPieces} = root.dataset;
+      const contrast = root.classList.contains('high-contrast');
+      const nextKey = `${chTheme}:${chPieces}:${contrast}`;
+      if (styleKey === nextKey) return;
+      styleKey = nextKey;
+      const style = getComputedStyle(root);
+      const light = style.getPropertyValue('--royal-light').trim();
+      const dark = style.getPropertyValue('--royal-dark').trim();
+      const wood = {walnut:['#DFC5A5','#69483F'],forest:['#EEE6C9','#397368']};
+      const palette = contrast ? ['#F9E8C3','#76513D'] : light && dark ? [light,dark] : wood[chTheme];
+      texturedBoard = !palette;
+      if (palette) {
+        lightTile.diffuseColor.copyFrom(Color3.FromHexString(palette[0]));
+        darkTile.diffuseColor.copyFrom(Color3.FromHexString(palette[1]));
+      }
+      frame.diffuseColor.copyFrom(Color3.FromHexString(style.getPropertyValue('--royal-frame-b').trim() || color('brand-walnut')));
+      const glow = style.getPropertyValue('--piece-glow').trim();
+      const white = Color3.FromHexString('#E5CCA1');
+      const black = Color3.FromHexString('#332927');
+      pieces.w.diffuseColor.copyFrom(glow ? Color3.Lerp(white,Color3.FromHexString(glow),.24) : white);
+      pieces.b.diffuseColor.copyFrom(glow ? Color3.Lerp(black,Color3.FromHexString(glow),.12) : black);
     }
 
     let previousGame;
     const syncTurns = (game, selected, targets, move, lastMove, checkedSide) => {
       needsFrame = true;
+      syncAppearance();
       if (previousGame && game !== previousGame && !move) {
         moving.clear();
         for (const mesh of active.values()) mesh.dispose();
         active.clear();
-        for (const [body, {timer,mesh}] of effects) {
-          clearTimeout(timer);
-          body.dispose();
-          mesh.dispose();
-        }
+        for (const effect of effects) effect.dispose();
         effects.clear();
       }
       previousGame = game;
+      const landing = performance.now() + moveDuration * .78;
       if (move?.captured) {
         const square = move.flags.includes('e') ? move.to[0] + move.from[1] : move.to;
         const mesh = active.get(square);
         if (mesh) {
           active.delete(square);
-          if (reducedMotion.matches) { moving.delete(mesh); mesh.dispose(); }
-          else scatter(mesh);
+          if (motionOff()) { moving.delete(mesh); mesh.dispose(); }
+          else retirePiece(mesh, landing);
         }
       }
       if (move && !move.promotion) {
@@ -212,13 +321,16 @@ export async function mountBoard(canvas, selectSquare) {
         if (move.flags.includes('k')) animateMove('h'+move.to[1],'f'+move.to[1]);
         if (move.flags.includes('q')) animateMove('a'+move.to[1],'d'+move.to[1]);
       }
-      for (const [square, {mesh, color}] of tiles) {
+      if (move && !motionOff()) impact(move.to, landing, Boolean(move.captured));
+      for (const [square, {mesh, isLight}] of tiles) {
         const piece = game.get(square);
+        const option = targets.get(square);
         if (square === selected) mesh.material = marked;
         else if (piece?.type === 'k' && piece.color === checkedSide) mesh.material = check;
-        else if (targets.includes(square)) mesh.material = target;
+        else if (option?.captured) mesh.material = captureTile;
         else if (lastMove?.from === square || lastMove?.to === square) mesh.material = previous;
-        else mesh.material = color;
+        else mesh.material = texturedBoard ? boardArt : isLight ? lightTile : darkTile;
+        syncCue(square, square === selected ? 'selected' : option?.captured ? 'capture' : option ? 'target' : null);
         const old = active.get(square);
         if (old && old.name === piece?.type && old.material === pieces[piece.color]) continue;
         if (old) { moving.delete(old); old.dispose(); }
@@ -226,7 +338,7 @@ export async function mountBoard(canvas, selectSquare) {
         if (piece) {
           const placed = makePiece(piece, square);
           active.set(square, placed);
-          if (move?.promotion && move.to === square && !reducedMotion.matches) {
+          if (move?.promotion && move.to === square && !motionOff()) {
             const end = placed.position.clone();
             placed.position.copyFrom(tiles.get(move.from).mesh.position);
             moving.set(placed,{start:placed.position.clone(),end,since:performance.now()});
@@ -234,12 +346,13 @@ export async function mountBoard(canvas, selectSquare) {
         }
       }
     };
-    scene.onPointerDown = () => {
+    scene.onPointerObservable.add(() => {
       const hit = scene.pick(scene.pointerX, scene.pointerY,
-        mesh => tiles.get(mesh.metadata?.square)?.mesh === mesh);
-      const square = hit?.pickedMesh?.metadata?.square;
+        mesh => mesh.isPickable && (mesh.metadata?.square || mesh.metadata?.pieceRoot?.isPickable));
+      const metadata = hit?.pickedMesh?.metadata;
+      const square = metadata?.pieceRoot?.metadata.square ?? metadata?.square;
       if (square) selectSquare(square);
-    };
+    }, PointerEventTypes.POINTERTAP);
     const observer = new ResizeObserver(() => {
       engine.resize();
       needsFrame = true;
@@ -249,7 +362,7 @@ export async function mountBoard(canvas, selectSquare) {
     document.addEventListener('visibilitychange',refresh);
     engine.onContextRestoredObservable.add(refresh);
     engine.runRenderLoop(() => {
-      if (document.hidden || !(performance.now() < warmupUntil || needsFrame || moving.size || effects.size)) return;
+      if (document.hidden || !canvas.clientWidth || !(performance.now() < warmupUntil || needsFrame || moving.size || effects.size)) return;
       needsFrame = false;
       scene.render();
     });
@@ -262,10 +375,6 @@ export async function mountBoard(canvas, selectSquare) {
       dispose() {
         document.removeEventListener('visibilitychange',refresh);
         observer.disconnect();
-        for (const [body, {timer}] of effects) {
-          clearTimeout(timer);
-          body.dispose();
-        }
         engine.dispose();
       },
     };

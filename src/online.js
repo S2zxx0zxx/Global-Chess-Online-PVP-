@@ -32,6 +32,9 @@ export function bindOnline({onMatch, onLeave}) {
       body: body ? JSON.stringify(body) : undefined,
       cache: 'no-store', signal: AbortSignal.timeout(8000),
     });
+    if (!response.headers.get('content-type')?.includes('application/json')) {
+      throw new Error('Private rooms require a connected room server.');
+    }
     const data = await response.json();
     if (!response.ok && !data.match) throw new Error(data.error ?? 'Room unavailable.');
     return data;
@@ -83,6 +86,7 @@ export function bindOnline({onMatch, onLeave}) {
     return async () => {
       if (pending || session) return;
       pending = true;
+      status.textContent = 'Connecting to the room service?';
       try { await action(); }
       catch (error) { status.textContent = error.message; }
       finally { pending = false; }
