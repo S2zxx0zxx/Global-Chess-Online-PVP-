@@ -9,7 +9,8 @@ import {
 const live=()=>({VITE_CHESS_ADS_MODE:'live',
  VITE_CHESS_ADS_POLICY_APPROVED:'true',VITE_CHESS_ADS_AUDIENCE_APPROVED:'true',
  VITE_CHESS_ADS_PRIVACY_APPROVED:'true',
- VITE_CHESS_ADS_REWARDED_ID:'ca-app-pub-1234567890123456/1234567890'});
+ VITE_CHESS_ADS_REWARDED_ID:'ca-app-pub-1234567890123456/1234567890',
+ VITE_CHESS_AD_PRIVACY_URL:'https://chess.example.org/privacy'});
 function storage(){
  const v=new Map();
  return {durable:true,getItem:k=>v.get(k)??null,setItem:(k,x)=>v.set(k,String(x)),
@@ -21,7 +22,7 @@ test('no ads on the web or with absent flags, irrespective of SDK availability',
  assert.equal(resolveMonetizationConfig({VITE_CHESS_ADS_MODE:'enabled'},'android').mode,'disabled');
 });
 test('real ads require each approved legal/audience/privacy flag and an actual ad ID',()=>{
- for(const key of ['VITE_CHESS_ADS_POLICY_APPROVED','VITE_CHESS_ADS_AUDIENCE_APPROVED','VITE_CHESS_ADS_PRIVACY_APPROVED','VITE_CHESS_ADS_REWARDED_ID']){
+ for(const key of ['VITE_CHESS_ADS_POLICY_APPROVED','VITE_CHESS_ADS_AUDIENCE_APPROVED','VITE_CHESS_ADS_PRIVACY_APPROVED','VITE_CHESS_ADS_REWARDED_ID','VITE_CHESS_AD_PRIVACY_URL']){
   const env=live();delete env[key];
   assert.equal(resolveMonetizationConfig(env,'android').mode,'disabled',key);
  }
