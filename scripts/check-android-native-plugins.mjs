@@ -8,6 +8,7 @@ if(!existsSync(path))throw Error('Capacitor plugin registry missing. Refuse misl
 const registered=JSON.parse(readFileSync(path,'utf8'));
 if(!Array.isArray(registered))throw Error('Unexpected native plugin registry shape');
 const names=new Set(registered.map(item=>item?.pkg).filter(x=>typeof x==='string'));
+console.log('Native plugin packages detected:',[...names].join(', ')||'(none)');
 if(!names.has('@capacitor/app'))throw Error('Capacitor App lifecycle plugin was NOT registered; Android Back would be broken');
 const adEnabled=process.env.CHESS_M4_ADS_TEST==='true'||process.env.CHESS_M4_ADS_LIVE==='true';
 if(adEnabled&&!names.has('@capacitor-community/admob'))
