@@ -5,7 +5,7 @@ const lessons=[{id:'center'},{id:'castle'}];
 const puzzles=[{id:'fork'},{id:'mate'}];
 const storage=()=>{
   const map=new Map();
-  return {getItem:key=>map.get(key)??null,setItem:(key,value)=>map.set(key,value)};
+  return {getItem:key=>map.get(key)??null,setItem:(key,value)=>map.set(key,value),removeItem:key=>map.delete(key)};
 };
 
 test('offline XP events are idempotent under repeated completions',()=>{
