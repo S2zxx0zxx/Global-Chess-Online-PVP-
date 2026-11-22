@@ -267,10 +267,13 @@ export function mountScreenRoutes({main,go,leaveMatch,toggleBoardView,getBoardVi
         ['Winning Run','Win three verified computer games in a row',stats.bestWinStreak>=3],
       ];
       const list=mk('div','ch-feature-list');section.append(list);
+      const awardArtwork=['/brand/royal-achievement-tactics.svg','/brand/royal-lessons.svg','/brand/royal-puzzles.svg','/brand/royal-daily.svg','/brand/royal-history.svg','/brand/royal-achievement-win.svg','/brand/royal-achievement-streak.svg'];
       for(const [index,[name,desc,earned]] of awards.entries()){
         const unavailable=index<4 ? p.invalid : saved===null;
         const row=mk('div','ch-achievement '+(earned?'ch-unlocked':'ch-locked'));
-        row.append(mk('span','ch-achievement-symbol',earned?'★':'◇'));
+        const medallion=mk('span','ch-achievement-symbol');
+        const art=mk('img','ch-award-art');art.src=awardArtwork[index];art.alt='';art.width=32;art.height=32;
+        medallion.append(art);row.append(medallion);
         const copy=mk('div');copy.append(mk('strong','',name),mk('small','',desc));
         row.append(copy,mk('span','ch-achievement-state',unavailable?'Unavailable':earned?'Earned':'Locked'));list.append(row);
       }
