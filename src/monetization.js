@@ -24,7 +24,7 @@ export function createMonetizationController({
     let earned=false,corrupt=false;
     try{earned=Boolean(readSupporterReward(storage?.getItem(M4_SUPPORTER_KEY)));}catch{corrupt=true;}
     return {
-      mode:config.mode,available:available(),optedIn,
+      mode:config.mode,privacyUrl:config.privacyUrl??null,available:available(),optedIn,
       enabled:available()&&optedIn&&!corrupt&&storage?.durable!==false,
       consentCanRequest:consent?.canRequestAds===true,
       privacyOptionsRequired:consent?.privacyOptionsRequirementStatus==='REQUIRED'||
