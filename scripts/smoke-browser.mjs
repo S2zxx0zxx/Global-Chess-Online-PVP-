@@ -205,6 +205,26 @@ try {
   await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-match") && document.querySelector("#board [data-square=e4].last-destination")?.getAttribute("aria-label")==="e4, White Pawn" && !document.querySelector("#status").textContent.includes("Match paused")'));
   console.log('Save and Exit restores the latest move after reload: passed');
 
+  await waitUntil(() => evaluate('Boolean(navigator.serviceWorker.controller)'));
+  await send('Network.enable');
+  const connection = {latency:0, downloadThroughput:-1, uploadThroughput:-1};
+  try {
+    await send('Network.emulateNetworkConditions', {...connection, offline:true});
+    await waitUntil(() => evaluate('navigator.onLine === false'));
+    const networkUnavailable = await evaluate('fetch("/offline-network-probe", {cache:"no-store"}).then(()=>false,()=>true)');
+    if (!networkUnavailable) throw new Error('Offline probe unexpectedly reached the server');
+    await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=match'});
+    await waitUntil(() => evaluate('navigator.onLine === false && document.getElementById("launch")?.hidden && document.querySelector("#board [data-square=e4].last-destination")?.getAttribute("aria-label") === "e4, White Pawn"'));
+    await evaluate('document.querySelector("#board [data-square=e7]").click();document.querySelector("#board [data-square=e5]").click();true');
+    await waitUntil(() => evaluate('document.querySelector("#board [data-square=e5].last-destination")?.getAttribute("aria-label") === "e5, Black Pawn"'));
+    const offlineShot = await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+    await writeFile('artifacts/offline-restored-match.png',Buffer.from(offlineShot.data,'base64'));
+    console.log('PWA restores a saved match and plays a legal move with network disabled: passed');
+  } finally {
+    await send('Network.emulateNetworkConditions', {...connection, offline:false});
+    await send('Network.disable');
+  }
+
   // Start a real new game with the computer as White and player as Black.
   // The CDP dialog listener explicitly accepts replacement of the prior match.
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=play'});

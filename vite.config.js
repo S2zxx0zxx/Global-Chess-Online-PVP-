@@ -27,7 +27,7 @@ export default defineConfig({
       ];
       const files = [...artwork,'index.html', 'manifest.webmanifest', 'icon.svg', 'maskable.svg', 'solver/cha.wasm.gz', 'solver/LICENSE.txt', ...Object.keys(bundle).filter(file => file !== 'index.html')];
       const hash = createHash('sha256').update(JSON.stringify(files));
-      for (const file of ['index.html', 'public/manifest.webmanifest', 'public/icon.svg', 'public/maskable.svg', 'public/solver/cha.wasm.gz', 'public/solver/LICENSE.txt', ...artwork.map(file => 'public/' + file)]) {
+      for (const file of ['index.html', 'public/_headers', 'public/manifest.webmanifest', 'public/icon.svg', 'public/maskable.svg', 'public/solver/cha.wasm.gz', 'public/solver/LICENSE.txt', ...artwork.map(file => 'public/' + file)]) {
         hash.update(readFileSync(new URL(file, import.meta.url)));
       }
       const revision = hash.digest('hex').slice(0,16);
