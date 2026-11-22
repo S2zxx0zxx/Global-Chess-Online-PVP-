@@ -14,6 +14,9 @@ test('online label never advertises a public match for a private invitation',()=
   assert.equal(sapphireMatchStatus(''),'PRIVATE ROOM — INVITE REQUIRED');
   assert.equal(sapphireMatchStatus('Room unavailable'),'ROOM UNAVAILABLE');
   assert.equal(sapphireMatchStatus('Opponent joined'),'MATCH CONNECTED');
+  assert.equal(sapphireMatchStatus('You are White'),'MATCH CONNECTED');
+  assert.equal(sapphireMatchStatus('Waiting for your friend…'),'PRIVATE ROOM — INVITE REQUIRED');
+  assert.equal(sapphireMatchStatus('Connection interrupted. Reconnecting…'),'RECONNECTING');
 });
 test('five visible navigation actions map to actual registered routes',()=>{
   const source=read('src/sapphire-shell.js');

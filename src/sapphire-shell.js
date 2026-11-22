@@ -35,8 +35,9 @@ export function sapphireTrainingDisplay(report,goal=15){
 }
 export function sapphireMatchStatus(status){
   const s=String(status||'').toLowerCase();
-  if(/opponent|joined|both seats|ready|turn/.test(s))return 'MATCH CONNECTED';
   if(/expired|error|failed|unavailable|unable|invalid/.test(s))return 'ROOM UNAVAILABLE';
+  if(/reconnect|connection interrupted|response lost/.test(s))return 'RECONNECTING';
+  if(/you are (white|black)|opponent joined|both seats|match ready|match connected/.test(s))return 'MATCH CONNECTED';
   return 'PRIVATE ROOM — INVITE REQUIRED';
 }
 function pref(){
