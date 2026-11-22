@@ -8,10 +8,10 @@
 
 ## Current control
 
-- **Tasks closed:** T01, T02, T04, T05, T06 (previous scoped evidence); **T07 `DONE (602 ORIGINAL SOURCE INVENTORY & PROVISIONAL BATCH MAP ONLY)`**. Original 602 task acceptance states remain 0 VERIFIED.
-- **One active task:** `NONE` after T07 inventory construction, pending exact PR head CI and protected squash-merge. T03 remains `BLOCKED_EXTERNAL` / user-directed nonrelease exception, NOT DONE.
-- **Next permitted action:** verify PR #27 T07 exact-head CI/merge first, then start **T08 only** on the resulting canonical SHA as explicitly instructed by Product Owner. T03 remains unresolved.
-- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03 unresolved; T07 source inventory DONE when integrated; T08 planned but not started; mandatory review still pending)
+- **Tasks closed:** T01/T02/T04/T05/T06 (scoped); T07 `DONE` (602 original source inventory only); **T08 `DONE` (regression freeze / CI gate only, contingent on exact-head PR and canonical merge verification)**. Original 602 task acceptance rows remain 0 VERIFIED.
+- **One active task:** `GC-B01-T08` integration/CI review pending; regression manifest, browser smoke hardening, tests and workflows added on a separate branch. T03 remains `BLOCKED_EXTERNAL`, NOT DONE.
+- **Next permitted action:** finish GC-B01-T08 exact-head Core + Android CI, protected squash merge and canonical smoke. Then resolve T03/governance; no B02 start or Batch GO until explicit review.
+- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03 remains unresolved and `main` unprotected; T07 source inventory and T08 regression guard completed in scope only; independent batch reviewer GO outstanding)
 - **No change authority inferred:** no merges, force pushes, production changes, billing or other work approved by this document.
 
 ## Task closure: GC-B01-T01
@@ -395,6 +395,52 @@ no_production_changes: true
 
 **Acceptance boundary:** T07's inventory/mapping guard is DONE **only for original source-ID completeness and candidate batch responsibility**. Every `CH-xx-xxx` row's `acceptance_verification` is still `NOT_VERIFIED`; mapped batch is provisional. Do not count 602 tasks as implemented, call source test cases run, or claim G0–G22 gates approved. Individual source-row links to exact atomic `GC-Bxx-Tyy` tasks and evidence are future review work, not fabricated here.
 
+## GC-B01-T08 — Reproducible regression freeze checkpoint
+
+**Source task:** `GC-MASTER-EXEC-v1.0` §01.08. Explicit user permission: `START GC-B01-T07 & START GC-B01-T08 start kro build and merge` — T07 successfully merged first. T03 remains a separate unresolved external governance item; this command does not waive B01 batch gates.
+
+```yaml
+task_id: GC-B01-T08
+scope_status: DONE_REGRESSION_BASELINE_AND_SOURCE_CI_GATES_ONLY
+source_canonical_sha: 3389c3f3cb3b7bd3235a47e80817cb0d44591574
+source_T07_PR: 27
+source_T07_post_merge_CI: 45039455255
+source_T07_post_merge_CI_attempt_1: FAILED_INTERMITTENT_CHROMIUM_STATE_WAIT
+source_T07_post_merge_CI_attempt_2: SUCCESS_125_OF_125
+T08_branch: feat/gc-b01-t08-regression-freeze
+T08_document: docs/execution/GC-B01-T08_REGRESSION_FREEZE_2026-11-22.md
+T08_machine_manifest: docs/execution/GC-B01-T08_REGRESSION_BASELINE.v1.json
+T08_source_guard: scripts/check-regression-baseline.mjs
+T08_guard_tests: tests/regression-baseline.test.js
+T08_categories: 10
+T08_new_test_cases: 9
+T08_expected_node_test_total: 134
+T08_core_workflow_gate: source_and_regressions_before_test_and_build
+T08_android_debug_gate: source_architecture_regressions_and_node_tests_before_debug
+T08_android_ephemeral_signing_gate: source_architecture_regressions_and_node_tests_before_test_AAB
+T08_production_signing: MANUAL_APPROVAL_ONLY_UNCHANGED
+T08_CI_PR_head: VERIFY_AFTER_FINAL_COMMIT
+T08_CI_core: PENDING
+T08_CI_Android_debug: PENDING
+T08_CI_ephemeral_signing: PENDING
+T08_protected_canonical_merge_SHA: PENDING
+T08_canonical_post_merge_CI: PENDING
+T08_browser_change: Test_only_sequential_promotion_setup_moves_with_per_move_acknowledgment
+browser_flake_eliminated_claim: false
+real_android_device_acceptance: false
+owner_play_signing_and_release_approved: false
+original_602_source_rows_independently_verified: 0
+owner_exception_T03: BLOCKED_EXTERNAL_UNPROTECTED_MAIN
+T03_DONE: false
+GC_B01_GATE: NOT_ELIGIBLE
+next_batch_started: false
+new_paid_service: false
+runtime_game_or_server_changes: false
+rollback: reviewed_revert_of_T08_squash_preserving_saves
+```
+
+**Task closure evidence must be supplemented by PR #28's exact-head Core/Android green checks and canonical post-merge run.** Baseline captures both prior intermittent Chromium failure and successful rerun. A passing smoke does not alone certify timing stability on all devices. No external Play, 602-task feature acceptance, or overall batch GO is asserted.
+
 ## Batch 01 sequential pointer
 
 | Task ID | Status | Evidence |
@@ -406,13 +452,13 @@ no_production_changes: true
 | `GC-B01-T05` | DONE (ARCHITECTURE ADR + GUARDS) | Retain Vite/ESM decision, isolated TypeScript 5.8.3 pilot, 6 guard tests; PR #25 core 104/104 + Android debug/signing CI SUCCESS; final docs merge verification separately required |
 | `GC-B01-T06` | DONE (DATA/IDENTITY CONTRACTS ONLY) | Six versioned schemas, manifest, 13 synthetic tests, immutable IDs/migration/account-link/privacy threat MD. PR #26 final CI + merge evidence required; NO data migration or cloud identity |
 | `GC-B01-T07` | DONE (602 SOURCE INVENTORY ONLY) | Original v3 XLSX and ZIP SHA-256 match; 602/602 distinct source IDs, 418+184 provenance, 23 release gates, 30 screens, 60 source tests, 40 assets; all 602 provisionally batch-linked, 0 task acceptances VERIFIED; exact PR CI/merge required |
-| `GC-B01-T08` | TODO | No action started |
+| `GC-B01-T08` | DONE (REGRESSION GATE FREEZE ONLY) | 10 mandatory categories, 9 new tests, core and Android pre-build traceability/regression guards, browser promotion per-move wait + labeled diagnostics. PR #28 exact-head Core/Android CI and post-merge confirmation required; physical Android release QA NOT claimed |
 | `GC-B01-GATE` | NOT_ELIGIBLE | Requires every T01–T08 task DONE and batch review |
 
 ## Resume procedure
 
 1. Issue `STATUS GC-B01-T01` to verify source evidence if audit freshness is in doubt.
-2. T07 original source inventory/phase crosswalk is complete subject to exact-head PR #27 CI and merge. **The user's same command explicitly authorizes T08 AFTER T07 succeeds.** T03 is unresolved, original 602 task acceptances 0 VERIFIED.
+2. T07 source inventory merged PR #27 at `3389c3f3cb3b7bd3235a47e80817cb0d44591574`, CI #45039455255 attempt 1 browser flaky failure, attempt 2 SUCCESS. T08 regression guards have a separate PR #28/CI. T03 unresolved; no B01 GO.
 3. Re-fetch GitHub heads before edits, use exact SHA proofs and preserve all historic game code.
 4. Never mark subsequent tasks DONE by copying this ledger status.
 
