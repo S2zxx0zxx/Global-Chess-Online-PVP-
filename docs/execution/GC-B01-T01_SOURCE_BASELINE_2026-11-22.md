@@ -177,7 +177,7 @@ The documentation-only audit branch was created after the initial read and is in
 - `public/chess-assets/pieces/white-queen.webp`
 - `public/chess-assets/pieces/white-rook.webp`
 
-The list above is directly from GitHub compare API and includes the actual 14 legacy WebP deletions, not a guessed list.
+The list above is directly from GitHub compare API and includes the actual 13 legacy WebP deletions, not a guessed list.
 
 ### Feature-to-file evidence (presence, not release certification)
 
