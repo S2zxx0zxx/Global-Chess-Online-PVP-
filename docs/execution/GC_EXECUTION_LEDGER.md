@@ -9,9 +9,9 @@
 ## Current control
 
 - **Tasks closed:** `GC-B01-T01` — `DONE` (source pin); `GC-B01-T02` — `DONE` (historical PR reconciliation only)
-- **One active task:** `GC-B01-T04` — `BLOCKED_EXTERNAL` (source-derived scope draft created; Product Owner approval still pending). T03 explicitly owner-skipped FOR PLANNING ONLY, not DONE.
-- **Next permitted action:** review/approve or revise `GC-B01-T04-SCOPE-v1.0`; T03 remains a batch/release blocker and T05 is NOT eligible.
-- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03 blocked/skipped for one planning task; T04 pending owner signoff; T05–T08 TODO)
+- **One active task:** `GC-B01-T04` — `IN_REVIEW` (Product Owner explicitly approved scope v1.0; final exact-head CI/merge verification pending). T03 owner-skipped FOR PLANNING ONLY, not DONE.
+- **Next permitted action:** verify exact PR #24 head after owner signoff, then safely close GC-B01-T04. T03 remains blocked; T05 is NOT eligible.
+- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03 owner-skipped/unresolved; T04 owner-approved awaiting final verification; T05–T08 TODO)
 - **No change authority inferred:** no merges, force pushes, production changes, billing or other work approved by this document.
 
 ## Task closure: GC-B01-T01
@@ -173,8 +173,8 @@ owner_sequence_exception:
   source: "User direct command: Skip kro 3 ko ispe kaam start kro START GC-B01-T04"
 canonical_pre_t04_sha: 45ec74c002d7ffb0f0f5252dd6d03db3f6569526
 task_branch: docs/gc-b01-t04-scope-lock
-task_status: BLOCKED_EXTERNAL
-task_blocker: Product Owner signature on source-derived M0-M5 scope table
+task_status: IN_REVIEW_POST_OWNER_APPROVAL
+task_blocker: Exact-head PR #24 CI and safe documentation-only merge verification
 doc_evidence:
   - docs/execution/GC-B01-T04_SCOPE_LOCK_2026-11-22.md
   - docs/execution/GC-B01-T04_PRD_SCOPE_MATRIX.csv
@@ -189,8 +189,12 @@ classification:
   online_rated_social_scope: M5
 all_122_master_tasks_preserved: true
 all_602_source_task_acceptance_claimed: false
-owner_scope_approval: PENDING_NOT_SIGNED
-next_permission: "APPROVE GC-B01-T04-SCOPE-v1.0 or REVISE GC-B01-T04"
+owner_scope_approval: APPROVED_IN_CHAT_2026_11_22
+owner_scope_approval_command: "APPROVE GC-B01-T04-SCOPE-v1.0"
+owner_scope_approval_recorded_at_utc: "2026-11-22T14:28:39Z"
+owner_scope_approval_scope: M0_M5_release_boundaries_and_16_PRD_classification_only
+optional_ads_activation_approved: false
+next_permission: verify_exact_head_CI_then_close_T04
 t03_live_status:
   task: GC-B01-T03
   status: BLOCKED_EXTERNAL_OWNER_SKIPPED_FOR_PLANNING
@@ -209,9 +213,17 @@ product_code_changes_in_t04: false
 rollback: Close draft PR and delete only T04 branch before merge; future doc revert PR after merge
 ```
 
-**Status semantics:** T04 has a complete proposed classified artifact but **must not** be called DONE without user-approved table signature; T03 remains unresolved and B01-GATE remains NO_GO. PRD reference is the original user-owned `Chess_FINAL_Master_Blueprint_v3_2026-11-18.md`, not unapproved imitation UI.
+**Status semantics:** T04 scope classification is **APPROVED by the user**, but task closure needs final exact-head CI and reviewed merge. T03 remains unresolved; B01-GATE remains NO_GO. PRD reference is the original user-owned `Chess_FINAL_Master_Blueprint_v3_2026-11-18.md`, not unapproved imitation UI.
 
 **Scope evidence:** [`GC-B01-T04_SCOPE_LOCK_2026-11-22.md`](GC-B01-T04_SCOPE_LOCK_2026-11-22.md); [`GC-B01-T04_PRD_SCOPE_MATRIX.csv`](GC-B01-T04_PRD_SCOPE_MATRIX.csv).
+
+### GC-B01-T04 scope signoff — explicit owner command
+
+- Product Owner command: `APPROVE GC-B01-T04-SCOPE-v1.0` (received in this ChatGPT conversation on 22 November 2026).
+- Recording timestamp (UTC): `2026-11-22T14:28:39Z`; no independent GitHub reviewer identity or personal legal signature claimed.
+- Approved: all 16 PRD classifications, 30 screen contract scope obligations, 12 deferred items with owner/reason/gate, and M0–M5 first-release boundaries as documented in `GC-B01-T04_SCOPE_LOCK_2026-11-22.md`.
+- Not approved: ad enablement, Play publication, new payments, live global PvP, task removal/reordering, waiving T03 governance, 602-row original source acceptance, or M0/M1/M2 product certification.
+- PR #24 pre-signoff SHA `5db79bea071fe0f17153e0092ac3f0ee21623d7d` CI #45030661367 was SUCCESS. **Post-signoff head checks and merge remain pending at this checkpoint.**
 
 ## Batch 01 sequential pointer
 
@@ -220,7 +232,7 @@ rollback: Close draft PR and delete only T04 branch before merge; future doc rev
 | `GC-B01-T01` | DONE | Exact-SHA baseline in this PR |
 | `GC-B01-T02` | DONE | `GC-B01-T02_PR18_RECONCILIATION_2026-11-22.md`; blocked features remain open under their own task IDs |
 | `GC-B01-T03` | BLOCKED_EXTERNAL (OWNER-SKIPPED FOR T04) | PR #23 merged, exact-head CI attempt 2 succeeded; only canonical protected; `main` unprotected and owner signoff pending; not DONE |
-| `GC-B01-T04` | BLOCKED_EXTERNAL (scope signoff) | PRD-001–016 classified, SCR-00–29 release owner map, M0–M5 boundaries, 12 named deferrals in T04 MD/CSV; awaiting Product Owner approval |
+| `GC-B01-T04` | IN_REVIEW (owner-approved, post-signoff checks pending) | 16/16 PRDs and M0–M5 scope explicitly approved via `APPROVE GC-B01-T04-SCOPE-v1.0`; verify final PR #24 CI and docs merge |
 | `GC-B01-T05` | TODO | No action started |
 | `GC-B01-T06` | TODO | No action started |
 | `GC-B01-T07` | TODO | No action started |
@@ -230,7 +242,7 @@ rollback: Close draft PR and delete only T04 branch before merge; future doc rev
 ## Resume procedure
 
 1. Issue `STATUS GC-B01-T01` to verify source evidence if audit freshness is in doubt.
-2. Issue `APPROVE GC-B01-T04-SCOPE-v1.0` or `REVISE GC-B01-T04 [specific change]` after reading the T04 document. This owner-directed planning exception does not close T03 or unlock T05.
+2. Owner approval `APPROVE GC-B01-T04-SCOPE-v1.0` received; verify exact-head PR #24 CI and safe docs-only merge. T03 remains unresolved, and T05 is not unlocked.
 3. Re-fetch GitHub heads before edits, use exact SHA proofs and preserve all historic game code.
 4. Never mark subsequent tasks DONE by copying this ledger status.
 
