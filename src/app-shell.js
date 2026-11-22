@@ -327,6 +327,9 @@ export function mountAppShell({startMatch, historyCount, readSavedHistory, write
   }
   lobby.append(more);
   document.documentElement.classList.add('ch-shell-ready');
+  // UMP refresh is mandatory on each launch only for a previously opted-in
+  // native session. This never initializes or loads an ad on its own.
+  void monetization?.onLaunch?.().catch(()=>{});
   // Read-only deep links let QA visit each ZIP v3 screen without modifying
   // active game state. Invite hashes always take precedence.
   const requested = new URL(location.href).searchParams.get('screen');
