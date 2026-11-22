@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://global-chess.invalid/contracts/proposed-account-link-intent-v1",
+  "$id": "https://global-chess.invalid/contracts/proposed-account-link-intent-v1.schema.json",
   "title": "PROPOSED consent-first client link intent; not an authentication token",
   "description": "Identity subject must be derived exclusively from independently verified provider credential on server; not accepted from this client schema.",
   "type": "object",

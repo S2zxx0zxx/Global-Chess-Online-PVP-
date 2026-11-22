@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://global-chess.invalid/contracts/legacy-match-save-v1",
+  "$id": "https://global-chess.invalid/contracts/legacy-match-save-v1.schema.json",
   "title": "Legacy local chess match save (current canonical serializer v1)",
   "description": "Schema of serialization emitted by src/game.js; importer may accept older compatible fields. Must not replace restoreGame runtime legality checks.",
   "type": "object",

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://global-chess.invalid/contracts/legacy-progress-events-v1",
+  "$id": "https://global-chess.invalid/contracts/legacy-progress-events-v1.schema.json",
   "title": "Local-only progression journal v1",
   "description": "Derived immutable legacy ID is kind:exerciseId (not stored). ID uniqueness is checked by readProgress, not uniqueItems semantics alone.",
   "type": "object",

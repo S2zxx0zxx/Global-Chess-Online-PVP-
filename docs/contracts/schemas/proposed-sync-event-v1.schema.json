@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://global-chess.invalid/contracts/proposed-sync-event-v1",
+  "$id": "https://global-chess.invalid/contracts/proposed-sync-event-v1.schema.json",
   "title": "PROPOSED future opt-in sync event; NOT deployed",
   "description": "Intended for B03 only after authenticated server authority, consent and transactional migration. Client-supplied payload is never intrinsically trusted.",
   "type": "object",

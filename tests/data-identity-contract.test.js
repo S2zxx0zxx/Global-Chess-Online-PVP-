@@ -43,11 +43,15 @@ test('all six versioned JSON schemas parse and relative references resolve', () 
     assert.equal(schema.$schema, 'https://json-schema.org/draft/2020-12/schema');
     assert.equal(schema.type, 'object');
     assert.equal(schema.additionalProperties, false);
-    assert.ok(schema.$id.startsWith('https://global-chess.invalid/contracts/'));
+    assert.equal(schema.$id, 'https://global-chess.invalid/contracts/' + name + '.schema.json');
     const refs = JSON.stringify(schema).match(/"\$ref":"[^"]+"/g) || [];
     for (const ref of refs) {
       const name = JSON.parse('{' + ref + '}').$ref;
-      if (!name.startsWith('#')) assert.equal(existsSync(resolve(dirname(file), name)), true);
+      if (!name.startsWith('#')) {
+        const localFile = resolve(dirname(file), name);
+        assert.equal(existsSync(localFile), true);
+        assert.equal(JSON.parse(readFileSync(localFile, 'utf8')).$id, new URL(name, schema.$id).href);
+      }
     }
   }
 });

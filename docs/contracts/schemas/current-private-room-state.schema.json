@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://global-chess.invalid/contracts/current-private-room-state",
+  "$id": "https://global-chess.invalid/contracts/current-private-room-state.schema.json",
   "title": "Current Cloudflare private-room match response shape (not a remote account)",
   "description": "match.version is a mutable optimistic concurrency counter, NOT a schema version or verified rating. Server chooses actual allowed actions.",
   "type": "object",

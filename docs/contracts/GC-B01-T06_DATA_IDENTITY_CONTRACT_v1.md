@@ -42,7 +42,7 @@ The task specifies **immutable local event IDs, migration versions, account-link
 - `proposed-sync-event-v1.schema.json` — **NOT DEPLOYED** opt-in event transport contract.
 - `proposed-account-link-intent-v1.schema.json` — **NOT DEPLOYED** consent intent. Client cannot assert a verified user identity; server must derive it from validated authentication.
 
-Manifest: [`GC-B01-T06_CONTRACT_MANIFEST.v1.json`](GC-B01-T06_CONTRACT_MANIFEST.v1.json). The `global-chess.invalid` schema-ID host is an intentionally **non-resolving reserved documentation namespace**, not a real deployment, credential, app domain or payment endpoint.
+Manifest: [`GC-B01-T06_CONTRACT_MANIFEST.v1.json`](GC-B01-T06_CONTRACT_MANIFEST.v1.json). The `global-chess.invalid` schema-ID host is an intentionally **non-resolving reserved documentation namespace**, not a real deployment, credential, app domain or payment endpoint. Every `$id` includes its `.schema.json` filename and relative `$ref` paths resolve to the matching local schema; this is checked by the T06 Node tests.
 
 ## 2. Immutable IDs — CURRENT versus FUTURE
 

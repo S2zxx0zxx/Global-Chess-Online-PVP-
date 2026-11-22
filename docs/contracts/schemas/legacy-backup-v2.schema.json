@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://global-chess.invalid/contracts/legacy-backup-v2",
+  "$id": "https://global-chess.invalid/contracts/legacy-backup-v2.schema.json",
   "title": "Canonical JSON backup v2",
   "description": "Contains string-serialized match and history snapshots. JSON Schema does NOT validate inner chess moves; previewBackup/restoreGame must validate them at runtime.",
   "type": "object",
