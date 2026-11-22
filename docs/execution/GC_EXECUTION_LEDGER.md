@@ -8,10 +8,10 @@
 
 ## Current control
 
-- **Tasks closed:** T01 source baseline `DONE`, T02 reconciliation `DONE`, T04 owner-approved scope `DONE`, T05 architecture guard `DONE`, **T06 data/identity contract preflight `DONE` (design/schema only; no sync or migration)**.
-- **One active task:** `NONE` — T06 contract design accepted subject to final PR #26 exact-head CI and protected squash-merge. T03 remains blocked / owner-skipped only for nonrelease contracts; NOT DONE.
-- **Next permitted action:** verify final T06 exact-head PR #26 checks, protected squash-merge and post-merge CI. T03 still unresolved; T07 not started or implicitly unlocked.
-- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03 unresolved; T04/T05/T06 scoped DONE; T07/T08 TODO)
+- **Tasks closed:** T01, T02, T04, T05, T06 (previous scoped evidence); **T07 `DONE (602 ORIGINAL SOURCE INVENTORY & PROVISIONAL BATCH MAP ONLY)`**. Original 602 task acceptance states remain 0 VERIFIED.
+- **One active task:** `NONE` after T07 inventory construction, pending exact PR head CI and protected squash-merge. T03 remains `BLOCKED_EXTERNAL` / user-directed nonrelease exception, NOT DONE.
+- **Next permitted action:** verify PR #27 T07 exact-head CI/merge first, then start **T08 only** on the resulting canonical SHA as explicitly instructed by Product Owner. T03 remains unresolved.
+- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03 unresolved; T07 source inventory DONE when integrated; T08 planned but not started; mandatory review still pending)
 - **No change authority inferred:** no merges, force pushes, production changes, billing or other work approved by this document.
 
 ## Task closure: GC-B01-T01
@@ -353,6 +353,48 @@ rollback: Close_unmerged_PR_or_reviewed_squash_revert_no_data_wipes
 
 **T06 closing evidence boundary:** Source `1c0dfd7d8b1b3ab35c15de3be7ea80ad3dace394` pinned; no secrets/user records touched, no JS runtime edits, 13 source-to-contract synthetic tests added, no dependencies. The independent GitHub CI at **final PR #26 head** and **post-merge canonical** must be checked before asserting integration success. Do not confuse JSON schema definitions with online migration or authenticated account sync.
 
+## GC-B01-T07 — 602-original-task inventory checkpoint
+
+**Owner command:** `START GC-B01-T07 & START GC-B01-T08 start kro build and merge`. Execution is strictly **T07 then T08** with independent PR, exact-head CI and rollback. T03 remains blocked, user authorization applies only to T07/T08 nonrelease engineering work.
+
+```yaml
+task_id: GC-B01-T07
+master: GC-MASTER-EXEC-v1.0
+scope_status: DONE_602_SOURCE_INVENTORY_AND_PROVISIONAL_BATCH_CROSSWALK_ONLY
+source_owner_tracker_sha256: df4a520e4d72e6592d96ac3960ac00e90b5d459ddc5288e056f63662a0ffbcd8
+source_zip_tracker_byte_identical: true
+overlay_Tasks_sheet_equal_to_original: true
+source_unique_task_ids: 602
+v2_original_preserved: 418
+v3_refinements: 184
+source_release_gates: 23
+source_screen_ids: 30
+source_test_cases: 60
+source_assets: 40
+provisional_batch_assignments: 602
+independently_verified_original_source_tasks: 0
+owner_approved_atomic_source_to_master_task_links: 0
+all_source_mapping_rows_require_review: true
+machine_registry: docs/execution/GC_B01_T07_602_TASK_SOURCE_BATCH_MAP.csv
+manifest: docs/execution/GC_B01_T07_602_TASK_SOURCE_MANIFEST.json
+source_reconciliation: docs/execution/GC-B01-T07_ORIGINAL_602_TASK_RECONCILIATION.md
+source_guard: scripts/verify-source-tracker.mjs
+source_guard_tests: tests/task-source-ledger.test.js
+canonical_pre_task_sha: 69d7e13c6904f13344c1195333f13f39741f09c1
+working_branch: docs/gc-b01-t07-602-source-ledger
+github_pr: T07_PR_PENDING_CREATION
+final_head_ci: PENDING
+canonical_merge_sha: PENDING
+previous_task_T03: BLOCKED_EXTERNAL_OWNER_SKIPPED_T07_T08_NONRELEASE_ONLY
+main_branch_protected: false
+batch_gate: NOT_ELIGIBLE
+T08_start_requires_T07_merge_and_post_merge_evidence: true
+T08_status: TODO
+no_production_changes: true
+```
+
+**Acceptance boundary:** T07's inventory/mapping guard is DONE **only for original source-ID completeness and candidate batch responsibility**. Every `CH-xx-xxx` row's `acceptance_verification` is still `NOT_VERIFIED`; mapped batch is provisional. Do not count 602 tasks as implemented, call source test cases run, or claim G0–G22 gates approved. Individual source-row links to exact atomic `GC-Bxx-Tyy` tasks and evidence are future review work, not fabricated here.
+
 ## Batch 01 sequential pointer
 
 | Task ID | Status | Evidence |
@@ -363,14 +405,14 @@ rollback: Close_unmerged_PR_or_reviewed_squash_revert_no_data_wipes
 | `GC-B01-T04` | DONE (SCOPE LOCK ONLY) | Explicit owner approval command; 16/16 PRDs, SCR-00–29, 12 deferrals and M0–M5 scope signed in PR #24; final CI/merge tracked in GitHub PR |
 | `GC-B01-T05` | DONE (ARCHITECTURE ADR + GUARDS) | Retain Vite/ESM decision, isolated TypeScript 5.8.3 pilot, 6 guard tests; PR #25 core 104/104 + Android debug/signing CI SUCCESS; final docs merge verification separately required |
 | `GC-B01-T06` | DONE (DATA/IDENTITY CONTRACTS ONLY) | Six versioned schemas, manifest, 13 synthetic tests, immutable IDs/migration/account-link/privacy threat MD. PR #26 final CI + merge evidence required; NO data migration or cloud identity |
-| `GC-B01-T07` | TODO | No action started |
+| `GC-B01-T07` | DONE (602 SOURCE INVENTORY ONLY) | Original v3 XLSX and ZIP SHA-256 match; 602/602 distinct source IDs, 418+184 provenance, 23 release gates, 30 screens, 60 source tests, 40 assets; all 602 provisionally batch-linked, 0 task acceptances VERIFIED; exact PR CI/merge required |
 | `GC-B01-T08` | TODO | No action started |
 | `GC-B01-GATE` | NOT_ELIGIBLE | Requires every T01–T08 task DONE and batch review |
 
 ## Resume procedure
 
 1. Issue `STATUS GC-B01-T01` to verify source evidence if audit freshness is in doubt.
-2. T06 contract preflight complete under a separate one-task exception; verify final PR #26 SHA, CI and protected merge. T03 remains unresolved; T07 is TODO and not started.
+2. T07 original source inventory/phase crosswalk is complete subject to exact-head PR #27 CI and merge. **The user's same command explicitly authorizes T08 AFTER T07 succeeds.** T03 is unresolved, original 602 task acceptances 0 VERIFIED.
 3. Re-fetch GitHub heads before edits, use exact SHA proofs and preserve all historic game code.
 4. Never mark subsequent tasks DONE by copying this ledger status.
 
