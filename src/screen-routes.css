@@ -205,3 +205,52 @@
 .ch-welcome-links{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:16px 0 0}
 .ch-welcome-links a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;color:#f6d493;font-size:.84rem;text-decoration:underline;text-underline-offset:4px}
 .ch-welcome-links a:focus-visible{outline:3px solid #80ccff;outline-offset:3px}
+
+.ch-shell-ready .ch-mode-grid .ch-mode-card {
+  justify-content: flex-end;
+  min-height: 150px;
+  padding: 16px;
+  border-color: var(--play-edge);
+  color: #fff4e1;
+  background:
+    repeating-conic-gradient(#ffffff0a 0% 25%, transparent 0% 50%) 0 0 / 46px 46px,
+    radial-gradient(ellipse at 95% 0%, var(--play-light), transparent 74%),
+    linear-gradient(145deg, var(--play-base), #111010);
+}
+.ch-shell-ready .ch-mode-grid .ch-mode-card::after {
+  top: 9px;
+  right: 12px;
+  bottom: auto;
+  width: 40%;
+  height: 43%;
+  background: var(--play-art) right center / contain no-repeat;
+  filter: drop-shadow(0 4px 6px #0009);
+}
+.ch-mode-grid .ch-mode-card strong { font-size: clamp(1.05rem, 4vw, 1.32rem); }
+.ch-mode-grid .ch-mode-card small { color: #f2e3d2; }
+.ch-mode-grid .ch-mode-card:hover { border-color: #fff0d5; }
+
+.ch-mode-grid [data-setup=classic] {
+  --play-edge: #e2b17a;
+  --play-light: #ac7138;
+  --play-base: #462a14;
+  --play-art: url('/brand/classic-royal.svg');
+}
+.ch-mode-grid [data-setup=quick] {
+  --play-edge: #89d1c7;
+  --play-light: #387f78;
+  --play-base: #142f31;
+  --play-art: url('/brand/quick-clock.svg');
+}
+.ch-mode-grid [data-setup=computer] {
+  --play-edge: #aabff5;
+  --play-light: #465b94;
+  --play-base: #20273d;
+  --play-art: url('/brand/computer-avatar.svg');
+}
+.ch-mode-grid [data-setup=local] {
+  --play-edge: #e5a1a0;
+  --play-light: #925256;
+  --play-base: #412328;
+  --play-art: url('/chess-assets/pieces/white-knight.webp');
+}
