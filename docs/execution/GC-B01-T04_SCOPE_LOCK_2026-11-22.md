@@ -1,9 +1,9 @@
-# GC-B01-T04 — v3 MVP, P2/P3 and optional feature scope proposal
+# GC-B01-T04 — v3 MVP, P2/P3 and optional feature scope LOCK
 
 **Permanent tag:** `GC-B01-T04` · **Master:** `GC-MASTER-EXEC-v1.0`  
 **Prepared:** 2026-11-22 · **Source SHA:** `45ec74c002d7ffb0f0f5252dd6d03db3f6569526` on `integration/global-chess-v3`  
 **Task acceptance:** Source-derived classified scope, explicit deferred-feature owners/reasons/release boundaries, signed Product Owner table.  
-**Current state:** `AWAITING_OWNER_SIGNOFF` — **NOT a signed scope lock**. Any fields labelled PROPOSED remain subject to owner approval.  
+**Current state:** `DONE` **for scope classification and Product Owner approval only**, effective in this document as a release-boundary decision. This does not certify implementation, device QA, security, ads consent or store release.  
 **No functionality removed.** All master workstreams survive; this document separates *first public release commitments* from *future planned development*, not whether all 122 engineering tasks will ever be executed.
 
 ## 1. Exact source contracts and priority of authority
@@ -24,7 +24,7 @@
 | **LOCKED** | Web/PWA + separately installable Android, same chess domain/rule behavior | Do not treat a Web PWA as Android Play approval |
 | **LOCKED** | Legal standard chess, reliable storage, no invented opponent or Elo/earnings | Gameplay/rules, save integrity, fair labels are release blockers |
 | **LOCKED direction** | Premium original burgundy/walnut/gold appearance, no copying Chess Clash | Screens original, accessible; color/spacing values still require review |
-| **SOURCE RELEASE BASELINE** | M0 offline → M1 Web beta → M2 Play → M3 verified coaching → M4 optional ads → M5 future public online | This **staged release** is source-derived; confirming the exact first-release cut is Product Owner signoff below |
+| **SOURCE RELEASE BASELINE** | M0 offline → M1 Web beta → M2 Play → M3 verified coaching → M4 optional ads → M5 future public online | This **staged release cut is now Product Owner-approved by explicit chat command**; any later revisions require a separate versioned scope-change request |
 | **PROPOSED DEFAULT** | Four-tab Home/Play/Learn/Profile, staged beginner curriculum, starter 12 lessons and 30 puzzles | Retain current good implementation; sign design/content acceptance later |
 | **NOT APPROVED** | Shop, coins, gems, chests, purchase buttons, compulsory login, global Elo or live ads during M0–M2 | Do not surface as working features or claim commercial availability |
 
@@ -143,40 +143,54 @@ This authorizes starting **scope documentation on T04 only**. It **does not** ce
 - `GC-B01-GATE`: **NO_GO / NOT_ELIGIBLE**. `T05` and all later tasks remain TODO and are not implicitly unlocked.
 - Exception owner: **Product Owner**, authorized command in this chat; rationale: avoid blocking non-destructive scoping while main protection is pending. Boundary: **planning only**, not security/release bypass.
 
-## 9. Task acceptance, approval and exact rollback
+## 9. Task acceptance, explicit owner approval and rollback
 
-| T04 must-pass | Evidence state |
-|---|---|
-| Read exact original v3 charter, PRD IDs, screen contracts, ADR release order | **VERIFIED** via user-owned master blueprint and current GitHub source |
-| Separate first-release MVP from M3/M4/M5 and conditional roadmap | **DOCUMENTED**; no roadmap task dropped |
-| PRD-001–016 coverage | **16/16 documented** plus CSV |
-| All 30 screen contracts mapped to staged release and owner | **30/30 mapped**, no FINAL claim |
-| Every identified deferral has owner, reason, phase and gate | **12 deferrals** documented |
-| Original 602-row tracker independently verified | **NO**; separately owned by `GC-B01-T07` |
-| Current code, safety, CI and release status honestly separated | **DOCUMENTED**; no new app code in this task |
-| **Signed scope table approved by Product Owner** | **PENDING**: no signature invented; not DONE |
-| T03 external governance blocker closed | **NO**: required before batch promotion or release |
+**Scope approval command received:** `APPROVE GC-B01-T04-SCOPE-v1.0` from the Product Owner in this ChatGPT conversation on 22 Nov 2026. This is **explicit user authorization for this scope classification**, not a GitHub-approved review by an independent person and not approval to activate optional services. No legal personal name/signature is invented.
 
-**Owner signoff block (not prefilled or forged):**
+**Decision record:**
 
 ```yaml
 scope_version: GC-B01-T04-v1.0
-owner_decision: PENDING
-approved_by: null
-approved_at_utc: null
-approved_m0_m2_contract: null
-approved_m3_coaching_status: null
-approved_m4_ads_status: null
-approved_m5_online_status: null
-approved_owner_role_mapping: null
+scope_state: OWNER_APPROVED_LOCKED
+owner_decision: APPROVED
+approved_by: Product Owner (explicit ChatGPT user command)
+approved_at_utc: "2026-11-22T14:28:39Z"
+approval_evidence_type: user_chat_instruction
 approval_command: APPROVE GC-B01-T04-SCOPE-v1.0
+approved_pr: 24
+approved_pre_signoff_head_sha: 5db79bea071fe0f17153e0092ac3f0ee21623d7d
+approved_m0_m2_contract: "M0 offline guest + legal chess + local bot and pass/play; M1 Web/PWA beta plus validated learning/history/privacy; M2 independently gated Android Play release"
+approved_m3_coaching_status: "post-M2 verified analysis and Mistake-to-Mission only after license/correctness evidence"
+approved_m4_ads_status: "OPTIONAL, OFF by default; this approval is NOT permission to activate AdMob, collect consent, or monetize"
+approved_m5_online_status: "later network multiplayer, rankings, friends, authority and anti-cheat after separate funding/security approval"
+approved_owner_role_mapping: "approved roles and all 12 deferral entries in section 6"
+approved_PRD_classifications: "PRD-001 through PRD-016 as listed in section 4 and CSV"
+approved_screen_contract_coverage: "SCR-00 through SCR-29 source obligation kept, not final acceptance"
+unchanged_master_tasks: 122
+original_602_task_tracker_audit: NOT_CLAIMED
+t03_governance_status: BLOCKED_EXTERNAL_OWNER_SKIPPED_FOR_T04_ONLY
+main_protection_status_at_signoff: UNPROTECTED
+release_authorization: NONE
+next_task_started: NONE
 ```
 
-**Proposed signoff sentence (must be sent explicitly by owner):**  
-`APPROVE GC-B01-T04-SCOPE-v1.0` — means approve the above M0–M5 release classification **without removing any master 122 tasks or waiving T03/B01 governance and release gates**. An owner may instead send `REVISE GC-B01-T04 [specific change]`.
+**Approval interpretation:** This locks the *release scope and boundaries*, while **all 122 sequential master tasks remain tracked**. It does not authorize changing the original 602 task row statuses, skipping implementation gates, turning on ads, using live payments, publishing the game, changing the release branch, or claiming global PvP is available.
 
-**Review proof expected before T04 DONE:** owner decision plus exact PR head and SHA, approved scope matrix, doc-only diff, review comments resolved, source checklist and rollback. A future owner approval is not retroactive proof of Android/CI/security tests.
+| T04 must-pass | Evidence / status |
+|---|---|
+| Exact original v3 source PRD/milestone/ADR reviewed | **VERIFIED** in T04 source comparison |
+| PRD-001–016 classified | **16/16 DOCUMENTED**, matrix CSV |
+| SCR-00–29 coverage and owner roles | **30/30 MAPPED**, not FINAL accepted |
+| Deferrals with owner, reason, milestone and gate | **12/12 DOCUMENTED** |
+| MVP/M3/M4/M5 release boundaries | **OWNER APPROVED** by command above |
+| Product Owner scope signoff | **APPROVED**, original chat instruction logged above |
+| Exact PR #24 baseline CI (before signoff edit) | [Run #45030661367](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45030661367) **SUCCESS** at `5db79bea071fe0f17153e0092ac3f0ee21623d7d` |
+| Exact post-signoff PR head CI and final merge evidence | **VERIFY AFTER THIS DOCUMENT COMMIT**; do not inherit a previous SHA's green status |
+| Original 602-row task tracker independently accepted | **NO**; future `GC-B01-T07` |
+| T03 / B01 gate closed | **NO**; protected `main` and T03 review outstanding |
 
-**Rollback:** before merge, close this draft PR and delete only `docs/gc-b01-t04-scope-lock`; canonical/source remains unchanged. After merge, revert the exact doc commit via a new reviewed PR; never force-push or delete user saves to undo a scope decision.
+**Task completion decision:** `GC-B01-T04 = OWNER-APPROVED SCOPE; PENDING POST-SIGNOFF CI/MERGE`. Once exact-head CI and approved documentation-only squash merge are verified, mark T04 `DONE (SCOPE LOCK)` in `GC_EXECUTION_LEDGER.md`; no other engineering task is completed by this signoff.
 
-**Current result:** `GC-B01-T04 = BLOCKED_EXTERNAL (owner scope signoff pending)`; `GC-B01-T03 = BLOCKED_EXTERNAL (owner skipped for this one planning task)`; `GC-B01-GATE = NOT_ELIGIBLE`. No T05 started.
+**Rollback:** Before merge, revert the signoff changes via reviewed PR or close PR #24 only if owner withdraws authorization. After merge, record a versioned `GC-B01-T04-v1.1` scope amendment in a new reviewed PR rather than silently rewriting this user-approved v1.0 or force pushing. No save/database/branch history changes are acceptable as a scope rollback.
+
+**Next-step safeguard:** T03 remains owner-skipped *for T04 planning only* and **not DONE**; `GC-B01-GATE = NOT_ELIGIBLE`. T05 is not started or automatically authorized. If the user later explicitly asks to skip T03 again to start T05, record a separate scoped exception without waiving security or release protections.
