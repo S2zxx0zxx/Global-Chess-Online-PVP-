@@ -496,6 +496,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
     if(route==='data'||route==='transfer'){
       title('Private device storage',route==='data'?'Data & privacy':'Import & export','Clearing your browser data can permanently remove unsynced matches and lessons.');
       paragraph(section,'Global Chess currently stores your local chess progress on this device. No automatic cloud backup or account synchronization is promised.','ch-inline-notice');
+      paragraph(section,'Optional ads remain off in browser/PWA and ad-free Android builds. In a separately approved ad-enabled Android build, Google AdMob and UMP may process device and ad data only according to the published privacy disclosures and native privacy choices. No ad-supported competitive advantage is offered.','ch-inline-notice');
       const nav=stack();
       nav.append(btn('Export JSON backup',()=>el('export-backup')?.click(),'primary'),btn('Import JSON backup',()=>el('import-backup')?.click()),btn('View saved games',()=>go('history')));
       if(route==='data'){
