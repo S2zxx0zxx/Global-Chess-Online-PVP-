@@ -12,6 +12,17 @@ reconciliation is still required; code additions do not retroactively change tho
 
 The 19 November records below are historical. Track the current candidate in [PR #18](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/18), based on the foundation with PR #16 merged. These checks update the evidence for individual gates without granting release sign-off.
 
+### Original execution tracker
+
+The owner’s workbook was retrieved and read without editing it. It contains 602 unique task IDs across 25 phases, 30 screen IDs, 23 gate IDs, 60 QA cases and 40 asset entries. The task IDs comprise 418 carried from v2 and 184 introduced in v3. All source task rows still carry their original `NOT_STARTED` status and no evidence links. The source inventory establishes the list to audit. Each acceptance status still requires evidence for the scope and platform in its row.
+
+| Tracker IDs | Current evidence | Remaining scope |
+|---|---|---|
+| RULE-001–RULE-010 | Shared chess engine tests count 20, 400, 8,902 and 197,281 nodes at depths 1–4. Fixtures cover illegal castling, castling rights, en passant expiry and king safety, knight SAN/FEN, and explicit selection of all four promotions. Chromium exercises all four through the game dialog. | Native Android UI acceptance. |
+| RULE-011–RULE-015 | Shared game tests distinguish mate and stalemate, exercise threefold and the fifth occurrence, and verify the 50-move claim and 75-move automatic draw with mate priority. | Native Android outcome and clock acceptance. |
+| RULE-020, UX-27 | Two Chromium tabs verify the stale write is rejected and the stale move remains in a Recovery export. | LocalStorage fallback and native interruption acceptance. |
+| UX-28, CH-14-003, CH-14-004, CH-17-009 | Chromium runs a saved game offline and exercises a staged service-worker activation and rollback. | Successive hosted builds and Android/PWA installation evidence. |
+
 | Gate | New evidence | Remaining acceptance |
 |---|---|---|
 | G3, G14 | Commit `1cdb85d`: [API 36 debug APK](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45015072664) and [disposable-key AAB signing smoke](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45015072607) passed. A local debug APK installed on the API 36 emulator. | Native Back, lifecycle, rotation, TalkBack, performance and real-device acceptance. |
