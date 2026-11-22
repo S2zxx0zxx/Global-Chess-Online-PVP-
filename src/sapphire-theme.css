@@ -1,0 +1,502 @@
+/* Midnight Sapphire — distinctive Global Chess UI system.
+ * New screen composition: celestial sky, aurora, metallic game buttons,
+ * authentic local progression. No imported third-party app artwork.
+ */
+:root{
+  --gs-ink:#031024;--gs-deep:#071c45;--gs-mid:#123971;--gs-blue:#1977d2;
+  --gs-sky:#25a8fa;--gs-teal:#0ccaba;--gs-gold:#f4c76b;--gs-cream:#fff5df;
+  --gs-panel:linear-gradient(165deg,#163d75,#071839 75%);
+  --gs-border:#f4ce86b0;
+  --gs-shadow:0 11px 28px #020817aa;
+}
+html.ch-sapphire-ready{background:#030d27;color-scheme:dark}
+html.ch-sapphire-ready body{
+  color:var(--gs-cream);
+  background:
+    linear-gradient(180deg,#00102a16 0%,#03112c58 48%,#020c27d9 100%),
+    url('/brand/sapphire-horizon.svg') center top/cover fixed no-repeat,
+    #041630;
+}
+html.ch-sapphire-ready .ch-shell-ready{color:var(--gs-cream)}
+html.ch-sapphire-ready main{max-width:950px;min-height:100dvh;overflow-x:clip}
+html.ch-sapphire-ready.ch-view-home .masthead{display:none!important}
+html.ch-sapphire-ready #lobby.gs-sapphire-lobby{
+  max-width:710px;
+  border:0;
+  border-radius:0;
+  min-height:calc(100dvh - 85px);
+  margin:0 auto;
+  padding:12px 12px 105px;
+  background:transparent;
+  backdrop-filter:none;
+  box-shadow:none;
+  overflow:visible;
+}
+html.ch-sapphire-ready #lobby.gs-sapphire-lobby>.gc-home-top{display:none}
+.gs-top-banner{display:grid;gap:12px}
+.gs-top-status{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.gs-settings-trigger{
+  position:relative;
+  display:grid;place-items:center;
+  width:48px;height:47px;
+  color:var(--gs-cream);
+  font-size:0;
+  border-radius:12px;
+  border:2px solid #78bdff;
+  background:linear-gradient(165deg,#249feb,#0e4e9e);
+  box-shadow:inset 0 2px 0 #e2f4ff88,0 5px 0 #0c2258,0 8px 14px #0008;
+}
+.gs-settings-trigger::after{content:'';position:absolute;right:-4px;top:-4px;width:11px;height:11px;border-radius:50%;background:#f2b95b;border:1px solid #0f4285}
+.gs-small-icon{width:31px;height:31px;object-fit:contain;flex:none}
+.gs-storage-tag{
+  display:inline-block;
+  padding:8px 12px;
+  color:#d8f3ec;
+  background:#051944ce;
+  border:1px solid #4fe2d684;
+  border-radius:20px;
+  font:800 .65rem system-ui,sans-serif;
+  letter-spacing:.13em;
+}
+.gs-player-header{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.06fr);gap:10px;align-items:stretch}
+.gs-user-chip,.gs-training-chip{
+  display:flex;align-items:center;gap:8px;
+  min-width:0;
+  border:1px solid #9fccfcab;
+  border-radius:13px;
+  color:#fff8ee;
+  background:linear-gradient(125deg,#124384,#041d52);
+  box-shadow:inset 0 2px 0 #ffffff24,0 4px 14px #0006;
+  padding:8px;
+  text-align:left;
+}
+.gs-user-avatar{width:51px;height:51px;flex:none;border-radius:11px;border:2px solid #efe3c1;background:#0c3574;object-fit:contain}
+.gs-user-copy{min-width:0;display:grid;gap:4px}
+.gs-user-copy strong{font:800 clamp(.77rem,3.2vw,1rem)/1.1 system-ui,sans-serif;color:#fff5e8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gs-user-copy small{font:700 .7rem/1.2 system-ui,sans-serif;color:#eed591}
+.gs-training-chip{
+  align-items:center;justify-content:center;
+  font:900 clamp(.73rem,3.4vw,1.03rem) system-ui,sans-serif;
+  background:linear-gradient(120deg,#077c5d,#08b45e 45%,#075b5a);
+  border:2px solid #54ecab;
+  text-shadow:0 2px 4px #003c28;
+}
+.gs-training-chip .gs-small-icon{width:51px;height:51px}
+.gs-quest{
+  display:grid;gap:7px;
+  padding:10px 12px;
+  border-radius:15px;
+  border:2px solid #c2a1f0;
+  background:linear-gradient(110deg,#5c347e,#693c8e,#281c63);
+  box-shadow:inset 0 2px 0 #fff7ff2a,0 5px 14px #0006;
+}
+.gs-quest-top{display:flex;align-items:center;gap:9px}
+.gs-quest-icon{width:40px;height:40px;object-fit:contain;flex:none}
+.gs-quest-copy{display:grid;gap:3px;flex:1;min-width:0}
+.gs-quest-copy strong{font:850 clamp(.78rem,3.5vw,1.1rem)/1.1 Georgia,serif;color:#fff9e8}
+.gs-quest-copy small{font:650 .68rem system-ui,sans-serif;color:#f5dffe}
+.gs-quest-button{
+  min-width:66px;min-height:37px;padding:6px 9px;
+  border:1px solid #ffedbd;border-radius:11px;
+  color:#302348;
+  font:900 .75rem system-ui;
+  background:linear-gradient(#ffeba9,#eca33c);
+}
+.gs-progress-track{height:10px;overflow:hidden;border:1px solid #e4b9fb;border-radius:20px;background:#1c103c;box-shadow:inset 0 2px 2px #0008}
+.gs-progress-fill{height:100%;width:0;background:linear-gradient(90deg,#e9d577,#fddaa1,#fff3bf);border-radius:20px;transition:width .2s ease}
+html.ch-sapphire-ready #lobby .gs-board-stage{
+  position:relative;isolation:isolate;
+  display:grid;place-items:center;
+  min-height:clamp(285px,66vw,480px);
+  margin:6px -10px 0;
+  padding:20px 16px 0;
+  background:
+    radial-gradient(ellipse at 50% 55%,#26c7d65c,transparent 61%),
+    radial-gradient(ellipse at 50% 4%,#2a6acb6b,transparent 56%);
+  overflow:hidden;
+}
+.gs-board-stage::before{
+  content:'';
+  position:absolute;inset:8% -12% 4%;
+  background:
+    repeating-conic-gradient(from 12deg at 50% 50%,transparent 0deg 20deg,#62c9ff07 25deg 28deg,transparent 34deg 45deg);
+  border-radius:50%;
+  pointer-events:none;
+  animation:gs-aurora-pulse 5s ease-in-out infinite alternate;
+}
+.gs-stage-orbit{
+  position:absolute;left:50%;top:53%;width:68%;max-width:370px;
+  aspect-ratio:1;
+  border:2px solid #16c1e044;
+  box-shadow:0 0 38px #13d4d63d,inset 0 0 28px #08d0c32d;
+  border-radius:50%;transform:translate(-50%,-50%) scaleY(.42);
+}
+html.ch-sapphire-ready #lobby .gs-board-stage .gc-stage-showcase{z-index:1;width:min(100%,450px);align-self:center}
+html.ch-sapphire-ready #lobby .gs-board-stage .gc-preview-frame{
+  width:min(100%,355px);
+  transform:perspective(650px) rotateX(27deg) rotateZ(-2deg);
+  border:5px solid #d2ac5b;
+  border-radius:12px;
+  box-shadow:0 0 0 5px #154a9a,0 0 0 9px #ba8c4a,0 20px 36px #000b,0 0 54px #31c1ea8c;
+  background:linear-gradient(130deg,#ffeca6,#b97d3e 28%,#2159a8 33%,#254ca2 72%,#ffd88d);
+  padding:10px;
+  animation:none;
+}
+html.ch-sapphire-ready .gc-preview-square.light{background:linear-gradient(130deg,#fffdf7,#d7e6fa)}
+html.ch-sapphire-ready .gc-preview-square.dark{background:linear-gradient(120deg,#08285a,#214d89)}
+html.ch-sapphire-ready .gc-preview-piece{filter:drop-shadow(0 2px 1px #040b25cc)}
+html.ch-sapphire-ready .gs-board-stage .gc-preview-plate{font-size:.52rem;color:#f7e1a5}
+.gs-board-caption{
+  position:absolute;bottom:2%;left:0;right:0;text-align:center;
+  color:#b2e4f7;font:750 .62rem system-ui,sans-serif;
+  letter-spacing:.14em;text-transform:uppercase;
+}
+.gs-play-controls{
+  width:min(100%,345px);
+  margin:-8px auto 17px;
+  display:grid;gap:8px;
+  justify-items:stretch;
+  position:relative;
+  z-index:1;
+}
+html.ch-sapphire-ready #lobby .gs-play-button{
+  display:flex!important;align-items:center;justify-content:center;gap:16px;
+  width:100%;min-height:72px!important;
+  border:3px solid #fff6c4;
+  border-radius:20px!important;
+  background:linear-gradient(155deg,#fff8cc 0%,#fed573 23%,#f6a816 68%,#dc7512 100%);
+  color:#342308;
+  font:1000 clamp(1.65rem,6.8vw,2.5rem)/1 Georgia,serif;
+  letter-spacing:.02em;
+  text-shadow:0 2px 1px #ffe9aa;
+  box-shadow:inset 0 3px 0 #fff9e1b3,0 6px 0 #7d460a,0 11px 21px #020e2cc2;
+}
+.gs-play-arrow{font-size:1.5rem}
+html.ch-sapphire-ready #lobby .gs-invite-button{
+  width:100%;min-height:45px!important;
+  font:.82rem system-ui,sans-serif;
+  background:#08275bd6;
+  border:1px solid #84d8f8;
+  color:#dbf5fb;
+  border-radius:13px!important;
+}
+html.ch-sapphire-ready #lobby .gs-resume-button{
+  order:1;
+  padding:10px 12px;
+  border-radius:13px!important;
+  color:#e7fff8;
+  border:1px solid #66e5bd;
+  background:linear-gradient(135deg,#0a926d,#07596d);
+}
+html.ch-sapphire-ready #lobby .gc-section-intro{margin:20px 3px 10px}
+html.ch-sapphire-ready #lobby .gc-section-intro strong{color:#fceac0}
+html.ch-sapphire-ready #lobby .gs-mode-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+html.ch-sapphire-ready #lobby .gs-mode-list .gc-battle-card{
+  min-height:125px;
+  border:2px solid #76b1ff95;
+  border-radius:17px;
+  background:linear-gradient(140deg,#1759ad,#082759);
+}
+html.ch-sapphire-ready #lobby .gs-mode-list .gc-battle-card[data-gc-mode=rapid]{background:linear-gradient(135deg,#4b3c95,#1a2366)}
+html.ch-sapphire-ready #lobby .gs-mode-list .gc-battle-card[data-gc-mode=online]{background:linear-gradient(135deg,#0e737e,#0c365c)}
+html.ch-sapphire-ready #lobby .gs-mode-list .gc-battle-card strong{font-size:1.08rem;color:#fff2cc}
+html.ch-sapphire-ready #lobby .gs-mode-list .gc-battle-card small{font-size:.72rem;color:#d3e6fd}
+html.ch-sapphire-ready #lobby .gs-collectables{grid-template-columns:repeat(4,minmax(0,1fr))}
+html.ch-sapphire-ready #lobby .gs-collectables .gc-explore-card{
+  background:linear-gradient(140deg,#21569d,#081f54);
+  border:1px solid #b3c1f4a6;
+  color:#f1e5c7;
+  min-height:98px;
+  border-radius:13px;
+}
+html.ch-sapphire-ready .gs-bottom-nav{
+  z-index:12;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:3px;
+  padding:6px max(6px,env(safe-area-inset-left,0px)) calc(7px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(180deg,#1b4179,#0b2555 60%,#061633);
+  border-top:2px solid #c6d3e1a6;
+  max-width:740px;
+  box-shadow:0 -7px 24px #020b288e;
+}
+html.ch-sapphire-ready .gs-nav-tab{
+  min-width:0;min-height:62px;padding:3px;
+  border:1px solid #5b83bf6b;
+  border-radius:10px;color:#dfebf5;
+  background:linear-gradient(160deg,#22539380,#0d2b6166);
+  font:800 clamp(.58rem,2.4vw,.76rem) system-ui,sans-serif;
+}
+html.ch-sapphire-ready .gs-nav-tab .gs-nav-icon{width:37px;height:37px;max-width:100%;object-fit:contain;filter:drop-shadow(0 1px 3px #001328)}
+html.ch-sapphire-ready .gs-nav-tab[aria-current=page]{
+  border-color:#f5d38c;
+  color:#fff7d8;
+  background:linear-gradient(160deg,#287dc5,#1b4890 75%);
+  box-shadow:0 0 17px #2ec7fa44,inset 0 2px 0 #ffefd64d;
+}
+html.ch-sapphire-ready .gs-nav-tab:focus-visible,.gs-settings-trigger:focus-visible,.gs-play-button:focus-visible,
+.gs-user-chip:focus-visible,.gs-training-chip:focus-visible,.gs-quest-button:focus-visible{
+  outline:3px solid #8dffdc;outline-offset:3px;
+}
+/* Secondary screens: sapphire art direction */
+html.ch-sapphire-ready .ch-screen,
+html.ch-sapphire-ready .ch-extra-screen{
+  border-radius:23px;border:1px solid #bc9c5d;
+  background:linear-gradient(155deg,#153d75,#051734 86%);
+  color:#fff4e2;
+  box-shadow:0 16px 38px #020918c2;
+}
+.gs-subscreen-banner{
+  padding:19px 14px 9px;
+  text-align:center;
+  background:radial-gradient(ellipse at 50% 0%,#257cc95c,transparent 70%);
+}
+.gs-subscreen-kicker{font:900 .66rem system-ui,sans-serif;color:#f9c77b;letter-spacing:.18em}
+.gs-subscreen-banner h2{font:800 clamp(1.5rem,5.5vw,2.25rem) Georgia,serif;color:#fff0c4;margin:6px 0}
+.gs-subscreen-banner p{font:.83rem/1.4 system-ui;color:#cee3f6;margin:0}
+html.ch-sapphire-ready .gc-hub-hero{background:linear-gradient(135deg,#154f89,#0e2263);border-color:#d8b66f}
+html.ch-sapphire-ready .gc-hub-learn{background:linear-gradient(135deg,#153d80,#124660)}
+html.ch-sapphire-ready .gc-hub-mode-card,
+html.ch-sapphire-ready .gc-academy-card,
+html.ch-sapphire-ready .ch-profile-card{
+  border:1px solid #9bcaf38c;
+  background:linear-gradient(145deg,#1c4e90,#071d50);
+  box-shadow:inset 0 1px 0 #ffffff25,0 7px 16px #0006;
+}
+html.ch-sapphire-ready #ch-profile-hub{background:linear-gradient(170deg,#183f78,#061936)}
+html.ch-sapphire-ready .gc-profile-hero{background:linear-gradient(135deg,#153d7d,#0c2956)}
+html.ch-sapphire-ready .ch-profile-avatar{border-color:#f9ce73}
+html.ch-sapphire-ready .ch-tab[aria-current=page]{background:linear-gradient(150deg,#346ac4,#1a4487);color:#fceac2}
+html.ch-sapphire-ready #match-area.gc-match-arena{
+  background:linear-gradient(165deg,#163c79,#07152f);
+  border-color:#c0b184;
+}
+html.ch-sapphire-ready .gc-match-ribbon,
+html.ch-sapphire-ready #match-area .gc-arena-player,
+html.ch-sapphire-ready .ch-match-dock,
+html.ch-sapphire-ready .gs-private-room{
+  background:linear-gradient(135deg,#1f5b9e,#081d4b);
+  border-color:#c6b479;
+}
+/* Private room displays actual backend status, not a fabricated search. */
+.gs-private-room{text-align:center;border:1px solid #d1b67f;border-radius:17px;padding:14px}
+.gs-pvp-banner{display:flex;align-items:center;justify-content:space-evenly;gap:8px;min-height:130px}
+.gs-pvp-avatar{width:90px;height:90px;object-fit:contain;border:3px solid #ebd1a0;border-radius:17px;background:#0b3068}
+.gs-pvp-vs{font:900 2.3rem Georgia,serif;color:#ffd48a;text-shadow:0 4px 8px #061734}
+.gs-pvp-title{font:900 1.5rem Georgia,serif;color:#f7db9b}
+.gs-pvp-hint{max-width:40ch;margin-inline:auto;font:.79rem/1.5 system-ui;color:#d2eaff}
+.gs-pvp-state{display:block;margin:12px auto;color:#c5f7e9;font:.67rem system-ui;letter-spacing:.12em}
+/* Real profile dialog: exactly-once source stats from saved history */
+.gs-profile-popup,
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup{
+  width:min(calc(100vw - 24px),480px);
+  max-height:calc(100dvh - 36px);
+  overflow:auto;
+  padding:15px;
+  color:#fff1d8;
+  background:linear-gradient(175deg,#3567a0,#0d2856 28%,#07193a 95%)!important;
+  border:2px solid #bad5f1;
+  border-radius:22px;
+  box-shadow:0 0 0 4px #0b3f7a,0 24px 64px #000d;
+}
+.gs-profile-popup::backdrop,
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup::backdrop{
+  background:#011127c9;backdrop-filter:blur(5px);
+}
+.gs-popup-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid #e3c98c75;padding:4px 0 12px}
+.gs-popup-heading h2{margin:0;font:900 1.8rem Georgia,serif;color:#fff3cc;text-shadow:0 2px 5px #0006}
+.gs-popup-close{
+  width:43px;height:43px;
+  font:900 2rem/1 system-ui;
+  color:white;
+  background:linear-gradient(#ff7780,#bf173f);
+  border:2px solid #ffcbd0;
+  border-radius:12px;
+}
+.gs-popup-identity{display:grid;grid-template-columns:84px 1fr 50px;align-items:center;gap:9px;padding:15px 0}
+.gs-popup-avatar{width:84px;height:84px;border:3px solid #f5dfae;background:#0c3974;border-radius:14px;object-fit:contain}
+.gs-popup-name{display:grid;gap:6px;min-width:0}
+.gs-popup-name strong{font:900 clamp(.9rem,4vw,1.3rem) system-ui;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gs-popup-name small{color:#e4ca86;font:.7rem system-ui}
+.gs-icon-edit{padding:8px;font:800 .72rem system-ui;color:#06244b;background:linear-gradient(#d2f4ff,#7cc5ff);border:1px solid #fff;border-radius:9px}
+.gs-profile-stat-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  border:2px solid #8ec9fb;
+  border-radius:17px;
+  padding:10px;
+  background:linear-gradient(155deg,#a6cef1,#c9e2f6);
+}
+.gs-stat{display:grid;gap:5px;padding:9px 7px;color:#123768;background:#e7f2ff9c;border:1px solid #88b0df;border-radius:10px}
+.gs-stat span{font:.75rem/1.2 system-ui;color:#1a4669}
+.gs-stat strong{font:950 clamp(1.02rem,4vw,1.4rem) system-ui;color:#083063}
+.gs-profile-footer,.gs-settings-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.gs-profile-footer .gs-tile,.gs-settings-links .gs-tile{
+  display:grid;place-items:center;gap:4px;padding:8px 3px;min-height:74px;
+  font:800 .68rem/1.25 system-ui;color:#e7f2ff;
+  border:1px solid #8ac9ff;border-radius:13px;
+  background:linear-gradient(140deg,#297ed1,#10417e);
+}
+.gs-tile-icon{width:33px;height:33px;object-fit:contain}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup h2{
+  text-align:center;font:900 1.85rem Georgia,serif;color:#fff1ce;
+}
+.gs-audio-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.gs-settings-switch{display:grid;justify-items:center;text-align:center;gap:9px;padding:13px 8px;background:#c4dbf3;color:#092c5b;border:1px solid #8cbcf1;border-radius:14px;font:750 .8rem system-ui}
+.gs-settings-switch span{display:grid;gap:3px}
+.gs-settings-switch small{font:.65rem/1.25 system-ui;color:#2b4e74}
+.gs-settings-switch input{width:45px;height:24px;accent-color:#00ba91}
+.gs-setting-feedback{color:#8c0d1e}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup>label{color:#f3e4c7}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup form[method=dialog] button{
+  width:100%;min-height:46px;border-radius:13px;border:2px solid #aedaff;background:linear-gradient(#248ed9,#0c4b94);color:#f9f1df;font:900 1rem system-ui;
+}
+/* Boot screen: no fictional progress percentage */
+#launch.gs-sapphire-launch{
+  isolation:isolate;
+  display:flex;align-items:center;flex-direction:column;justify-content:center;
+  gap:0;overflow:hidden;
+  background:
+    linear-gradient(180deg,#03133b55,#04133dd8),
+    url('/brand/sapphire-horizon.svg') center/cover no-repeat,
+    #041331;
+  color:#fff2d0;
+}
+#launch.gs-sapphire-launch[hidden]{display:none!important}
+.gs-launch-logo{z-index:1;width:min(74vw,310px)!important;height:auto!important;filter:drop-shadow(0 8px 18px #0008)}
+.gs-launch-stage{width:min(72vw,340px);position:relative;z-index:1;margin:13vh 0 10vh}
+.gs-launch-stage .gc-preview-frame{width:min(70vw,300px)!important;transform:perspective(600px) rotateX(25deg) rotateZ(-2deg)}
+.gs-loading-caption{z-index:1;font:900 1.35rem Georgia,serif;color:#ffdc83;margin:5px}
+.gs-loading-bar{width:min(82vw,350px);height:16px;border:2px solid #aadfff;border-radius:15px;overflow:hidden;background:#021137;box-shadow:0 0 0 4px #102b69}
+.gs-loading-bar::before{
+  content:'';display:block;height:100%;width:35%;
+  background:linear-gradient(90deg,#0976f8,#43d9ef,#f6c96d);
+  border-radius:12px;
+  animation:gs-progress-indeterminate 1.3s linear infinite;
+}
+.gs-launch-tip{width:min(88vw,400px);margin-top:28px;padding:18px;border-radius:15px;background:#bedcff;color:#10305d;border:2px solid #2d5592;display:flex;align-items:center;gap:12px;font:.8rem/1.4 system-ui}
+.gs-launch-tip img{width:43px;height:43px}
+@keyframes gs-progress-indeterminate{0%{transform:translateX(-115%)}100%{transform:translateX(330%)}}
+@keyframes gs-aurora-pulse{from{opacity:.45}to{opacity:1}}
+@media(max-width:390px){
+ html.ch-sapphire-ready #lobby.gs-sapphire-lobby{padding:8px 8px 95px}
+ .gs-player-header{gap:6px}
+ .gs-user-avatar{width:39px;height:43px}
+ .gs-user-chip,.gs-training-chip{padding:5px}
+ .gs-training-chip .gs-small-icon{width:35px;height:35px}
+ .gs-quest{padding:9px}
+ .gs-quest-icon{width:32px;height:32px}
+ html.ch-sapphire-ready #lobby .gs-board-stage{min-height:285px;padding:10px 4px 0}
+ html.ch-sapphire-ready #lobby .gs-board-stage .gc-preview-frame{width:min(74vw,285px)}
+ html.ch-sapphire-ready #lobby .gs-play-button{min-height:65px!important}
+ html.ch-sapphire-ready .gs-nav-tab{min-height:57px;font-size:.58rem}
+ html.ch-sapphire-ready .gs-nav-tab .gs-nav-icon{width:29px;height:29px}
+ .gs-profile-popup{padding:12px}
+ .gs-profile-stat-list{gap:6px;padding:6px}
+}
+@media(max-width:320px){
+ .gs-player-header{grid-template-columns:minmax(0,1fr)}
+ .gs-training-chip{min-height:42px}
+ .gs-quest-copy strong{font-size:.68rem}
+ .gs-quest-button{min-width:47px;font-size:.68rem}
+ .gs-profile-footer,.gs-settings-links{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(min-width:760px){
+ html.ch-sapphire-ready #lobby.gs-sapphire-lobby{padding:16px 22px 108px}
+ html.ch-sapphire-ready #lobby .gs-board-stage{min-height:470px}
+}
+@media(prefers-reduced-motion:reduce){
+ .gs-progress-fill,.gs-loading-bar::before,.gs-board-stage::before{transition:none;animation:none}
+ .gs-loading-bar::before{width:65%}
+}
+@media(prefers-contrast:more){
+ html.ch-sapphire-ready #lobby .gs-mode-list .gc-battle-card,.gs-user-chip,.gs-training-chip,.gs-quest,.gs-settings-switch{border:2px solid #fff4c2}
+ .gs-quest-copy small,.gs-user-copy small{color:#fff0bf}
+}
+
+/* Accessible boot illustration: a real 8x8 chess texture, never a copied atlas. */
+.gs-launch-board-art{
+  position:relative;
+  width:min(69vw,298px);
+  aspect-ratio:1;
+  margin-inline:auto;
+  transform:perspective(600px) rotateX(23deg) rotateZ(-3deg);
+  border:12px ridge #f0c577;
+  border-radius:10px;
+  background:
+    conic-gradient(#183769 25%,#e2eef7 0 50%,#183769 0 75%,#e2eef7 0)
+    0 0/25% 25%;
+  box-shadow:0 0 0 5px #15499b,0 16px 35px #010924c9,0 0 48px #62d2f655;
+}
+.gs-launch-board-art img{
+  position:absolute;width:22%;height:22%;object-fit:contain;
+  filter:drop-shadow(0 3px 3px #0207228c);
+}
+.gs-launch-board-art img:first-child{left:16%;bottom:14%}
+.gs-launch-board-art img:last-child{right:15%;top:11%}
+html.ch-sapphire-ready #lobby #lobby-resume[hidden],
+html.ch-sapphire-ready #lobby .gs-resume-button[hidden]{display:none!important}
+html.ch-sapphire-ready #lobby .gc-hero-copy[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){
+  #launch.gs-sapphire-launch .gs-loading-bar::before{animation:none}
+}
+
+/* The original sapphire logo is visible between settings and local-save status. */
+.gs-home-logo{
+  width:clamp(105px,32vw,160px);
+  max-height:61px;
+  object-fit:contain;
+  filter:drop-shadow(0 5px 8px #010921a8);
+  flex:none;
+}
+@media(max-width:320px){.gs-home-logo{width:96px}}
+/* Primary CTA never inherits [hidden] from the old hero copy. */
+html.ch-sapphire-ready #lobby .gs-play-controls .gs-play-button{display:flex!important;visibility:visible;opacity:1}
+
+/* True on/off switches: retain native checkbox semantics and keyboard focus. */
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup{position:relative}
+html.ch-sapphire-ready #settings-dialog .gs-settings-close{
+  position:absolute;top:9px;right:10px;
+  width:42px;height:42px;min-height:42px;
+  border:2px solid #ffd5dc;border-radius:11px;
+  color:#fff;font:900 1.9rem/1 system-ui,sans-serif;
+  background:linear-gradient(#ff6478,#b81537);
+  box-shadow:inset 0 1px 0 #fff9,0 3px 5px #0005;
+  cursor:pointer;
+}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup h2{padding-right:40px;padding-left:40px}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox]{
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  display:block;
+  position:relative;
+  margin:1px auto;
+  width:58px;height:30px;
+  min-height:30px;
+  border-radius:30px;
+  border:2px solid #8191a9;
+  background:linear-gradient(#a3b6d2,#6c7e9d);
+  box-shadow:inset 0 2px 4px #14274565,0 1px 0 #fff9;
+  cursor:pointer;
+  transition:background .14s ease;
+}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox]::before{
+  content:'';
+  position:absolute;top:3px;left:4px;
+  width:20px;height:20px;
+  border-radius:50%;
+  background:linear-gradient(#fff,#d7ebff);
+  box-shadow:0 1px 3px #071d4b99;
+  transition:transform .14s ease;
+}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox]:checked{
+  border-color:#24f2be;
+  background:linear-gradient(#18da9f,#059e68);
+}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox]:checked::before{transform:translateX(26px)}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox]:disabled{opacity:.45;cursor:not-allowed}
+html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox]:focus-visible{outline:3px solid #0639b8;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){
+  html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox],
+  html.ch-sapphire-ready #settings-dialog.gs-settings-popup .gs-settings-switch input[type=checkbox]::before{transition:none}
+}

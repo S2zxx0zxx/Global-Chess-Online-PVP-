@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 240" role="img" aria-label="Global Chess original sapphire crest">
+<defs><linearGradient id="gold" x2="0" y2="1"><stop stop-color="#fff7db"/><stop offset=".43" stop-color="#f5c46b"/><stop offset=".8" stop-color="#c68b36"/><stop offset="1" stop-color="#f8d79c"/></linearGradient>
+<linearGradient id="ice" x2="0" y2="1"><stop stop-color="#fffefa"/><stop offset=".8" stop-color="#bcdcf7"/></linearGradient><linearGradient id="deep" x2="0" y2="1"><stop stop-color="#16519d"/><stop offset="1" stop-color="#041c53"/></linearGradient>
+<filter id="shadow"><feDropShadow dx="0" dy="6" stdDeviation="3" flood-color="#000824" flood-opacity=".9"/></filter></defs>
+<path d="M128 55Q320-49 512 55l27 107q-219 164-438 0Z" fill="url(#deep)" stroke="url(#gold)" stroke-width="8"/>
+<path d="M127 60L88 28l-2 47-32-13 19 58 41 23M513 60l39-32 2 47 32-13-19 58-41 23" fill="none" stroke="#f8ce77" stroke-width="9" stroke-linecap="round"/>
+<path d="M320 12l16 24 24-14-8 45h-64l-8-45 24 14Z" fill="url(#gold)" stroke="#ffeeca" stroke-width="4"/>
+<path d="M320 36v18" stroke="#fff0cf" stroke-width="3"/>
+<g filter="url(#shadow)" text-anchor="middle" paint-order="stroke" stroke="#082354" stroke-width="9" stroke-linejoin="round"><text x="320" y="121" fill="url(#gold)" font-family="Georgia,serif" font-weight="900" font-size="76">GLOBAL</text><text x="320" y="182" fill="url(#ice)" font-family="Georgia,serif" font-weight="900" font-size="83">CHESS</text></g>
+<path d="M222 200l98 15 98-15" fill="none" stroke="url(#gold)" stroke-width="5"/>
+<path d="M320 201l7 8 11-3-6 10 6 10-11-3-7 8-7-8-11 3 6-10-6-10 11 3Z" fill="#fbe3a1"/>
+</svg>

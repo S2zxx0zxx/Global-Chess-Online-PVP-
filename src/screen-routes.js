@@ -6,6 +6,7 @@ import {renderPieceArt} from './piece-art.js';
 import {feedbackPreferences,setFeedbackPreference} from './feedback.js';
 import {BOARD_THEMES,PIECE_THEMES,ANIMATED_THEMES,applyBoardTheme,applyPieceTheme} from './appearance.js';
 import {storageConflictMessage} from './storage.js';
+import {outcomeArtwork} from './outcome-artwork.js';
 
 const el=id=>document.getElementById(id);
 const ls=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback;}catch{return fallback;}};
@@ -118,7 +119,7 @@ export function mountScreenRoutes({main,go,leaveMatch,toggleBoardView,getBoardVi
       const outcome=match?.outcome||el('result-copy').textContent.trim();
       title('Match complete',outcome||'Match still in progress','Exact adjudication from the chess game engine.');
       if(outcome){
-        const image=mk('img','ch-celebration');image.src='/brand/victory-confetti.svg';image.alt='';section.append(image);
+        const image=mk('img','ch-celebration');image.src=outcomeArtwork(outcome)||'/brand/royal-versus.svg';image.alt='';section.append(image);
         const info=mk('div','ch-stats-grid');section.append(info);
         for(const [label,value] of [['Moves',Math.ceil((match?.moves||0)/2)],['Opponent',match?.online?'Private online player':match?.mode==='computer'?'Computer':'Local friend']]){
           const tile=mk('div','ch-stat');tile.append(mk('strong','',String(value)),mk('span','',label));info.append(tile);
@@ -266,10 +267,13 @@ export function mountScreenRoutes({main,go,leaveMatch,toggleBoardView,getBoardVi
         ['Winning Run','Win three verified computer games in a row',stats.bestWinStreak>=3],
       ];
       const list=mk('div','ch-feature-list');section.append(list);
+      const awardArtwork=['/brand/royal-achievement-tactics.svg','/brand/royal-lessons.svg','/brand/royal-puzzles.svg','/brand/royal-daily.svg','/brand/royal-history.svg','/brand/royal-achievement-win.svg','/brand/royal-achievement-streak.svg'];
       for(const [index,[name,desc,earned]] of awards.entries()){
         const unavailable=index<4 ? p.invalid : saved===null;
         const row=mk('div','ch-achievement '+(earned?'ch-unlocked':'ch-locked'));
-        row.append(mk('span','ch-achievement-symbol',earned?'★':'◇'));
+        const medallion=mk('span','ch-achievement-symbol');
+        const art=mk('img','ch-award-art');art.src=awardArtwork[index];art.alt='';art.width=32;art.height=32;
+        medallion.append(art);row.append(medallion);
         const copy=mk('div');copy.append(mk('strong','',name),mk('small','',desc));
         row.append(copy,mk('span','ch-achievement-state',unavailable?'Unavailable':earned?'Earned':'Locked'));list.append(row);
       }
@@ -286,7 +290,7 @@ export function mountScreenRoutes({main,go,leaveMatch,toggleBoardView,getBoardVi
       section.append(tabs);
     }
     if(route==='avatars'){
-      const icons=[['♞','Knight','/brand/guest-avatar.svg'],['♜','Rook','/brand/pieces/piece_white_rook.svg'],['♛','Queen','/brand/pieces/piece_white_queen.svg']];
+      const icons=[['♞','Guardian','/brand/royal-avatar-guardian.svg'],['♜','Scholar','/brand/royal-avatar-scholar.svg'],['♛','Traveler','/brand/royal-avatar-traveler.svg']];
       const gallery=mk('div','ch-avatar-gallery');section.append(gallery);
       const current=ls('global-chess.preferences.v1',{});
       const selected=['♞','♜','♛'].includes(current.avatar)?current.avatar:'♞';

@@ -161,6 +161,47 @@ try {
   await mkdir('artifacts', {recursive:true});
   const homeShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/chess-v3-mobile-home.png',Buffer.from(homeShot.data,'base64'));
+  // Midnight Sapphire's actual controls must work, not just appear in a screenshot.
+  const sapphireControls=await evaluate(`(() => ({
+    tabs:document.querySelectorAll('.gs-nav-tab').length,
+    board:!!document.querySelector('.gs-board-stage .gc-preview-board'),
+    play:!!document.querySelector('.gs-play-controls .gs-play-button'),
+    visiblePlay:(()=>{const r=document.querySelector('.gs-play-controls .gs-play-button')?.getBoundingClientRect();return !!r&&r.width>100&&r.height>45;})(),
+    title:!!document.querySelector('#lobby-title'),
+    greeting:!!document.querySelector('#guest-greeting'),
+    brand:!!document.querySelector('.gs-home-logo'),
+  }))()`);
+  if(sapphireControls.tabs!==5||!sapphireControls.board||!sapphireControls.play||!sapphireControls.visiblePlay||!sapphireControls.title||!sapphireControls.greeting||!sapphireControls.brand) {
+    throw new Error('Sapphire Home missing connected controls: '+JSON.stringify(sapphireControls));
+  }
+  await evaluate('document.querySelector(".gs-user-chip").click(); true');
+  await waitUntil(()=>evaluate('document.querySelector("#gs-profile-popup[open]")?.querySelectorAll(".gs-stat").length===6'));
+  const profilePopupShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/sapphire-profile-popup.png',Buffer.from(profilePopupShot.data,'base64'));
+  await evaluate('document.querySelector("#gs-profile-popup .gs-popup-close").click();true');
+  await evaluate('document.querySelector(".gs-settings-trigger").click();true');
+  await waitUntil(()=>evaluate('document.querySelector("#settings-dialog[open]")?.querySelectorAll("input[data-gs-preference]").length===2'));
+  const settingsPopupShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/sapphire-settings-popup.png',Buffer.from(settingsPopupShot.data,'base64'));
+  await evaluate(`(() => {
+    for(const input of document.querySelectorAll('#settings-dialog input[data-gs-preference]')){
+      if(input.disabled)continue;
+      const before=input.checked;
+      input.click();
+      const persisted=JSON.parse(localStorage.getItem('global-chess.feedback.v1')||'{}');
+      if(persisted[input.dataset.gsPreference]!==!before)throw new Error('Preference not saved: '+input.dataset.gsPreference);
+      input.click();
+    }
+    return true;
+  })()`);
+  await evaluate('document.querySelector("#settings-dialog .gs-settings-close").click();true');
+  await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=appearance]").click();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-appearance") && !document.querySelector("#ch-extra-screen").hidden'));
+  await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=home]").click();true');
+  await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-home")'));
+  const sapphireShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/sapphire-home-360.png',Buffer.from(sapphireShot.data,'base64'));
+  console.log('Sapphire profile, settings, artwork, original guest IDs and 5-tab navigation: passed');
   await evaluate('document.querySelector("#ch-tab-bar [data-ch-view=play]").click(); true');
   if (!(await evaluate('document.getElementById("ch-play-hub").hidden === false'))) {
     throw new Error('Play hub did not open');
@@ -360,7 +401,7 @@ try {
   await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelectorAll(".ch-avatar-card").length === 3'));
   await evaluate('document.querySelectorAll(".ch-avatar-card")[1].click();document.querySelector(".ch-profile-tabs button:last-child").click();document.querySelector(".ch-frame-teal").click();true');
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=profile'});
-  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#ch-profile-avatar img")?.src.includes("piece_white_rook.svg")===true && document.getElementById("ch-profile-avatar").dataset.frame === "teal"'));
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#ch-profile-avatar img")?.src.includes("/brand/royal-avatar-scholar.svg")===true && document.getElementById("ch-profile-avatar").dataset.frame === "teal"'));
   console.log('Original avatar and decorative frame persist across reload: passed');
   await evaluate('document.querySelector("[data-profile-link=progress]").click();true');
   await waitUntil(()=>evaluate('Array.from(document.querySelectorAll(".ch-stat")).some(tile=>tile.textContent.includes("Exercise XP") && Number(tile.querySelector("strong")?.textContent)>0)'));
@@ -371,8 +412,12 @@ try {
     await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-home")'));
     const overflow=await evaluate('document.documentElement.scrollWidth - document.documentElement.clientWidth');
     if(overflow>2)throw new Error('Home horizontal overflow at '+width+'px: '+overflow);
+    if(width===360||width===768){
+      const screenshot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+      await writeFile('artifacts/screens/arcade-home-'+width+'.png',Buffer.from(screenshot.data,'base64'));
+    }
   }
-  console.log('Home screen horizontal overflow checks: 320,360,412,768px passed');
+  console.log('Arcade home composition and horizontal overflow checks: 320,360,412,768px passed');
   await send('Emulation.setDeviceMetricsOverride',{width:360,height:800,deviceScaleFactor:1,mobile:true});
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=home'});
   await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-home")'));

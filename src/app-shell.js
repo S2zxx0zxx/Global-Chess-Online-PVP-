@@ -3,6 +3,8 @@ import { BOARD_THEMES, PIECE_THEMES } from './appearance.js';
 import { lessons, puzzles, dailyExercise } from './learning.js';
 import { mountScreenRoutes } from './screen-routes.js';
 import { bindNativeLifecycle } from './native-lifecycle.js';
+import { mountArcadeShell } from './arcade-shell.js';
+import { mountSapphireShell } from './sapphire-shell.js';
 
 const byId = id => document.getElementById(id);
 
@@ -279,7 +281,7 @@ export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMo
     let prefs={};
     try{prefs=JSON.parse(localStorage.getItem('global-chess.preferences.v1')||'{}')||{};}catch{}
     byId('ch-profile-name').textContent=typeof prefs.name==='string'&&prefs.name.trim()?prefs.name.trim().slice(0,24):'Guest player';
-    const icons={'♞':'/brand/guest-avatar.svg','♜':'/brand/pieces/piece_white_rook.svg','♛':'/brand/pieces/piece_white_queen.svg'};
+    const icons={'♞':'/brand/royal-avatar-guardian.svg','♜':'/brand/royal-avatar-scholar.svg','♛':'/brand/royal-avatar-traveler.svg'};
     const avatar=byId('ch-profile-avatar');
     const icon=document.createElement('img');
     icon.src=icons[prefs.avatar]||icons['♞'];icon.alt='';
@@ -340,7 +342,13 @@ export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMo
     syncRoomPanel();
     screenRoutes?.show(next);
     for(const tab of nav.querySelectorAll('button')){
-      const active=tab.dataset.chView===next || (['history','review','progress','achievements','appearance','avatars','frames','settings','data','transfer','update','about'].includes(next)&&tab.dataset.chView==='profile') || (['lessons','lesson','puzzles','puzzle','puzzle-result','daily'].includes(next)&&tab.dataset.chView==='learn');
+      const appearanceRoutes=['appearance','avatars','frames'];
+      const learningRoutes=['lessons','lesson','puzzles','puzzle','puzzle-result','daily'];
+      const profileRoutes=['history','review','progress','achievements','settings','data','transfer','update','about'];
+      const active=tab.dataset.chView===next ||
+        (appearanceRoutes.includes(next)&&tab.dataset.chView==='appearance') ||
+        (learningRoutes.includes(next)&&tab.dataset.chView==='learn') ||
+        (profileRoutes.includes(next)&&tab.dataset.chView==='profile');
       tab.setAttribute('aria-current',active?'page':'false');
     }
     if(next==='profile') refreshProfile();
@@ -407,6 +415,9 @@ export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMo
   more.setAttribute('role','group');
   more.setAttribute('aria-label','Explore Global Chess');
   lobby.prepend(more);
+  // Original UI composition only: it reuses the controller and navigation above.
+  mountArcadeShell({lobby,play,learn,profile,match,go,openSetup,getMatchSummary,readSavedHistory,storagePersistent});
+  mountSapphireShell({lobby,play,learn,profile,match,main,nav,go,openSetup,readSavedHistory,getProgressReport,refreshProfile,getMatchSummary,storagePersistent});
   document.documentElement.classList.add('ch-shell-ready');
   // Read-only deep links let QA visit each ZIP v3 screen without modifying
   // active game state. Invite hashes always take precedence.
