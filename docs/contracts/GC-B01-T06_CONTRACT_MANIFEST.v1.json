@@ -55,13 +55,15 @@
       "inviteTransport": "URL fragment (cleared after join)"
     },
     "otherLocalKeys": [
-      "global-chess.preferences.v1",
-      "global-chess.avatar-frame.v1",
       "global-chess.appearance.v1",
+      "global-chess.avatar-frame.v1",
+      "global-chess.feedback.v1",
+      "global-chess.first-move-v1",
+      "global-chess.learning.v1",
       "global-chess.pieces.v1",
+      "global-chess.preferences.v1",
       "global-chess.reduce-motion.v1",
-      "global-chess.setup.v1",
-      "global-chess.learning.v1"
+      "global-chess.setup.v1"
     ]
   },
   "futureNotDeployed": {
