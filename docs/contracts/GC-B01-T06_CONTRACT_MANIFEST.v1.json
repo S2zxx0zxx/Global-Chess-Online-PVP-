@@ -1,0 +1,85 @@
+{
+  "contractVersion": 1,
+  "designState": "PREFLIGHT_ONLY_NO_MIGRATION_DEPLOYED",
+  "basedOnCanonical": "1c0dfd7d8b1b3ab35c15de3be7ea80ad3dace394",
+  "scope": "GC-B01-T06",
+  "dataAuthority": "local device for offline; server Room object for private rooms; NO account/cloud sync authority yet",
+  "liveLegacy": {
+    "indexedDB": {
+      "database": "global-chess",
+      "version": 1,
+      "store": "saves",
+      "snapshotKey": "snapshot",
+      "fields": [
+        "global-chess.match.v1",
+        "global-chess.history.v1",
+        "global-chess.progress-events.v1"
+      ]
+    },
+    "localMatch": {
+      "key": "global-chess.match.v1",
+      "wireVersion": 1,
+      "schema": "legacy-match-save-v1.schema.json"
+    },
+    "matchHistory": {
+      "key": "global-chess.history.v1",
+      "shape": "Array<{outcome:string,snapshot:string}>",
+      "maxEntries": 50,
+      "immutableIdPresent": false
+    },
+    "progression": {
+      "key": "global-chess.progress-events.v1",
+      "wireVersion": 1,
+      "eventKinds": [
+        "lesson",
+        "puzzle",
+        "daily"
+      ],
+      "legacyDerivedIdentity": "kind + ':' + exerciseId",
+      "schema": "legacy-progress-events-v1.schema.json"
+    },
+    "backup": {
+      "versionCurrent": 2,
+      "versionImportAlso": [
+        1
+      ],
+      "maxInputCharacters": 2000000,
+      "schema": "legacy-backup-v2.schema.json"
+    },
+    "room": {
+      "schema": "current-private-room-state.schema.json",
+      "roomTTLms": 86400000,
+      "serverVersionField": "match.version (optimistic concurrency, not schemaVersion)",
+      "credentialLocalKey": "global-chess.online-seat.v1",
+      "credentialStorage": "sessionStorage AND localStorage best effort",
+      "inviteTransport": "URL fragment (cleared after join)"
+    },
+    "otherLocalKeys": [
+      "global-chess.preferences.v1",
+      "global-chess.avatar-frame.v1",
+      "global-chess.appearance.v1",
+      "global-chess.pieces.v1",
+      "global-chess.reduce-motion.v1",
+      "global-chess.setup.v1",
+      "global-chess.learning.v1"
+    ]
+  },
+  "futureNotDeployed": {
+    "syncEnvelopeSchema": "proposed-sync-event-v1.schema.json",
+    "accountLinkIntentSchema": "proposed-account-link-intent-v1.schema.json",
+    "immutableHistoryEventId": "new cryptographic UUID generated once on first durable commit; legacy records preserved until explicit atomic migration",
+    "legacyProgressNaturalId": "kind:exerciseId scoped by eventual authenticated account; avoid double-awards from multi-device importing",
+    "neverAutomaticallyLinkAccount": true,
+    "neverOverwriteOtherDeviceWithoutPreview": true,
+    "remoteDeletionRequiresExplicitConfirmation": true,
+    "serverDerivedAuthenticatedSubject": true
+  },
+  "restrictions": [
+    "Do not silently mutate live v1/v2 storage",
+    "Do not persist auth tokens as player IDs",
+    "Do not treat XP as verified rank",
+    "Do not sync room seat secrets/invite links in cloud backups",
+    "Do not claim backendless private-room endpoint",
+    "No email/account needed for offline M0-M2"
+  ]
+}
