@@ -2,6 +2,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { mkdtemp, readFile, rm, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { preview as startPreview } from 'vite';
 
 function browserBinary() {
   if (process.env.CHESS_BROWSER) return process.env.CHESS_BROWSER;
@@ -28,16 +29,31 @@ async function waitUntil(check, timeoutMs = 30000) {
 }
 
 const profile = await mkdtemp(join(tmpdir(), 'global-chess-browser-'));
-const preview = spawn(process.execPath, [
-  'node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', '4173', '--strictPort',
-], {stdio:['ignore', 'pipe', 'pipe']});
-let previewLog = '';
-preview.stderr.on('data', bytes => {previewLog += bytes.toString();});
-preview.stdout.on('data', bytes => {previewLog += bytes.toString();});
+let preview;
+let servedWorker;
 let chrome;
 let ws;
 
 try {
+  const builtWorker = await readFile('dist/sw.js', 'utf8');
+  const versionLine = /^const version = prefix \+ "([a-f0-9]{16})";$/m;
+  const originalRevision = builtWorker.match(versionLine)?.[1];
+  if (!originalRevision) throw new Error('Could not identify the built service-worker revision');
+  const nextRevision = originalRevision + '-test-update';
+  const nextWorker = builtWorker.replace(versionLine, 'const version = prefix + "' + nextRevision + '";');
+  preview = await startPreview({
+    preview:{host:'127.0.0.1',port:4173,strictPort:true},
+    plugins:[{
+      name:'staged-worker-browser-fixture',
+      configurePreviewServer(server){
+        server.middlewares.use((request,response,next)=>{
+          if (!servedWorker || request.url !== '/sw.js') return next();
+          response.writeHead(200,{'Content-Type':'text/javascript','Cache-Control':'no-store'});
+          response.end(servedWorker);
+        });
+      },
+    }],
+  });
   await waitUntil(async () => (await fetch('http://127.0.0.1:4173/')).ok);
   const headers = (await fetch('http://127.0.0.1:4173/')).headers;
   if (!headers.get('content-security-policy')?.includes("frame-ancestors 'none'") ||
@@ -101,6 +117,14 @@ try {
     });
     if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? result.exceptionDetails.text);
     return result.result?.value;
+  }
+  function updateButton(label, click = false) {
+    return evaluate(`(() => {
+      const button = Array.from(document.querySelectorAll('#ch-extra-screen button'))
+        .find(item => !item.hidden && !item.disabled && item.textContent.trim() === ${JSON.stringify(label)});
+      if (${click}) button?.click();
+      return Boolean(button);
+    })()`);
   }
   await send('Page.enable');
   await send('Runtime.enable');
@@ -225,6 +249,19 @@ try {
     await send('Network.disable');
   }
 
+  servedWorker = nextWorker;
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=update'});
+  await waitUntil(() => updateButton('Check for update'));
+  await updateButton('Check for update', true);
+  await waitUntil(() => updateButton('Apply downloaded update'));
+  await updateButton('Apply downloaded update', true);
+  await waitUntil(() => evaluate('document.querySelector("#ch-extra-screen [role=status]")?.textContent.includes("Finish or resign the active local match")'));
+  if (!await evaluate('navigator.serviceWorker.getRegistration().then(r => Boolean(r.waiting))')) {
+    throw new Error('A staged update replaced the running chess match');
+  }
+  const deferredShot = await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/update-deferred-active-match.png',Buffer.from(deferredShot.data,'base64'));
+
   // Start a real new game with the computer as White and player as Black.
   // The CDP dialog listener explicitly accepts replacement of the prior match.
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=play'});
@@ -257,6 +294,36 @@ try {
   const reviewShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile('artifacts/SCR-12-real-review.png',Buffer.from(reviewShot.data,'base64'));
   console.log('Completed game history and replay: passed');
+
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=update'});
+  await waitUntil(() => updateButton('Apply downloaded update'));
+  await evaluate('window.chessUpdateReloadMarker = true');
+  await updateButton('Apply downloaded update', true);
+  await waitUntil(() => evaluate(`(async () => {
+    const keys = await caches.keys();
+    return window.chessUpdateReloadMarker === undefined &&
+      document.querySelector('#ch-extra-screen h1')?.textContent === 'PWA update' &&
+      keys.includes('global-chess-${nextRevision}') && !keys.includes('global-chess-${originalRevision}');
+  })()`));
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=history'});
+  await waitUntil(() => evaluate('document.querySelector("#ch-extra-screen .ch-history-row")?.textContent.toLowerCase().includes("resignation")'));
+  console.log('Staged PWA update waits during a match and preserves history after activation: passed');
+
+  // Serve the original worker bytes again, as a server would on rollback.
+  servedWorker = builtWorker;
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=update'});
+  await waitUntil(() => updateButton('Check for update'));
+  await updateButton('Check for update', true);
+  await waitUntil(() => updateButton('Apply downloaded update'));
+  await updateButton('Apply downloaded update', true);
+  await waitUntil(() => evaluate(`(async () => {
+    const keys = await caches.keys();
+    return !(await navigator.serviceWorker.getRegistration()).waiting &&
+      keys.includes('global-chess-${originalRevision}') && !keys.includes('global-chess-${nextRevision}');
+  })()`));
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=history'});
+  await waitUntil(() => evaluate('document.querySelector("#ch-extra-screen .ch-history-row")?.textContent.toLowerCase().includes("resignation")'));
+  console.log('PWA worker revision rollback preserves completed match history: passed');
 
   // ZIP v3 screen-by-screen visual regression: these are route renders,
   // not assertions that every release-gate behavior is finished.
@@ -341,11 +408,9 @@ try {
   await writeFile('artifacts/SCR-27-volatile-storage.png',Buffer.from(volatileShot.data,'base64'));
   console.log('Blocked browser storage: offline play and honest session-only warning passed');
   if(errors.length)throw new Error('Chromium runtime exceptions: '+errors.join(' | '));
-} catch (error) {
-  throw new Error(error.message + (previewLog ? '\nPreview logs:\n' + previewLog.slice(-3000) : ''));
 } finally {
   ws?.close();
   chrome?.kill('SIGTERM');
-  preview.kill('SIGTERM');
+  await preview?.close();
   await rm(profile, {recursive:true, force:true, maxRetries:5, retryDelay:100});
 }

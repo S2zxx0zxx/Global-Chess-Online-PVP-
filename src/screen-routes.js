@@ -469,6 +469,7 @@ export function mountScreenRoutes({main,go,leaveMatch,toggleBoardView,getBoardVi
     if(route==='update'){
       title('Match-safe upgrades','PWA update','New assets are staged offline. A downloaded update never replaces your active match without asking.');
       const status=paragraph(section,'Check for a downloaded update when you are ready.','ch-inline-notice');
+      status.setAttribute('role','status');
       const check=btn('Check for update',async()=>{
         if(!('serviceWorker' in navigator)){
           status.textContent='Service workers are unavailable in this browser. Browser refreshes are managed manually.';return;
@@ -478,6 +479,22 @@ export function mountScreenRoutes({main,go,leaveMatch,toggleBoardView,getBoardVi
           const registration=await navigator.serviceWorker.getRegistration();
           if(!registration){status.textContent='Offline service worker is not installed.';return;}
           await registration.update();
+          const installing=registration.installing;
+          if(installing){
+            status.textContent='Downloading the update…';
+            await new Promise(resolve=>{
+              function checkState(){
+                if(!['installed','activated','redundant'].includes(installing.state))return;
+                installing.removeEventListener('statechange',checkState);
+                resolve();
+              }
+              installing.addEventListener('statechange',checkState);
+              checkState();
+            });
+            if(installing.state==='redundant' && !registration.waiting){
+              throw new Error('Update installation failed');
+            }
+          }
           if(registration.waiting){
             status.textContent='An update is downloaded and waiting. Apply it only when your game is finished.';
             apply.hidden=false;

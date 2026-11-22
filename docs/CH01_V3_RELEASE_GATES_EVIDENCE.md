@@ -18,9 +18,30 @@ The 19 November records below are historical. Track the current candidate in [PR
 | G1, G8 | 2D and 3D smoke render the project SVG art. The package gate rejects legacy board and piece WebPs. | Device accessibility and commercial provenance review. |
 | G7, G12 | Combined tests cover failed backup/history writes, legacy backup compatibility, and exercise journal validation. Chromium Save and Exit reloads and resumes the latest move. | Multi-tab, quota and interrupted write matrix on real devices. |
 | G10, G11 | Bounded search tests and a source-hashed validator for 12 lessons and 30 puzzles run in core CI. | Weak-device benchmark and independent content review. |
-| G13, G15 | Browser smoke serves the production header policy and compiles the mating solver under CSP. The installed service worker restores a saved board and plays the legal move e7 to e5 with Chromium networking disabled. | Staged update, rollback, phone install and deployed response verification. |
+| G13, G15 | Browser smoke serves the production header policy and compiles the mating solver under CSP. The installed service worker restores a saved board and plays the legal move e7 to e5 with Chromium networking disabled. A staged worker waits during a match and completed history survives activation and a rollback to the original worker revision. | Phone install and deployed response verification. |
 | G17, G22-P3 | [Core run at `cef423d`](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45016248696) exercises local Workers HTTP and Durable Object state with two seats, move, reconnect and resignation. | Hosted preview, physical two-client session and network or load acceptance. |
 | G18, G19 | Owner-signing workflow requires an approved permanent ID and protected upload credentials. | Production signature, Play Console and rollout acceptance. |
+
+### Pull request reconciliation
+
+| PR | Evidence in the current integration candidate | Open verification |
+|---|---|---|
+| #1 | Foundation and merged appearance changes are the base of #18. | Final integration into `main` and release acceptance. |
+| #2 | Current mobile shell covers four tabs, bot side selection, match menu and truthful result display. | Physical Android navigation and accessibility. |
+| #3, #12 | Durable save and exit, history rollback and reload recovery are exercised on the current shell. | Full device storage and interruption matrix. |
+| #4 | API 36 preview APK built in CI and installed on the emulator. | Physical Android lifecycle. |
+| #5 | Completion journal and XP persist through browser reload. | Verify each progression contract against the original tracker. |
+| #6 | Data controls and production response headers are integrated. Chromium exercises offline restore and update staging. | Hosted header and update verification. |
+| #7 | CI-only disposable signing check and a separate protected owner-signing workflow. | Permanent app identity, upload key and Play acceptance. |
+| #8, #14 | Bounded bot search, legal fallback and starter pack validation integrated. | Low-end latency and independent content review. |
+| #9 | Historical gate ledger restored and current responsive browser evidence recorded. | Device accessibility and acceptance for all gates. |
+| #10 | Seat-authorized room resignation verified with actual local Workers HTTP and reconciliation for both clients. | Hosted and physical two-client verification. |
+| #11 | Original 602-task, 30-screen and 23-gate inventory tracked as source reconciliation. | Review immutable task IDs against the original private workbook. |
+| #13 | Original SVG packaging check, API 36 shell and required native App plugin integrated. | Commercial rights review and physical lifecycle checks. |
+| #15 | Backup v2 with legacy import, progression journal and perft fixtures integrated with #16. | End-to-end release sign-off. |
+| #16 | Merged into the foundation. Chromium renders 2D, 3D, and current appearance routes. | Physical GPU, effects and visual acceptance. |
+| #17 | Separate optional rewarded-ad candidate reviewed at `2d92ece`. AdMob stays absent from this integration build. | Consent, operator ad configuration and real-device ad acceptance if this milestone is enabled. |
+| #18 | Consolidated release candidate with core, Android preview and disposable signing checks. | Complete the release gates and record exact-head checks before merge. |
 
 ## Verified engineering evidence so far
 

@@ -488,6 +488,9 @@ appShell = mountAppShell({
   storagePersistent: gameStorage.durable,
   hasCorruptMatch(){return Boolean(corruptMatchRaw);},
   async preparePwaUpdate(){
+    if (importingBackup || corruptMatchRaw !== undefined) {
+      return {ok:false,reason:'Resolve the backup or saved-match recovery before applying an update.'};
+    }
     if (online?.active && !online.match.outcome) {
       return {ok:false,reason:'Finish your private online match before applying an update.'};
     }
@@ -499,8 +502,8 @@ appShell = mountAppShell({
       return {ok:false,reason:'This browser cannot persist local games. Finish this temporary session before reloading.'};
     }
     updateClock();
-    save();
     try {
+      if (!online?.active && !save()) throw new Error('Match save failed');
       await gameStorage.flush?.();
       return {ok:true};
     } catch {
