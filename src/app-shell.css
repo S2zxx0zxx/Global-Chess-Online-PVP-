@@ -134,3 +134,74 @@ html.ch-shell-ready{scroll-padding-bottom:100px}
 .ch-first-move-tip button,.ch-tutorial-replay{min-height:44px;padding:9px 10px;border:1px solid var(--ch-card-stroke);border-radius:10px;background:#73432f;color:#ffe7c2;white-space:nowrap;font-weight:700}
 .ch-tutorial-replay{display:block;width:100%;margin-bottom:10px;text-align:center}
 @media(max-width:359px){.ch-first-move-tip{align-items:stretch;flex-direction:column}.ch-first-move-tip button{width:100%}}
+
+/* Learn cards use distinct palettes and existing chess artwork. */
+.ch-shell-ready .ch-learn-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ch-learn-grid .ch-learn-tile {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 154px;
+  justify-content: flex-end;
+  padding: 16px;
+  border-color: var(--learn-edge);
+  background:
+    radial-gradient(ellipse at 95% 0%, var(--learn-light), transparent 75%),
+    linear-gradient(145deg, var(--learn-base), #10100f 87%);
+}
+
+.ch-learn-grid .ch-learn-tile::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: repeating-conic-gradient(#ffffff09 0% 25%, transparent 0% 50%) 0 0 / 46px 46px;
+  pointer-events: none;
+}
+
+.ch-learn-grid .ch-learn-tile::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: 8px;
+  right: 10px;
+  width: 36%;
+  height: 44%;
+  background: var(--learn-art) right center / contain no-repeat;
+  filter: drop-shadow(0 5px 7px #0009);
+  pointer-events: none;
+}
+
+.ch-learn-grid .ch-learn-tile span { color: var(--learn-edge); font-size: 1.45rem; }
+.ch-learn-grid .ch-learn-tile strong { font-size: clamp(1.05rem, 4vw, 1.32rem); }
+.ch-learn-grid .ch-learn-tile small { color: #f1e3d5; }
+.ch-learn-grid .ch-learn-tile:hover { border-color: #fff0d5; }
+
+#ch-open-lessons {
+  --learn-base: #412711;
+  --learn-light: #ad713d;
+  --learn-edge: #e2b17a;
+  --learn-art: url('/brand/classic-royal.svg');
+}
+
+#ch-open-puzzles {
+  --learn-base: #172b34;
+  --learn-light: #3e7281;
+  --learn-edge: #8cc7d4;
+  --learn-art: url('/chess-assets/pieces/white-knight.webp');
+}
+
+#ch-open-daily {
+  --learn-base: #302039;
+  --learn-light: #82536f;
+  --learn-edge: #daa5cb;
+  --learn-art: url('/brand/quick-clock.svg');
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 340px) {
+  .ch-shell-ready .ch-learn-grid { grid-template-columns: 1fr; }
+}
