@@ -19,7 +19,7 @@
 
 - Default branch is `main`; repository is PUBLIC, not archived.
 - GitHub currently shows **18 PRs**, of which **17 open/draft**, and **PR #16 merged into foundation**, not `main`.
-- All 19 inspected branch heads are listed in the PR table below or branch inventory. No new releases (GitHub releases API returned an empty array).
+- The 19 pre-existing branch heads are listed in the complete branch inventory below; the new audit branch is excluded from that pre-write snapshot. No new releases (GitHub releases API returned an empty array).
 - Source tree at PR #18 SHA was retrieved with `truncated=false` and **118 files**.
 - [PR #18](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/18) currently targets foundation at `f4d313f24fc54c73255226c6fb1f4859d651a31d` and includes **18 commits / 71 changed files**, with `behind=0`.
 - This pin is immutable source history. The BRANCH names can advance; recheck GitHub before taking later actions.
@@ -43,6 +43,33 @@ main @ 63462e20f97a
 - #15 versus #18: **diverged**, +33 commits on #18 side and 70 on #15 side (Git graph delta, not amount of missing features).
 - #17 versus #18: **diverged**, +33 on #18 side and 109 on #17 side. AdMob/UMP experiment is not integrated into the release branch. No optional monetization decisions are made in Task T01.
 - `main` versus #18 is **diverged**, with 251 unique commits on #18 and 1 unique on `main` (README deletion). This is a source graph fact, not proof of how a future merge will behave.
+
+### Full branch inventory, exact SHA at T01 snapshot (20 pre-existing branches)
+
+The documentation-only audit branch was created **after** this source snapshot and is not included in these 20 pre-existing branch heads.
+
+| Branch | Exact SHA | Protected |
+|---|---|---|
+| `audit/gc-b01-t01-source-pin-20261122` | `a50749b247681332f7dfc7bc5a62bc07906328e3` | no |
+| `audit/m01-repository-reconciliation-20261122` | `f948510e6db45ead1e1112ee38fc364a235a0fb9` | no |
+| `feat/chess-release-integration` | `3d9467ada0eaf167eecc52d6c98ed126fa98c98c` | no |
+| `feat/chess-v3-android-debug-shell` | `56faad37c15ef8ab354dba3947b2bb10f6a56815` | no |
+| `feat/chess-v3-android-release-gate` | `4cf8bdda1018b598de70f1994b9d18ad5a776cc6` | no |
+| `feat/chess-v3-data-controls-pwa-update` | `ac8bdf8155cf18f7e67c4909f7d1fd4f44166c94` | no |
+| `feat/chess-v3-m0-mobile-shell` | `b42985ca42bec16931dced4546b0a4c6baac7ade` | no |
+| `feat/chess-v3-m02a-safe-exit-navigation-qa` | `95da2b81f7632e4b80d2433778e6279e7c301118` | no |
+| `feat/chess-v3-m02b-original-art-android-a11y` | `f9c8ef0368d60443e884edaa6a31111bd1f5f046` | no |
+| `feat/chess-v3-m03-bounded-bot-learning-audit` | `8f15cdfb2741e5180a37ae65c07d6d6063c1a9d2` | no |
+| `feat/chess-v3-m03-progression-integrated-release-gates` | `083a521d062da3066c15d7fdc188ba9abfa0aa53` | no |
+| `feat/chess-v3-m04-consent-gated-rewarded-ads` | `2d92eceae6fc4e126fc64bfd4c5376190f5a26a0` | no |
+| `feat/chess-v3-pvp-server-resignation` | `0a2b66845e12f498d669ce156427c3601a6b93b3` | no |
+| `feat/chess-v3-verified-local-progress` | `ade15933579a99226373ac6f36cf84adf8a6040b` | no |
+| `feat/playable-chess-foundation` | `f4d313f24fc54c73255226c6fb1f4859d651a31d` | no |
+| `feat/royal-animated-appearance` | `b2cd46b29050b048f3c0f609c8c32c456cbf0db0` | no |
+| `fix/chess-v3-bot-content-correctness` | `aff6271d036dd25d21a86a5f245d564613155796` | no |
+| `fix/chess-v3-offline-save-recovery` | `ba45dc68b69c1176414cf5066c53b3756efb5690` | no |
+| `main` | `63462e20f97a64913836e361c0e9807604ac3d4a` | no |
+| `test/chess-v3-accessibility-release-evidence` | `dcb8e0f1b5bb823cdb39826c5d6e4f3e95073e5c` | no |
 
 ## 3. Live pull request inventory (18 PRs)
 
