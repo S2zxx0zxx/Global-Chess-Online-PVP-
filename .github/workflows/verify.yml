@@ -36,6 +36,8 @@ jobs:
       - name: Check source syntax
         run: |
           find src server scripts tests -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Check architecture boundaries
+        run: npm run check:architecture
       - name: Run automated tests
         run: npm test
       - name: Build production PWA

@@ -8,10 +8,10 @@
 
 ## Current control
 
-- **Tasks closed:** `GC-B01-T01` — `DONE` (source pin); `GC-B01-T02` — `DONE` (historical PR reconciliation); **`GC-B01-T04` — `DONE` (owner-approved scope lock only)**.
-- **One active task:** `NONE` — T04 scope acceptance approved and documented; final PR #24 exact-head checks/merge remain PR integration work. T03 owner-skipped FOR PLANNING ONLY, not DONE.
-- **Next permitted action:** verify PR #24 final closure SHA and squash-merge docs only, then `RESUME GC-B01-T03` or request a new explicit T05 planning-only sequence exception. No automatic T05 start.
-- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03 unresolved; T04 DONE for scope only; T05–T08 TODO)
+- **Tasks closed:** `GC-B01-T01` — `DONE` (source pin); `GC-B01-T02` — `DONE` (reconciliation); `GC-B01-T04` — `DONE` (owner scope); **`GC-B01-T05` — `DONE` (architecture ADR and source/CI guard only, not a product rewrite)**.
+- **One active task:** `NONE` after T05 architecture/guard verification; PR #25 documentation-closure commit and protected squash-merge require final exact-head checks. T03 remains owner-skipped for NONRELEASE planning only, not DONE.
+- **Next permitted action:** verify final PR #25 exact-head CI and squash-merge, then `RESUME GC-B01-T03` or obtain an explicit new T06 planning-only exception; T06 not started.
+- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03 unresolved; T04/T05 source-scoped DONE; T06–T08 TODO)
 - **No change authority inferred:** no merges, force pushes, production changes, billing or other work approved by this document.
 
 ## Task closure: GC-B01-T01
@@ -227,6 +227,67 @@ rollback: Close draft PR and delete only T04 branch before merge; future doc rev
 - Not approved: ad enablement, Play publication, new payments, live global PvP, task removal/reordering, waiving T03 governance, 602-row original source acceptance, or M0/M1/M2 product certification.
 - PR #24 pre-signoff SHA `5db79bea071fe0f17153e0092ac3f0ee21623d7d` CI #45030661367 was SUCCESS. **Post-signoff head checks and merge remain pending at this checkpoint.**
 
+## GC-B01-T05 — Live architecture baseline and explicit one-task exception
+
+**User command:** `START GC-B01-T05` after owner-approved T04. Scope limited to architecture ADR and compatibility guards, NOT release governance bypass. Source Master 01.05 specifically allows choice between continuing Vite/JavaScript ESM with progressive typing and React/TypeScript rewrite; choice must be based on measured source and regression risk.
+
+```yaml
+task_id: GC-B01-T05
+plan_id: GC-MASTER-EXEC-v1.0
+status: DONE_ARCHITECTURE_ADR_AND_CI_GUARDS_ONLY
+original_architecture: Vite_8_JavaScript_ESM_vanilla_UI
+selected_architecture: RETAIN_VITE_ESM
+typescript_strategy: JSDoc_progressive_checkJs_then_pinned_toolchain_later
+react_runtime_added: false
+new_runtime_or_dev_dependencies: 0
+package_lock_changed: false
+reference_source_sha: b9126162357e0ab21ebcded8915dfe35cbba568c
+working_branch: feat/gc-b01-t05-architecture-contract
+task_artifacts:
+  - docs/execution/GC-B01-T05_ARCHITECTURE_ADR_2026-11-22.md
+  - scripts/check-architecture-contract.mjs
+  - tests/architecture-contract.test.js
+  - package.json
+  - .github/workflows/verify.yml
+  - docs/execution/GC_EXECUTION_LEDGER.md
+pilot:
+  local_ts_version: 5.8.3
+  syntax_and_typecheck: PASS
+  representative_clock_behavior_parity: 1_of_1_passed
+  deliberately_invalid_preset: TS2345_rejected
+  installed_compiler_in_repo: false
+  app_runtime_migrated_to_typescript: false
+baseline_CI:
+  run: "https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45033713460"
+  original_Node_tests: 98_of_98_passed
+  main_JS_raw_kB: 146.42
+  main_JS_gzip_kB: 49.02
+  optional_3D_raw_bytes: 1114381
+  optional_3D_gzip_kB: 267.39
+  3D_budget_bytes: 1800000
+  vite_build_seconds: 1.42
+CI_exact_implementation_SHA: d5b511142aa5f03248ca4a5df7036a71e5b73e24
+CI_core_104_of_104_passed: https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45034747296
+CI_android_debug_success: https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45034747291
+CI_android_ephemeral_signing_success: https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45034747265
+architecture_guard: PASSED
+source_runtime_changes: NONE
+final_closure_SHA_CI_and_protected_merge: VERIFY_AFTER_LAST_DOC_COMMIT
+human_independent_review: NOT_CLAIMED
+upstream_exception:
+  skipped_task: GC-B01-T03
+  scope: THIS_TASK_PLANNING_AND_SOURCE_GUARDS_ONLY
+  not_marked_DONE: true
+  main_branch_protection: UNRESOLVED
+batch_gate: NOT_ELIGIBLE
+t06_started: false
+rollback: New_revert_PR_only__no_force_push__preserve_saves
+```
+
+**Important:** TypeScript pilot is a tested local prototype; the checker is source-level; neither is a claim of full TypeScript static typing. No changes to chess move rules, persisted data, public server behavior, Android signing or user UI.
+
+**T05 exact-head engineering verification:** [Core 45034747296](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45034747296) **SUCCESS** (104/104, architecture guard and Chromium/Workers); [Android debug 45034747291](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45034747291) **SUCCESS**; [ephemeral signing 45034747265](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45034747265) **SUCCESS**, all on source SHA `d5b511142aa5f03248ca4a5df7036a71e5b73e24`. The final ledger/ADR textual edit requires a fresh exact-head CI run before protected merge. No TypeScript, React, paid service, Android release or stored data migration was performed.
+
 ## Batch 01 sequential pointer
 
 | Task ID | Status | Evidence |
@@ -235,7 +296,7 @@ rollback: Close draft PR and delete only T04 branch before merge; future doc rev
 | `GC-B01-T02` | DONE | `GC-B01-T02_PR18_RECONCILIATION_2026-11-22.md`; blocked features remain open under their own task IDs |
 | `GC-B01-T03` | BLOCKED_EXTERNAL (OWNER-SKIPPED FOR T04) | PR #23 merged, exact-head CI attempt 2 succeeded; only canonical protected; `main` unprotected and owner signoff pending; not DONE |
 | `GC-B01-T04` | DONE (SCOPE LOCK ONLY) | Explicit owner approval command; 16/16 PRDs, SCR-00–29, 12 deferrals and M0–M5 scope signed in PR #24; final CI/merge tracked in GitHub PR |
-| `GC-B01-T05` | TODO | No action started |
+| `GC-B01-T05` | DONE (ARCHITECTURE ADR + GUARDS) | Retain Vite/ESM decision, isolated TypeScript 5.8.3 pilot, 6 guard tests; PR #25 core 104/104 + Android debug/signing CI SUCCESS; final docs merge verification separately required |
 | `GC-B01-T06` | TODO | No action started |
 | `GC-B01-T07` | TODO | No action started |
 | `GC-B01-T08` | TODO | No action started |
@@ -244,7 +305,7 @@ rollback: Close draft PR and delete only T04 branch before merge; future doc rev
 ## Resume procedure
 
 1. Issue `STATUS GC-B01-T01` to verify source evidence if audit freshness is in doubt.
-2. `GC-B01-T04` scope lock is owner-approved and DONE. Verify its final documentation SHA/merge on PR #24; T03 remains unresolved and T05 is not automatically unlocked.
+2. `GC-B01-T05` architecture/guard scope is marked DONE subject to final docs-only exact-head CI/merge verification. T03 remains unresolved; T06 not started.
 3. Re-fetch GitHub heads before edits, use exact SHA proofs and preserve all historic game code.
 4. Never mark subsequent tasks DONE by copying this ledger status.
 
