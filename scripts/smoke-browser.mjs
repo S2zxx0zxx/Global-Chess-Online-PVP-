@@ -423,8 +423,8 @@ try {
         fromCell.click(); toCell.click(); return true;
       })()`);
       await waitUntil(()=>evaluate(
-        'document.querySelector("#board [data-square=${to}].last-destination") !== null'
-      ),15000,'committed promotion setup move ${from}-${to}');
+        `document.querySelector("#board [data-square=${to}].last-destination") !== null`
+      ),15000,`committed promotion setup move ${from}-${to}`);
     }
     await evaluate(`(() => {
       const from=document.querySelector('#board [data-square=b7]');
