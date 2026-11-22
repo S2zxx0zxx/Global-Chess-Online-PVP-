@@ -494,7 +494,11 @@ appShell = mountAppShell({
     if(gameStorage.durable !== false)await gameStorage.flush?.();
     return {durable:gameStorage.durable !== false};
   },
-  resignCurrentMatch(){
+  async resignCurrentMatch(){
+    if (online?.active) {
+      if (!online.canResign() || !confirm('Resign this private match?')) return false;
+      return await online.resign() ? true : 'server-error';
+    }
     updateClock();
     if(online?.active || outcome(state.game) || (state.preset === undefined && !state.game.history().length))return false;
     const side=state.mode==='computer'?state.playerSide:state.game.turn();
@@ -518,7 +522,7 @@ appShell = mountAppShell({
   getMatchSummary(){
     return {
       outcome:outcome(state.game),mode:state.mode,
-      online:Boolean(online?.active),difficulty:state.difficulty,
+      online:Boolean(online?.active),canResignOnline:online?.canResign(),difficulty:state.difficulty,
       playerSide:state.playerSide,turn:state.game.turn(),moves:state.game.history().length,paused:state.paused,
       started:Boolean(online?.active) || state.preset !== undefined || state.game.history().length > 0,
     };

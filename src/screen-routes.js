@@ -87,11 +87,21 @@ export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMove
           card(items,'Pause match','Stop the local clock',()=>go('pause'));
         }
         if(!details.outcome){
-          card(items,'Resign game','End your current match',()=>{
-            if(resignCurrentMatch())go('result');
+          card(items,'Resign game','End your current match',async ()=>{
+            if(await resignCurrentMatch())go('result');
           },'ch-danger-card');
         }
         if(!details.outcome) card(items,'How to move','Replay the move and capture guide',()=>{go('match');replayTutorial();});
+      } else if(details.canResignOnline) {
+        const resign = card(items,'Resign game','End your private match',async ()=>{
+          resign.disabled = true;
+          try {
+            const result = await resignCurrentMatch();
+            if (!resign.isConnected) return;
+            if (result === true) go('result');
+            else if (result === 'server-error') go('match');
+          } finally { resign.disabled = false; }
+        },'ch-danger-card');
       }
       const moves=readMoves();
       if(moves.length){
