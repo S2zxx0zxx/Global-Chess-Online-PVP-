@@ -628,6 +628,80 @@ try {
   secondary = undefined;
   console.log('Two-tab save conflict preserves the newer match and exports the stale tab’s local move: passed');
 
+  // Keep the real app, store and dialog flow. Hold bot responses so the old
+  // worker can reply on purpose after a completely new match has started.
+  const controlledBot = await send('Page.addScriptToEvaluateOnNewDocument',{source:`
+    window.botJobs = [];
+    window.committedMoves = [];
+    window.addEventListener('chess-move-committed', event => committedMoves.push(event.detail));
+    const BrowserWorker = window.Worker;
+    window.Worker = class {
+      constructor(url, options) {
+        if (!/\\/bot-[^/]+\\.js$/.test(new URL(url,location.href).pathname)) return new BrowserWorker(url,options);
+        botJobs.push(this);
+      }
+      postMessage(request) { this.request = request; }
+      terminate() { this.terminated = true; }
+      reply(from,to) { this.onmessage?.({data:{from,to}}); }
+    };
+  `});
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=match'});
+  await waitUntil(() => evaluate('document.getElementById("launch")?.hidden && Array.isArray(window.botJobs)'));
+  await evaluate('document.querySelector("#welcome-dialog[open] button[value=guest]")?.click()');
+  const opening = 'document.querySelector("#board [data-square=e2]").click();document.querySelector("#board [data-square=e4]").click();true';
+  await evaluate('document.getElementById("local").click();true');
+  await waitUntil(() => evaluate('document.documentElement.classList.contains("ch-view-match") && document.querySelector("#versus").hidden'));
+  await evaluate('document.querySelector("#ch-first-move-tip:not([hidden]) button")?.click()');
+  await send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
+  async function tapSquare(square) {
+    const point = await evaluate(`(() => {
+      const cell = document.querySelector('#board [data-square=${square}]');
+      cell.scrollIntoView({block:'nearest'});
+      const rect = cell.getBoundingClientRect();
+      const point={x:rect.x+rect.width/2,y:rect.y+rect.height/2};
+      const hit=document.elementFromPoint(point.x,point.y);
+      if (!cell.contains(hit)) throw new Error('Square ${square} blocked by ' + (hit?.closest('dialog')?.id || hit?.id || hit?.className || hit?.tagName));
+      return point;
+    })()`);
+    await send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[point]});
+    await send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  }
+  await tapSquare('e2');
+  await tapSquare('e4');
+  await tapSquare('e4');
+  await waitUntil(() => evaluate('document.querySelector("#board [data-square=e4].last-destination")?.getAttribute("aria-label") === "e4, White Pawn"'));
+  if (await evaluate('committedMoves.length') !== 1) throw new Error('Repeated tap committed more than one move');
+  await send('Emulation.setTouchEmulationEnabled',{enabled:false});
+
+  async function restartComputerOpening() {
+    await evaluate('document.getElementById("ch-match-tools").click();true');
+    await waitUntil(() => evaluate('document.documentElement.classList.contains("ch-view-menu")'));
+    await evaluate(`(() => {
+      const restart=Array.from(document.querySelectorAll('#ch-extra-screen button'))
+        .find(button=>button.querySelector('strong')?.textContent === 'Restart match');
+      restart.click();
+      ${opening}
+    })()`);
+  }
+  await evaluate('document.getElementById("computer").click();' + opening);
+  await waitUntil(() => evaluate('Boolean(botJobs[0]?.request)'));
+  await restartComputerOpening();
+  await waitUntil(() => evaluate('Boolean(botJobs[0]?.terminated && botJobs[1]?.request)'));
+  if (!await evaluate(`(() => {
+    const before = committedMoves.length;
+    botJobs[0].reply('e7','e5');
+    return botJobs[0].request.fen === botJobs[1].request.fen && committedMoves.length === before &&
+      !botJobs[1].terminated && document.querySelector('#board [data-square=e7]').getAttribute('aria-label') === 'e7, Black Pawn';
+  })()`)) throw new Error('The retired bot affected the new match');
+  await evaluate('botJobs[1].reply("c7","c5")');
+  await waitUntil(() => evaluate('document.querySelector("#board [data-square=c5].last-destination")?.getAttribute("aria-label") === "c5, Black Pawn"'));
+
+  await restartComputerOpening();
+  await waitUntil(() => evaluate('Boolean(botJobs[2]?.request)'));
+  await waitUntil(() => evaluate('botJobs[2].terminated === true && committedMoves.at(-1)?.color === "b" && !document.querySelector("#status").textContent.includes("Computer thinking")'),8000);
+  await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:controlledBot.identifier});
+  console.log('Rapid touch commits once, a retired bot cannot move after restart, and a stalled bot falls back: passed');
+
   // Screen contracts SCR-00/01: denied browser storage must not crash the app,
   // and the UI may NOT claim a durable save for temporary guest play.
   await send('Page.addScriptToEvaluateOnNewDocument',{source:

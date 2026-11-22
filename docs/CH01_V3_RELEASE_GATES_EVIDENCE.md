@@ -20,6 +20,7 @@ The owner’s workbook was retrieved and read without editing it. It contains 60
 |---|---|---|
 | RULE-001–RULE-010 | Shared chess engine tests count 20, 400, 8,902 and 197,281 nodes at depths 1–4. Fixtures cover illegal castling, castling rights, en passant expiry and king safety, knight SAN/FEN, and explicit selection of all four promotions. Chromium exercises all four through the game dialog. | Native Android UI acceptance. |
 | RULE-011–RULE-015 | Shared game tests distinguish mate and stalemate, exercise threefold and the fifth occurrence, and verify the 50-move claim and 75-move automatic draw with mate priority. | Native Android outcome and clock acceptance. |
+| RULE-018, RULE-019, RULE-027 | Chromium repeats a real touch on the destination square and records one committed move. A controlled bot returns a legal old reply after restart through Match Options, but only the new job affects the board. A silent job hits the real application deadline and makes a legal fallback move. | Physical Android touch and weak-device measurements. RULE-016 and RULE-017 still require undo coverage. |
 | RULE-020, UX-27 | Two Chromium tabs verify the stale write is rejected and the stale move remains in a Recovery export. | LocalStorage fallback and native interruption acceptance. |
 | UX-28, CH-14-003, CH-14-004, CH-17-009 | Chromium runs a saved game offline and exercises a staged service-worker activation and rollback. | Successive hosted builds and Android/PWA installation evidence. |
 
