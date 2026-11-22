@@ -161,7 +161,7 @@ test('private-room credentials are sensitive; local session storage must not be 
   assert.ok(client.includes('expectedVersion:snapshot.match.version'));
   assert.ok(worker.includes("Authorization") && worker.includes('transaction'));
   assert.ok(worker.includes('ROOM_CREATION_LIMIT'));
-  assert.ok(!manifest.futureNotDeployed.serverDerivedAuthenticatedSubject === false);
+  assert.equal(manifest.futureNotDeployed.serverDerivedAuthenticatedSubject, true);
 });
 
 test('legacy IndexedDB persisted data keys and durable snapshot CAS remain explicit', () => {
@@ -171,4 +171,18 @@ test('legacy IndexedDB persisted data keys and durable snapshot CAS remain expli
   assert.ok(storage.includes("snapshot[key] !== committed.get(key)"));
   assert.equal(manifest.liveLegacy.indexedDB.store, 'saves');
   assert.equal(manifest.liveLegacy.indexedDB.snapshotKey,'snapshot');
+});
+
+test('privacy inventory lists tutorial feedback and never includes online seat in backup', () => {
+  const shell = readFileSync(resolve(root, 'src/app-shell.js'), 'utf8');
+  const feedback = readFileSync(resolve(root, 'src/feedback.js'), 'utf8');
+  for (const key of ['global-chess.first-move-v1','global-chess.feedback.v1']) {
+    assert.ok(manifest.liveLegacy.otherLocalKeys.includes(key), key);
+    assert.ok((shell + feedback).includes(key), 'Source missing ' + key);
+  }
+  const storage = memoryStore();
+  storage.setItem('global-chess.online-seat.v1', 'synthetic-never-export');
+  const backup = exportBackup(storage);
+  assert.ok(!backup.includes('synthetic-never-export'));
+  assert.equal(Object.hasOwn(JSON.parse(backup), 'onlineSeat'), false);
 });
