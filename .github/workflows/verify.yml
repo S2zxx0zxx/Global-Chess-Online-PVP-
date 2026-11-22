@@ -64,3 +64,20 @@ jobs:
           test -s dist/manifest.webmanifest
           test -s dist/solver/cha.wasm.gz
           test -s public/solver/LICENSE.txt
+      - name: Smoke-test two seats on local Workers runtime
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+        run: |
+          node node_modules/wrangler/bin/wrangler.js dev --local --ip 127.0.0.1 --port 8787 --persist-to "$RUNNER_TEMP/chess-rooms" > "$RUNNER_TEMP/chess-worker.log" 2>&1 &
+          worker=$!
+          trap 'kill "$worker" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent --max-time 2 http://127.0.0.1:8787/ --output /dev/null; then
+              node scripts/smoke-local-rooms.mjs
+              exit $?
+            fi
+            if ! kill -0 "$worker" 2>/dev/null; then break; fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/chess-worker.log"
+          exit 1
