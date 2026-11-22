@@ -30,7 +30,7 @@ baseline_pr: https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/pull/18
 base_branch: feat/playable-chess-foundation
 base_sha: f4d313f24fc54c73255226c6fb1f4859d651a31d
 work_branch: audit/gc-b01-t01-source-pin-20261122
-audit_commit: 7cb41aee4222a943aab3317783dfaaf9b65386ac
+audit_commit: bc5a9fb91cc2dd4bf9162f45e1b7906ffe75294d
 changed_files:
   - docs/execution/GC-B01-T01_SOURCE_BASELINE_2026-11-22.md
 requirements_evidence:
