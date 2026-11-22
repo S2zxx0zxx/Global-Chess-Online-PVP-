@@ -15,7 +15,7 @@ function browserBinary() {
   throw new Error('Chromium browser not available on CI runner');
 }
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-async function waitUntil(check, timeoutMs = 30000) {
+async function waitUntil(check, timeoutMs = 30000, stage = 'browser state') {
   const deadline = Date.now() + timeoutMs;
   let lastError;
   while (Date.now() < deadline) {
@@ -25,7 +25,7 @@ async function waitUntil(check, timeoutMs = 30000) {
     } catch (error) { lastError = error; }
     await sleep(250);
   }
-  throw new Error('Timed out waiting for browser state' + (lastError ? ': ' + lastError.message : ''));
+  throw new Error('Timed out waiting for ' + stage + (lastError ? ': ' + lastError.message : ''));
 }
 
 const profile = await mkdtemp(join(tmpdir(), 'global-chess-browser-'));
@@ -404,20 +404,37 @@ try {
 
   // Reach a legal promotion position from the normal board, without injecting game state.
   async function openPromotion() {
+    // The previous smoke fired 8 move pairs in one Runtime.evaluate call.
+    // On slower CI, UI state render could lag behind the next synthetic click,
+    // making the final promotion modal time out intermittently. Commit/check
+    // each move before sending the next input; never inject or alter game state.
+    await evaluate("document.getElementById('local').click();true");
+    await waitUntil(()=>evaluate(
+      'document.documentElement.classList.contains("ch-view-match") && '+
+      'document.querySelector("#board [data-square=a2]")?.getAttribute("aria-label")==="a2, White Pawn"'
+    ),15000,'fresh local board and first white pawn');
+    const sequence=[['a2','a4'],['h7','h5'],['a4','a5'],['h5','h4'],
+      ['a5','a6'],['h4','h3'],['a6','b7'],['h3','g2']];
+    for(const [from,to] of sequence) {
+      await evaluate(`(() => {
+        const fromCell=document.querySelector('#board [data-square=${from}]');
+        const toCell=document.querySelector('#board [data-square=${to}]');
+        if(!fromCell||!toCell)throw new Error('Promotion setup lost square ${from}-${to}');
+        fromCell.click(); toCell.click(); return true;
+      })()`);
+      await waitUntil(()=>evaluate(
+        'document.querySelector("#board [data-square=${to}].last-destination") !== null'
+      ),15000,'committed promotion setup move ${from}-${to}');
+    }
     await evaluate(`(() => {
-      document.getElementById('local').click();
-      const cell = square => document.querySelector('#board [data-square=' + square + ']');
-      for (const [from,to] of [['a2','a4'],['h7','h5'],['a4','a5'],['h5','h4'],
-                              ['a5','a6'],['h4','h3'],['a6','b7'],['h3','g2']]) {
-        cell(from).click();
-        cell(to).click();
-      }
-      cell('b7').focus();
-      cell('b7').click();
-      cell('a8').focus();
-      cell('a8').click();
+      const from=document.querySelector('#board [data-square=b7]');
+      const to=document.querySelector('#board [data-square=a8]');
+      if(!from||!to)throw new Error('Promotion final squares missing');
+      from.focus();from.click();to.focus();to.click();return true;
     })()`);
-    await waitUntil(() => evaluate('document.querySelector("#promotion[open]")?.contains(document.activeElement)'));
+    await waitUntil(()=>evaluate(
+      'document.querySelector("#promotion[open]")?.contains(document.activeElement)'
+    ),15000,'promotion dialog and accessible focus');
   }
   async function pressKey(key, windowsVirtualKeyCode) {
     const code = key === ' ' ? 'Space' : key;
