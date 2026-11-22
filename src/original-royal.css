@@ -1,0 +1,125 @@
+/* Global Chess original royal design layer.
+ * Authored for Global Chess. No third-party APK textures, UI atlases, fonts,
+ * visual layouts, audio, or proprietary code are included here.
+ * Keep chess rules, network and storage independent from presentation.
+ */
+:root {
+  --ch-color-brand-espresso:#07191a;
+  --ch-color-brand-wine:#11272a;
+  --ch-color-brand-mahogany:#18383a;
+  --ch-color-brand-walnut:#294f4c;
+  --ch-color-brand-gold:#e9ca86;
+  --ch-color-brand-goldStrong:#d9ad58;
+  --ch-color-brand-cream:#fff4dc;
+  --ch-color-brand-sand:#c7d3c5;
+  --ch-color-brand-teal:#237369;
+  --ch-color-a11y-focus:#79e6dc;
+  --ch-royal-border:rgba(241,209,141,.42);
+  --ch-royal-inner:rgba(255,249,222,.12);
+  --ch-royal-shadow:0 14px 46px rgba(1,8,10,.52);
+  --ch-royal-surface:linear-gradient(165deg,rgba(21,49,50,.94),rgba(6,23,28,.97));
+}
+html.ch-shell-ready body {
+  background-color:#061719;
+  background-image:
+    linear-gradient(180deg,rgba(4,14,17,.30),rgba(5,18,22,.89) 46%,#071516 100%),
+    url('/brand/original-royal-hall.svg');
+  background-position:center top,center top;
+  background-repeat:no-repeat;
+  background-size:cover,min(100vw,820px) auto;
+  color:var(--ch-color-brand-cream);
+}
+.ch-shell-ready .masthead .brand {
+  text-shadow:0 1px 12px rgba(240,203,128,.16);
+}
+.ch-shell-ready .masthead .brand strong {
+  color:#ffe1a0;
+  letter-spacing:.12em;
+}
+.ch-shell-ready .lobby,
+.ch-shell-ready .ch-screen,
+.ch-shell-ready .layout>aside {
+  border:1px solid var(--ch-royal-border);
+  background:var(--ch-royal-surface);
+  box-shadow:inset 0 1px 0 var(--ch-royal-inner),var(--ch-royal-shadow);
+  backdrop-filter:blur(6px);
+}
+.ch-shell-ready .lobby,
+.ch-shell-ready .ch-screen {
+  border-radius:24px;
+}
+.ch-shell-ready .ch-hero-mark {
+  filter:drop-shadow(0 6px 14px rgba(226,192,118,.28));
+}
+.ch-shell-ready .ch-eyebrow,
+.ch-shell-ready .ch-hero h2 {
+  color:#f6db9f;
+}
+.ch-shell-ready .mode-cards button,
+.ch-shell-ready .ch-play-hub button,
+.ch-shell-ready .ch-learn-hub button {
+  position:relative;
+  overflow:hidden;
+  border-color:rgba(234,201,137,.42);
+  background-color:rgba(15,42,46,.82);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 7px 20px rgba(0,7,8,.22);
+}
+.ch-shell-ready .mode-cards button::after {
+  content:'';
+  position:absolute;
+  inset:auto 12px 0;
+  height:2px;
+  background:linear-gradient(90deg,transparent,rgba(255,216,139,.74),transparent);
+  pointer-events:none;
+}
+.ch-shell-ready .mode-cards button:hover,
+.ch-shell-ready .mode-cards button:focus-visible {
+  border-color:#f9d998;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 9px 24px rgba(0,9,11,.38);
+}
+.ch-shell-ready .board {
+  border-color:#8f7041;
+  box-shadow:0 0 0 2px rgba(244,216,155,.42),0 0 0 7px rgba(8,33,35,.85),0 17px 35px rgba(0,8,11,.48);
+}
+.ch-shell-ready .board button:focus-visible,
+.ch-shell-ready button:focus-visible,
+.ch-shell-ready a:focus-visible,
+.ch-shell-ready select:focus-visible {
+  outline:3px solid var(--ch-color-a11y-focus);
+  outline-offset:2px;
+}
+.ch-shell-ready button,
+.ch-shell-ready select,
+.ch-shell-ready a {
+  -webkit-tap-highlight-color:transparent;
+}
+.ch-shell-ready dialog {
+  border:1px solid var(--ch-royal-border);
+  background:var(--ch-royal-surface);
+  color:var(--ch-color-brand-cream);
+  box-shadow:var(--ch-royal-shadow);
+}
+@media (hover:none) and (pointer:coarse) {
+  .ch-shell-ready .mode-cards button,
+  .ch-shell-ready .masthead button {
+    min-height:48px;
+  }
+}
+@media (max-width:359px) {
+  .ch-shell-ready .lobby,
+  .ch-shell-ready .ch-screen {border-radius:18px}
+  .ch-shell-ready .mode-cards button {min-height:76px}
+}
+@media (prefers-reduced-motion:reduce) {
+  .ch-shell-ready .mode-cards button,
+  .ch-shell-ready .ch-play-hub button {
+    animation:none!important;
+    transition:none!important;
+  }
+}
+@media (prefers-contrast:more) {
+  .ch-shell-ready .lobby,
+  .ch-shell-ready .ch-screen,
+  .ch-shell-ready .layout>aside {border-color:#ffdf99;background:#07191a}
+  .ch-shell-ready button:focus-visible {outline-width:4px}
+}
