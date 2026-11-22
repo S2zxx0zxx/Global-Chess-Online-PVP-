@@ -101,7 +101,7 @@ export function verifySourceTracker({manifest,taskRows,gateRows,screenRows,testR
   check(gateRows.every(x=>x.status==='NOT_STARTED'),'Source gate historical status altered');
   check(screenRows.every(x=>x.status==='NOT_STARTED'),'Source screen historical status altered');
   check(testRows.every(x=>x.status==='NOT_RUN'),'Source test historical status altered');
-  check(assetRows.every(x=>x.status==='NOT_STARTED'),'Source asset historical status altered');
+  check(assetRows.every(x=>x.status==='NOT_CREATED'),'Source asset historical status altered');
   const rowStatus=id=>{
     const match=ledgerText.match(new RegExp('^\\|\\s*`'+id+'`\\s*\\|\\s*([^|]+)\\|','m'));
     return match?.[1]?.trim() ?? null;
