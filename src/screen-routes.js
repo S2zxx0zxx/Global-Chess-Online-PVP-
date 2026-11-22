@@ -13,14 +13,6 @@ const btn=(title,fn,cls='')=>{const x=mk('button','ch-action '+cls,title);x.type
 const paragraph=(parent,content,cls='ch-support')=>{const x=mk('p',cls,content);parent.append(x);return x;};
 const heading=(parent,group,title,summary,fn)=>{parent.append(btn('← Back',fn,'ch-back-button'));paragraph(parent,group.toUpperCase(),'ch-eyebrow');const h=mk('h1','',title);h.id='ch-extra-screen-title';h.tabIndex=-1;parent.append(h);if(summary)paragraph(parent,summary);};
 const card=(parent,title,detail,fn,cls='')=>{const x=btn('',fn,'ch-feature-card '+cls);x.append(mk('strong','',title),mk('small','',detail));parent.append(x);return x;};
-const ALL=[...lessons,...puzzles];
-const KNOWN=new Set(ALL.map(x=>x.id));
-const report=()=>{
-  const list=ls('global-chess.learning.v1',[]);
-  const completed=[...new Set(Array.isArray(list)?list:[])].filter(x=>KNOWN.has(x));
-  const daily=[...new Set(Array.isArray(list)?list:[])].filter(x=>/^daily-\d{4}-\d{2}-\d{2}$/.test(x));
-  return {completed,daily};
-};
 const days=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const EXPORT=(data,name,type)=>{
   const url=URL.createObjectURL(new Blob([data],{type}));
@@ -32,12 +24,13 @@ const appearance=name=>{
 };
 export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','settings','data','transfer','recovery','update','about']);
 
-export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,saveAndExitCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
+export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,saveAndExitCurrentMatch,preparePwaUpdate,hasCorruptMatch,getProgressReport}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
   screen.setAttribute('aria-labelledby','ch-extra-screen-title');
   main.insertBefore(screen,el('ch-tab-bar'));
   let selected=0,exercise=lessons[0],lastSolved=null,fault=false,ply=0;
+  const report=()=>{try{return getProgressReport();}catch{return {completed:[],daily:[],xp:null,invalid:true,persisted:false};}};
   appearance(ls('global-chess.appearance.v1','maple'));
 
   function records(){
@@ -238,7 +231,9 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
     if(route==='lessons'||route==='puzzles'){
       const set=route==='lessons'?lessons:puzzles;
       title('Interactive practice',route==='lessons'?'Chess lessons':'Tactical puzzles',route==='lessons'?'Learn piece movement, special moves and tactics.':'Offline positions with validated legal answers.');
-      const completed=new Set(report().completed),list=mk('div','ch-feature-list');section.append(list);
+      const progress=report();
+      if(progress.invalid)paragraph(section,'Previously completed exercises cannot be verified until the local journal is recovered.','ch-inline-notice ch-notice-warning');
+      const completed=new Set(progress.completed),list=mk('div','ch-feature-list');section.append(list);
       for(const x of set)card(list,x.title,completed.has(x.id)?'Completed · Replay to practice':x.prompt,()=>{exercise=x;go(route==='lessons'?'lesson':'puzzle');},completed.has(x.id)?'ch-done':'');
     }
     if(route==='lesson'||route==='puzzle'){
@@ -256,7 +251,9 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
     if(route==='daily'){
       exercise=dailyExercise();
       title('Offline daily practice','Daily challenge · '+days(),exercise.prompt);
-      const done=report().daily.includes('daily-'+days());
+      const progress=report();
+      const done=progress.daily.includes('daily-'+days());
+      if(progress.invalid)paragraph(section,'Progress journal could not be verified. Replays will not silently overwrite damaged data.','ch-inline-notice ch-notice-warning');
       paragraph(section,done?'Already completed today. Replaying does not grant duplicate progress.':'The local-day challenge is deterministic and can be played without internet.','ch-inline-notice');
       section.append(btn('Play today’s puzzle',()=>openExercise(exercise),'primary'));
     }
@@ -264,6 +261,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
       title('Local player record','Your progress','Validated offline results. Local two-player games are not counted as personal wins.');
       const progress=report(),saved=records(),stats=summarizeMatches(saved),grid=mk('div','ch-stats-grid');
       section.append(grid);
+      if(progress.invalid)paragraph(section,'The local exercise journal cannot be verified. XP and exercise awards are unavailable. Existing bytes were preserved; export a recovery backup.','ch-inline-notice ch-notice-warning');
       if(saved===null)paragraph(section,'Match history is unavailable. No saved data was cleared.','ch-inline-notice ch-notice-warning');
       const values=[
         ['Completed games',saved===null?'Unavailable':stats.completed],
@@ -272,9 +270,10 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
         ['Vs Computer win rate',saved===null?'Unavailable':stats.winRate+'%'],
         ['Current bot win streak',saved===null?'Unavailable':stats.currentWinStreak],
         ['Best bot win streak',saved===null?'Unavailable':stats.bestWinStreak],
-        ['Lessons completed',progress.completed.filter(x=>lessons.some(y=>y.id===x)).length+'/'+lessons.length],
-        ['Puzzles completed',progress.completed.filter(x=>puzzles.some(y=>y.id===x)).length+'/'+puzzles.length],
-        ['Daily challenges',progress.daily.length],
+        ['Local practice XP',progress.invalid?'Unavailable':progress.xp+(progress.persisted?'':' · session only')],
+        ['Lessons completed',progress.invalid?'Unavailable':progress.completed.filter(x=>lessons.some(y=>y.id===x)).length+'/'+lessons.length],
+        ['Puzzles completed',progress.invalid?'Unavailable':progress.completed.filter(x=>puzzles.some(y=>y.id===x)).length+'/'+puzzles.length],
+        ['Daily challenges',progress.invalid?'Unavailable':progress.daily.length],
       ];
       for(const [label,value] of values){
         const tile=mk('div','ch-stat');
@@ -286,6 +285,7 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
     if(route==='achievements'){
       title('Proven milestones','Achievements','Unlocks are computed from real local records, not simulated leaderboards.');
       const p=report(),seen=new Set(p.completed),stats=summarizeMatches(records());
+      if(p.invalid){paragraph(section,'Exercise journal is unreadable, so achievements cannot be verified. Original bytes have not been replaced.','ch-inline-notice ch-notice-warning');return;}
       const awards=[
         ['First Steps','Complete one practice exercise',p.completed.length>=1],
         ['Chess Basics','Complete all twelve lessons',lessons.every(x=>seen.has(x.id))],
