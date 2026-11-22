@@ -408,7 +408,14 @@ try {
     // On slower CI, UI state render could lag behind the next synthetic click,
     // making the final promotion modal time out intermittently. Commit/check
     // each move before sending the next input; never inject or alter game state.
-    await evaluate("document.getElementById('local').click();true");
+    await evaluate(`(() => {
+      // The prior smoke may leave an unfinished local match. Accept only its
+      // Replace-this-match confirmation in this synthetic CI fixture.
+      const original=window.confirm;
+      window.confirm=()=>true;
+      try { document.getElementById('local').click(); } finally { window.confirm=original; }
+      return true;
+    })()`);
     await waitUntil(()=>evaluate(
       'document.documentElement.classList.contains("ch-view-match") && '+
       'document.querySelector("#board [data-square=a2]")?.getAttribute("aria-label")==="a2, White Pawn"'
@@ -418,9 +425,14 @@ try {
     for(const [from,to] of sequence) {
       await evaluate(`(() => {
         const fromCell=document.querySelector('#board [data-square=${from}]');
+        if(!fromCell)throw new Error('Promotion setup source square missing: ${from}');
+        fromCell.click();
+        // selectSquare() synchronously replaces board children during render.
+        // Re-query destination AFTER the source click; stale buttons are detached.
         const toCell=document.querySelector('#board [data-square=${to}]');
-        if(!fromCell||!toCell)throw new Error('Promotion setup lost square ${from}-${to}');
-        fromCell.click(); toCell.click(); return true;
+        if(!toCell)throw new Error('Promotion setup target square missing: ${to}');
+        toCell.click();
+        return true;
       })()`);
       await waitUntil(()=>evaluate(
         `document.querySelector("#board [data-square=${to}].last-destination") !== null`
@@ -428,9 +440,12 @@ try {
     }
     await evaluate(`(() => {
       const from=document.querySelector('#board [data-square=b7]');
+      if(!from)throw new Error('Promotion final source missing');
+      from.focus();from.click();
       const to=document.querySelector('#board [data-square=a8]');
-      if(!from||!to)throw new Error('Promotion final squares missing');
-      from.focus();from.click();to.focus();to.click();return true;
+      if(!to)throw new Error('Promotion final destination missing');
+      to.focus();to.click();
+      return true;
     })()`);
     await waitUntil(()=>evaluate(
       'document.querySelector("#promotion[open]")?.contains(document.activeElement)'
