@@ -360,7 +360,7 @@ try {
   await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelectorAll(".ch-avatar-card").length === 3'));
   await evaluate('document.querySelectorAll(".ch-avatar-card")[1].click();document.querySelector(".ch-profile-tabs button:last-child").click();document.querySelector(".ch-frame-teal").click();true');
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=profile'});
-  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#ch-profile-avatar img")?.src.includes("piece_white_rook.svg")===true && document.getElementById("ch-profile-avatar").dataset.frame === "teal"'));
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.querySelector("#ch-profile-avatar img")?.src.includes("/brand/royal-avatar-scholar.svg")===true && document.getElementById("ch-profile-avatar").dataset.frame === "teal"'));
   console.log('Original avatar and decorative frame persist across reload: passed');
   await evaluate('document.querySelector("[data-profile-link=progress]").click();true');
   await waitUntil(()=>evaluate('Array.from(document.querySelectorAll(".ch-stat")).some(tile=>tile.textContent.includes("Exercise XP") && Number(tile.querySelector("strong")?.textContent)>0)'));
@@ -371,8 +371,12 @@ try {
     await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-home")'));
     const overflow=await evaluate('document.documentElement.scrollWidth - document.documentElement.clientWidth');
     if(overflow>2)throw new Error('Home horizontal overflow at '+width+'px: '+overflow);
+    if(width===360||width===768){
+      const screenshot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+      await writeFile('artifacts/screens/arcade-home-'+width+'.png',Buffer.from(screenshot.data,'base64'));
+    }
   }
-  console.log('Home screen horizontal overflow checks: 320,360,412,768px passed');
+  console.log('Arcade home composition and horizontal overflow checks: 320,360,412,768px passed');
   await send('Emulation.setDeviceMetricsOverride',{width:360,height:800,deviceScaleFactor:1,mobile:true});
   await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=home'});
   await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-home")'));
