@@ -1,8 +1,9 @@
 import { matchKey, historyKey } from './backup.js';
 import { progressKey } from './progression.js';
+import { M4_SUPPORTER_KEY } from './monetization-policy.js';
 
 const STORAGE_NAME = 'global-chess';
-const STORAGE_KEYS = [matchKey, historyKey, progressKey];
+const STORAGE_KEYS = [matchKey, historyKey, progressKey, M4_SUPPORTER_KEY];
 
 function reportStorageError() {
   if (typeof window !== 'undefined') window.dispatchEvent(new Event('chess-storage-error'));
