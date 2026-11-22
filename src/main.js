@@ -197,10 +197,12 @@ async function toggleBoardView() {
 }
 
 function render(move) {
-  rematch.hidden = Boolean(online?.active) || !outcome(state.game);
-  displayClock();
   const {game, mode} = state;
-  lobby?.render({outcome:outcome(game),turn:game.turn(),mode,playerSide:state.playerSide,online:Boolean(online?.active),
+  const matchOutcome = outcome(game);
+  rematch.hidden = Boolean(online?.active) || !matchOutcome;
+  if (promotion.open && (state.paused || matchOutcome)) promotion.close();
+  displayClock();
+  lobby?.render({outcome:matchOutcome,turn:game.turn(),mode,playerSide:state.playerSide,online:Boolean(online?.active),
     started:online?.active ? online.match.turnStartedAt !== null : state.preset !== undefined || game.history().length > 0 || Boolean(state.clock)});
   const activeSquare = document.activeElement?.dataset.square;
   const targets = new Map((selected ? game.moves({square: selected, verbose: true}) : [])
@@ -251,11 +253,11 @@ function render(move) {
   playMoveEffect?.();
   if (activeSquare) board.querySelector('[data-square="' + activeSquare + '"]')?.focus({preventScroll:true});
   const storageNote = gameStorage.durable === false ? 'Session only · Progress will not be saved after closing' : '';
-  status.textContent = [state.paused ? 'Match paused · Open Pause screen to resume' : (outcome(game) ?? (mode === 'computer' && game.turn() !== state.playerSide ? 'Computer thinking…' :
+  status.textContent = [state.paused ? 'Match paused · Open Pause screen to resume' : (matchOutcome ?? (mode === 'computer' && game.turn() !== state.playerSide ? 'Computer thinking…' :
     (game.turn() === 'w' ? 'White' : 'Black') + ' to move' + (game.inCheck() ? ' · Check' : ''))), notice, storageNote].filter(Boolean).join(' · ');
-  const drawAllowed = !outcome(game) && hasAvailableDrawClaim(game);
+  const drawAllowed = !matchOutcome && hasAvailableDrawClaim(game);
   claim.hidden = state.paused || (online?.active && !online.canMove(game.turn())) ||
-    Boolean(outcome(game)) || (mode === 'computer' && game.turn() !== state.playerSide) ||
+    Boolean(matchOutcome) || (mode === 'computer' && game.turn() !== state.playerSide) ||
     !drawAllowed;
 }
 
@@ -321,7 +323,7 @@ function playComputer() {
 }
 
 async function selectSquare(square) {
-  if (importingBackup) return;
+  if (importingBackup || promotion.open) return;
   const {game, mode} = state;
   if (online?.active && !online.canMove(game.turn())) return;
   if (!square || state.paused || outcome(game) || (mode === 'computer' && game.turn() !== state.playerSide)) return;
@@ -336,11 +338,24 @@ async function selectSquare(square) {
   const options = game.moves({square:selected, verbose:true}).filter(move => move.to === square);
   if (!options.length) return;
   if (!options[0].promotion) return commit(options[0]);
+  const source = selected;
+  const previousPosition = game.fen();
+  const restoreBoardFocus = board.contains(document.activeElement);
+  for (const icon of promotion.querySelectorAll('.ch-promotion-icon')) {
+    icon.replaceChildren();
+    icon.classList.remove('piece-white', 'piece-black');
+    renderPieceArt(icon, {color:game.turn(), type:icon.parentElement.value}, names);
+  }
   promotion.returnValue = '';
   promotion.showModal();
   await new Promise(resolve => promotion.addEventListener('close', resolve, {once:true}));
   const chosen = options.find(move => move.promotion === promotion.returnValue);
-  if (chosen && state.game === game) commit(chosen);
+  const canCommit = chosen && state.game === game && game.fen() === previousPosition &&
+    !state.paused && !outcome(game);
+  if (canCommit) commit(chosen);
+  if (restoreBoardFocus && !board.hidden) {
+    board.querySelector('[data-square="' + (canCommit ? square : source) + '"]')?.focus({preventScroll:true});
+  }
 }
 // Pointer drag is presentation-only: legal move validation remains in selectSquare
 // and the chess.js state. Taps and keyboard operation continue to work.

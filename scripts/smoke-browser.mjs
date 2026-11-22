@@ -380,6 +380,13 @@ try {
   await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden === true && document.documentElement.classList.contains("ch-view-play")'));
   const landscapeOverflow=await evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth');
   if(landscapeOverflow>2)throw new Error('Play Hub overflows landscape viewport: '+landscapeOverflow);
+  await send('Emulation.setDeviceMetricsOverride',{width:1366,height:768,deviceScaleFactor:1,mobile:false});
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=home'});
+  await waitUntil(()=>evaluate('document.getElementById("launch")?.hidden && document.documentElement.classList.contains("ch-view-home")'));
+  if (await evaluate('document.documentElement.scrollWidth - document.documentElement.clientWidth') > 2) {
+    throw new Error('Home overflows the 1366px desktop viewport');
+  }
+  await send('Emulation.setDeviceMetricsOverride',{width:360,height:800,deviceScaleFactor:1,mobile:true});
   console.log('200% text size and landscape browser layout: passed');
 
   // Real browser Back must navigate the game shell without clearing saved moves.
@@ -390,6 +397,61 @@ try {
   await evaluate('history.back();true');
   await waitUntil(()=>evaluate('document.documentElement.classList.contains("ch-view-play")'));
   console.log('Browser Back returns from Learn to Play: passed');
+
+  // Reach a legal promotion position from the normal board, without injecting game state.
+  async function openPromotion() {
+    await evaluate(`(() => {
+      document.getElementById('local').click();
+      const cell = square => document.querySelector('#board [data-square=' + square + ']');
+      for (const [from,to] of [['a2','a4'],['h7','h5'],['a4','a5'],['h5','h4'],
+                              ['a5','a6'],['h4','h3'],['a6','b7'],['h3','g2']]) {
+        cell(from).click();
+        cell(to).click();
+      }
+      cell('b7').focus();
+      cell('b7').click();
+      cell('a8').click();
+    })()`);
+    await waitUntil(() => evaluate('document.querySelector("#promotion[open]")?.contains(document.activeElement)'));
+  }
+  async function pressKey(key, windowsVirtualKeyCode) {
+    await send('Input.dispatchKeyEvent',{
+      type:'keyDown',key,code:key,windowsVirtualKeyCode,
+      ...(key === 'Enter' ? {text:'\r'} : {}),
+    });
+    await send('Input.dispatchKeyEvent',{type:'keyUp',key,code:key,windowsVirtualKeyCode});
+  }
+  await openPromotion();
+  if (!await evaluate(`(() => {
+    const dialog = document.querySelector('#promotion[open]');
+    const heading = document.getElementById(dialog.getAttribute('aria-labelledby'));
+    const labels = Array.from(dialog.querySelectorAll('.ch-promotion-pieces button'), b => b.textContent.trim());
+    return heading.textContent === 'Promote pawn' && labels.join(',') === 'Queen,Rook,Bishop,Knight' &&
+      document.activeElement.value === 'q' && dialog.querySelectorAll('img').length === 4;
+  })()`)) throw new Error('Promotion name, focus or choices are incomplete');
+  await pressKey('Tab',9);
+  await waitUntil(() => evaluate('document.activeElement.value === "r"'));
+  const promotionShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile('artifacts/SCR-08-promotion.png',Buffer.from(promotionShot.data,'base64'));
+  await pressKey('Escape',27);
+  await waitUntil(() => evaluate('!document.querySelector("#promotion").open && document.activeElement.dataset.square === "b7" && document.activeElement.getAttribute("aria-label") === "b7, White Pawn"'));
+  for (const [value,piece] of [['q','Queen'],['r','Rook'],['b','Bishop'],['n','Knight']]) {
+    await openPromotion();
+    await evaluate(`document.querySelector('#promotion button[value=${value}]').focus()`);
+    await pressKey('Enter',13);
+    await waitUntil(async () => {
+      const actual = await evaluate(`({
+        open:document.querySelector('#promotion').open,
+        focus:document.activeElement.getAttribute('aria-label'),
+        landing:document.querySelector('#board [data-square=a8].last-destination')?.getAttribute('aria-label'),
+      })`);
+      if (!actual.open && actual.focus === 'a8, White ' + piece && actual.landing === actual.focus) return true;
+      throw new Error('Expected ' + piece + ' promotion: ' + JSON.stringify(actual));
+    });
+  }
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=match'});
+  await waitUntil(() => evaluate('document.querySelector("#board [data-square=a8].last-destination")?.getAttribute("aria-label") === "a8, White Knight"'));
+  console.log('Promotion keyboard navigation, Escape, all four choices and persisted underpromotion: passed');
 
   // Screen contracts SCR-00/01: denied browser storage must not crash the app,
   // and the UI may NOT claim a durable save for temporary guest play.

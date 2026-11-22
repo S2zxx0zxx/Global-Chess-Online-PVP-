@@ -14,7 +14,7 @@ This is an implementation/evidence ledger, **not** a claim that any contract is 
 | SCR-05 | New Match Setup | src/app-shell.js #ch-setup-dialog; src/main.js playerSide | PARTIAL | Full settings/undo/flip policy, persisted format defaults and mobile QA |
 | SCR-06 | VS Introduction | src/main.js showVersus; index.html #versus | PARTIAL | Real human/online labels, escape/skip and animation device QA |
 | SCR-07 | Gameplay Board | src/main.js; src/board3d.js; src/app-shell.css | PARTIAL | Drag/clock/3D device QA, check accessibility and corner cases |
-| SCR-08 | Promotion | index.html #promotion, src/main.js | PARTIAL | Trap focus, ESC validation, Android TalkBack and four-choice QA |
+| SCR-08 | Promotion | Named modal, explicit Cancel, active piece art and keyboard focus restoration. Chromium reached legal promotion from the starting position, tested Escape and all four piece choices, and reloaded the saved knight. | PARTIAL | Android TalkBack, touch and physical-device timing |
 | SCR-09 | In-Game Menu | src/screen-routes.js ?screen=menu | PARTIAL | Resign/undo terminal policy, destructive confirmations |
 | SCR-10 | Pause | src/screen-routes.js ?screen=pause | PARTIAL | Clock pause transition + Android background lifecycle |
 | SCR-11 | Match Result | src/screen-routes.js ?screen=result, src/lobby.js | PARTIAL | Time, once-only XP journal and complete endgame QA |
@@ -34,10 +34,12 @@ This is an implementation/evidence ledger, **not** a claim that any contract is 
 | SCR-25 | Data & Privacy | src/screen-routes.js ?screen=data | PARTIAL | User-approved privacy/terms links and data deletion policy |
 | SCR-26 | Import / Export | src/screen-routes.js ?screen=transfer; src/backup.js | PARTIAL | Import preview, backup validation UI, storage transaction atomicity |
 | SCR-27 | Error Recovery | src/screen-routes.js ?screen=recovery | PARTIAL | Corrupted DB safe-mode migration and full export rescue |
-| SCR-28 | PWA Update | src/screen-routes.js ?screen=update; vite.config.js | PARTIAL | Ready-worker activation after match, migration-aware reload |
+| SCR-28 | PWA Update | Chromium staged a worker, deferred it during an active game, applied it after resignation, and preserved history through a worker rollback. | PARTIAL | Deployed and installed-device updates with real successive application builds |
 | SCR-29 | About / Support / Licenses | src/screen-routes.js ?screen=about | PARTIAL | Version/build ID, support contact approval and final notices |
 
 ## Executed browser evidence
+
+- PR #18 adds a 1366px desktop Home overflow regression and a mobile promotion test that exercises real moves and keyboard input. The suite captures the focused promotion dialog as `SCR-08-promotion.png`.
 
 - [GitHub Actions #44947446464](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/44947446464): 42/42 unit tests, a production PWA build, real 2D move + Babylon 3D rendered-pixel smoke, 21 auxiliary-route screenshots, Black-side computer game, verified resignation/replay, persisted avatars/Crest pieces, browser Back, simulated blocked browser storage, 320/360/412/768 horizontal overflow checks, 200% text-scale check, landscape viewport, WASM and offline assets. Run applies to SHA `75b3c982b41b30a073426baa16c12987fff03ec9`.
 - Additional art modules: `public/brand/`, `public/brand/pieces/`; see `docs/V3_ARTWORK_PROVENANCE.md`.
