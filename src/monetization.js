@@ -118,7 +118,13 @@ export function createMonetizationController({
     }
   }
 
-  return {status,optIn,requestConsent,privacyOptions,rewarded};
+  async function onLaunch(){
+    // UMP consent information is refreshed at app start for users who opted
+    // in earlier; new/opted-out users are never silently contacted.
+    if(!status().enabled)return {ok:false,reason:'Ads not opted in or unavailable'};
+    return requestConsent();
+  }
+  return {status,optIn,requestConsent,onLaunch,privacyOptions,rewarded};
 }
 
 // Native Capacitor can expose plugins either through the registered JS proxy
