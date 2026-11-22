@@ -8,10 +8,10 @@
 
 ## Current control
 
-- **Tasks closed:** `GC-B01-T01` — `DONE` (source pin); `GC-B01-T02` — `DONE` (historical PR reconciliation only)
-- **One active task:** `GC-B01-T04` — `IN_REVIEW` (Product Owner explicitly approved scope v1.0; final exact-head CI/merge verification pending). T03 owner-skipped FOR PLANNING ONLY, not DONE.
-- **Next permitted action:** verify exact PR #24 head after owner signoff, then safely close GC-B01-T04. T03 remains blocked; T05 is NOT eligible.
-- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03 owner-skipped/unresolved; T04 owner-approved awaiting final verification; T05–T08 TODO)
+- **Tasks closed:** `GC-B01-T01` — `DONE` (source pin); `GC-B01-T02` — `DONE` (historical PR reconciliation); **`GC-B01-T04` — `DONE` (owner-approved scope lock only)**.
+- **One active task:** `NONE` — T04 scope acceptance approved and documented; final PR #24 exact-head checks/merge remain PR integration work. T03 owner-skipped FOR PLANNING ONLY, not DONE.
+- **Next permitted action:** verify PR #24 final closure SHA and squash-merge docs only, then `RESUME GC-B01-T03` or request a new explicit T05 planning-only sequence exception. No automatic T05 start.
+- **Batch status:** `GC-B01-GATE = NOT_ELIGIBLE` (T03 unresolved; T04 DONE for scope only; T05–T08 TODO)
 - **No change authority inferred:** no merges, force pushes, production changes, billing or other work approved by this document.
 
 ## Task closure: GC-B01-T01
@@ -173,8 +173,8 @@ owner_sequence_exception:
   source: "User direct command: Skip kro 3 ko ispe kaam start kro START GC-B01-T04"
 canonical_pre_t04_sha: 45ec74c002d7ffb0f0f5252dd6d03db3f6569526
 task_branch: docs/gc-b01-t04-scope-lock
-task_status: IN_REVIEW_POST_OWNER_APPROVAL
-task_blocker: Exact-head PR #24 CI and safe documentation-only merge verification
+task_status: DONE_OWNER_APPROVED_SCOPE_LOCK_ONLY
+task_blocker: NONE_FOR_SCOPE_CLASSIFICATION__BATCH_T03_STILL_BLOCKED
 doc_evidence:
   - docs/execution/GC-B01-T04_SCOPE_LOCK_2026-11-22.md
   - docs/execution/GC-B01-T04_PRD_SCOPE_MATRIX.csv
@@ -194,7 +194,7 @@ owner_scope_approval_command: "APPROVE GC-B01-T04-SCOPE-v1.0"
 owner_scope_approval_recorded_at_utc: "2026-11-22T14:28:39Z"
 owner_scope_approval_scope: M0_M5_release_boundaries_and_16_PRD_classification_only
 optional_ads_activation_approved: false
-next_permission: verify_exact_head_CI_then_close_T04
+next_permission: verify_final_PR24_CI_then_merge_docs__T05_NOT_AUTHORIZED
 t03_live_status:
   task: GC-B01-T03
   status: BLOCKED_EXTERNAL_OWNER_SKIPPED_FOR_PLANNING
@@ -213,9 +213,11 @@ product_code_changes_in_t04: false
 rollback: Close draft PR and delete only T04 branch before merge; future doc revert PR after merge
 ```
 
-**Status semantics:** T04 scope classification is **APPROVED by the user**, but task closure needs final exact-head CI and reviewed merge. T03 remains unresolved; B01-GATE remains NO_GO. PRD reference is the original user-owned `Chess_FINAL_Master_Blueprint_v3_2026-11-18.md`, not unapproved imitation UI.
+**Status semantics:** T04 scope-lock task is **DONE after explicit owner approval**. The PR #24 merge is separately verified before integration completion. T03 remains unresolved and B01-GATE is NO-GO; T05 not started. PRD reference is the original user-owned `Chess_FINAL_Master_Blueprint_v3_2026-11-18.md`, not unapproved imitation UI.
 
 **Scope evidence:** [`GC-B01-T04_SCOPE_LOCK_2026-11-22.md`](GC-B01-T04_SCOPE_LOCK_2026-11-22.md); [`GC-B01-T04_PRD_SCOPE_MATRIX.csv`](GC-B01-T04_PRD_SCOPE_MATRIX.csv).
+
+**Closure evidence:** Product Owner command `APPROVE GC-B01-T04-SCOPE-v1.0` recorded 2026-11-22T14:28:39Z. CI on signed scope before ledger closure [run #45033223532](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45033223532) SUCCESS at `e2fdddd5cc4895cede1ce36d88633fa5f98f51e8`. Final updated documentation SHA requires fresh CI and PR #24 squash-merge check. Closure does not imply active `main` protection or release readiness.
 
 ### GC-B01-T04 scope signoff — explicit owner command
 
@@ -232,7 +234,7 @@ rollback: Close draft PR and delete only T04 branch before merge; future doc rev
 | `GC-B01-T01` | DONE | Exact-SHA baseline in this PR |
 | `GC-B01-T02` | DONE | `GC-B01-T02_PR18_RECONCILIATION_2026-11-22.md`; blocked features remain open under their own task IDs |
 | `GC-B01-T03` | BLOCKED_EXTERNAL (OWNER-SKIPPED FOR T04) | PR #23 merged, exact-head CI attempt 2 succeeded; only canonical protected; `main` unprotected and owner signoff pending; not DONE |
-| `GC-B01-T04` | IN_REVIEW (owner-approved, post-signoff checks pending) | 16/16 PRDs and M0–M5 scope explicitly approved via `APPROVE GC-B01-T04-SCOPE-v1.0`; verify final PR #24 CI and docs merge |
+| `GC-B01-T04` | DONE (SCOPE LOCK ONLY) | Explicit owner approval command; 16/16 PRDs, SCR-00–29, 12 deferrals and M0–M5 scope signed in PR #24; final CI/merge tracked in GitHub PR |
 | `GC-B01-T05` | TODO | No action started |
 | `GC-B01-T06` | TODO | No action started |
 | `GC-B01-T07` | TODO | No action started |
@@ -242,7 +244,7 @@ rollback: Close draft PR and delete only T04 branch before merge; future doc rev
 ## Resume procedure
 
 1. Issue `STATUS GC-B01-T01` to verify source evidence if audit freshness is in doubt.
-2. Owner approval `APPROVE GC-B01-T04-SCOPE-v1.0` received; verify exact-head PR #24 CI and safe docs-only merge. T03 remains unresolved, and T05 is not unlocked.
+2. `GC-B01-T04` scope lock is owner-approved and DONE. Verify its final documentation SHA/merge on PR #24; T03 remains unresolved and T05 is not automatically unlocked.
 3. Re-fetch GitHub heads before edits, use exact SHA proofs and preserve all historic game code.
 4. Never mark subsequent tasks DONE by copying this ledger status.
 
