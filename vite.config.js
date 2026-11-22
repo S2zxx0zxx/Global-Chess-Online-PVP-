@@ -2,7 +2,19 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { defineConfig } from 'vite';
 
+// Preview serves the same global headers as Workers static assets so the browser
+// smoke test also exercises the production CSP.
+const headerLines = readFileSync(new URL('public/_headers', import.meta.url), 'utf8').trimEnd().split(/\r?\n/);
+if (headerLines[0] !== '/*' || headerLines.slice(1).some(line => !/^\s+[\w-]+:/.test(line))) {
+  throw new Error('Expected one global static asset header rule');
+}
+const previewHeaders = Object.fromEntries(headerLines.slice(1).map(line => {
+  const colon = line.indexOf(':');
+  return [line.slice(0, colon).trim(), line.slice(colon + 1).trim()];
+}));
+
 export default defineConfig({
+  preview: { headers: previewHeaders },
   plugins: [{
     name: 'offline-game-shell',
     apply: 'build',

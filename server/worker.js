@@ -1,7 +1,11 @@
 import { applyDrawClaim, applyMove, applyResign, advanceClock, createMatch, startMatch } from './match.js';
 
 const json = (body, status = 200) => Response.json(body, {
-  status, headers: { 'Cache-Control': 'no-store' },
+  status, headers: {
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'no-referrer',
+  },
 });
 const token = () => crypto.randomUUID();
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;

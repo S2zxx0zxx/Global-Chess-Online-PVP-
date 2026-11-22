@@ -39,6 +39,11 @@ let ws;
 
 try {
   await waitUntil(async () => (await fetch('http://127.0.0.1:4173/')).ok);
+  const headers = (await fetch('http://127.0.0.1:4173/')).headers;
+  if (!headers.get('content-security-policy')?.includes("frame-ancestors 'none'") ||
+      headers.get('x-content-type-options') !== 'nosniff') {
+    throw new Error('Production preview did not serve the expected static asset policy');
+  }
   chrome = spawn(browserBinary(), [
     '--headless=new', '--no-sandbox', '--no-first-run', '--disable-extensions',
     '--disable-dev-shm-usage', '--enable-unsafe-swiftshader', '--use-gl=angle',
@@ -91,7 +96,9 @@ try {
     });
   }
   async function evaluate(expression) {
-    const result = await send('Runtime.evaluate', {expression, returnByValue:true, awaitPromise:true});
+    const result = await send('Runtime.evaluate', {
+      expression, returnByValue:true, awaitPromise:true, allowUnsafeEvalBlockedByCSP:false,
+    });
     if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? result.exceptionDetails.text);
     return result.result?.value;
   }
@@ -101,6 +108,18 @@ try {
   await send('Page.navigate', {url:'http://127.0.0.1:4173/'});
   await waitUntil(() => evaluate('document.readyState === "complete" && !!document.getElementById("local")'));
   await waitUntil(() => evaluate('document.getElementById("launch").hidden === true'));
+  await evaluate(`(async () => {
+    const response = await fetch('/solver/cha.wasm.gz');
+    if (!response.ok) throw new Error('Browser mating solver missing');
+    let bytes = await response.arrayBuffer();
+    const magic = new Uint8Array(bytes, 0, 2);
+    if (magic[0] === 31 && magic[1] === 139) {
+      bytes = await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+    }
+    await WebAssembly.compile(bytes);
+    return true;
+  })()`);
+  console.log('Mating solver WebAssembly compiles under the production CSP: passed');
   await mkdir('artifacts',{recursive:true});
   if(await evaluate('document.querySelector("#welcome-dialog[open]") !== null')){
     const welcomeShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
