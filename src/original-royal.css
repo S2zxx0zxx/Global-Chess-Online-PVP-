@@ -1,125 +1,371 @@
-/* Global Chess original royal design layer.
- * Authored for Global Chess. No third-party APK textures, UI atlases, fonts,
- * visual layouts, audio, or proprietary code are included here.
- * Keep chess rules, network and storage independent from presentation.
+/* Global Chess Royal Identity v2
+ * Independent game presentation layer. All illustrated slots are project-authored SVGs
+ * in public/brand/royal-*.svg. The board rules and persistence remain untouched.
+ * This stylesheet MUST load after home.css, profile.css, and screen-routes.css.
  */
 :root {
-  --ch-color-brand-espresso:#07191a;
-  --ch-color-brand-wine:#11272a;
-  --ch-color-brand-mahogany:#18383a;
-  --ch-color-brand-walnut:#294f4c;
-  --ch-color-brand-gold:#e9ca86;
-  --ch-color-brand-goldStrong:#d9ad58;
-  --ch-color-brand-cream:#fff4dc;
-  --ch-color-brand-sand:#c7d3c5;
-  --ch-color-brand-teal:#237369;
-  --ch-color-a11y-focus:#79e6dc;
-  --ch-royal-border:rgba(241,209,141,.42);
-  --ch-royal-inner:rgba(255,249,222,.12);
-  --ch-royal-shadow:0 14px 46px rgba(1,8,10,.52);
-  --ch-royal-surface:linear-gradient(165deg,rgba(21,49,50,.94),rgba(6,23,28,.97));
+  --ch-color-brand-espresso: #071a1c;
+  --ch-color-brand-wine: #112d30;
+  --ch-color-brand-mahogany: #204649;
+  --ch-color-brand-walnut: #3c655f;
+  --ch-color-brand-gold: #f1d28e;
+  --ch-color-brand-goldStrong: #dfb766;
+  --ch-color-brand-cream: #fff6e1;
+  --ch-color-brand-sand: #d8ddd0;
+  --ch-color-brand-teal: #25766d;
+  --ch-color-a11y-focus: #7df1df;
+  --ch-card-stroke: rgba(237, 207, 146, .46);
+  --ch-highlight: linear-gradient(135deg,#fff0bf 0%,#e3b86d 55%,#ae7538 100%);
+  --ch-royal-border: rgba(238,211,153,.48);
+  --ch-royal-muted: #d3dccb;
+  --ch-royal-surface: linear-gradient(160deg,rgba(30,67,69,.96),rgba(8,26,31,.97));
+  --ch-royal-surface-dark: linear-gradient(155deg,rgba(15,46,48,.96),rgba(5,21,27,.99));
+  --ch-royal-gloss: inset 0 1px 0 rgba(255,250,226,.13);
+  --ch-royal-shadow: 0 16px 38px rgba(0,6,10,.43);
 }
+html.ch-shell-ready {background:#06191d;color-scheme:dark}
 html.ch-shell-ready body {
-  background-color:#061719;
+  min-height:100dvh;
+  background-color:#06191d;
   background-image:
-    linear-gradient(180deg,rgba(4,14,17,.30),rgba(5,18,22,.89) 46%,#071516 100%),
+    linear-gradient(180deg,rgba(4,15,19,.16),rgba(5,19,23,.91) 54%,#06191d),
     url('/brand/original-royal-hall.svg');
-  background-position:center top,center top;
   background-repeat:no-repeat;
-  background-size:cover,min(100vw,820px) auto;
-  color:var(--ch-color-brand-cream);
+  background-size:cover,min(100vw,850px) auto;
+  background-position:center top;
+  color:#fff4de;
 }
-.ch-shell-ready .masthead .brand {
-  text-shadow:0 1px 12px rgba(240,203,128,.16);
+.ch-shell-ready main {
+  padding-top:calc(12px + env(safe-area-inset-top,0px));
+  padding-inline:max(12px,env(safe-area-inset-left,0px));
+  padding-bottom:calc(96px + env(safe-area-inset-bottom,0px));
+}
+.ch-shell-ready .masthead {
+  border:0;
+  background:linear-gradient(90deg,rgba(4,25,29,.3),rgba(11,43,43,.18));
+  border-radius:16px;
 }
 .ch-shell-ready .masthead .brand strong {
-  color:#ffe1a0;
-  letter-spacing:.12em;
+  color:#fff0bc;
+  letter-spacing:.095em;
+  text-shadow:0 2px 12px rgba(228,182,94,.22);
+}
+.ch-shell-ready .masthead button {
+  border:1px solid var(--ch-royal-border);
+  border-radius:12px;
+  background:var(--ch-royal-surface);
+  color:#fff2ce;
 }
 .ch-shell-ready .lobby,
 .ch-shell-ready .ch-screen,
-.ch-shell-ready .layout>aside {
-  border:1px solid var(--ch-royal-border);
-  background:var(--ch-royal-surface);
-  box-shadow:inset 0 1px 0 var(--ch-royal-inner),var(--ch-royal-shadow);
-  backdrop-filter:blur(6px);
-}
-.ch-shell-ready .lobby,
-.ch-shell-ready .ch-screen {
-  border-radius:24px;
-}
-.ch-shell-ready .ch-hero-mark {
-  filter:drop-shadow(0 6px 14px rgba(226,192,118,.28));
-}
-.ch-shell-ready .ch-eyebrow,
-.ch-shell-ready .ch-hero h2 {
-  color:#f6db9f;
-}
-.ch-shell-ready .mode-cards button,
-.ch-shell-ready .ch-play-hub button,
-.ch-shell-ready .ch-learn-hub button {
-  position:relative;
-  overflow:hidden;
-  border-color:rgba(234,201,137,.42);
-  background-color:rgba(15,42,46,.82);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 7px 20px rgba(0,7,8,.22);
-}
-.ch-shell-ready .mode-cards button::after {
-  content:'';
-  position:absolute;
-  inset:auto 12px 0;
-  height:2px;
-  background:linear-gradient(90deg,transparent,rgba(255,216,139,.74),transparent);
-  pointer-events:none;
-}
-.ch-shell-ready .mode-cards button:hover,
-.ch-shell-ready .mode-cards button:focus-visible {
-  border-color:#f9d998;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 9px 24px rgba(0,9,11,.38);
-}
-.ch-shell-ready .board {
-  border-color:#8f7041;
-  box-shadow:0 0 0 2px rgba(244,216,155,.42),0 0 0 7px rgba(8,33,35,.85),0 17px 35px rgba(0,8,11,.48);
-}
-.ch-shell-ready .board button:focus-visible,
-.ch-shell-ready button:focus-visible,
-.ch-shell-ready a:focus-visible,
-.ch-shell-ready select:focus-visible {
-  outline:3px solid var(--ch-color-a11y-focus);
-  outline-offset:2px;
-}
-.ch-shell-ready button,
-.ch-shell-ready select,
-.ch-shell-ready a {
-  -webkit-tap-highlight-color:transparent;
-}
-.ch-shell-ready dialog {
+.ch-shell-ready .layout>aside,
+.ch-shell-ready .ch-extra-screen {
   border:1px solid var(--ch-royal-border);
   background:var(--ch-royal-surface);
   color:var(--ch-color-brand-cream);
-  box-shadow:var(--ch-royal-shadow);
+  box-shadow:var(--ch-royal-gloss),var(--ch-royal-shadow);
+  backdrop-filter:blur(5px);
+  -webkit-backdrop-filter:blur(5px);
 }
-@media (hover:none) and (pointer:coarse) {
-  .ch-shell-ready .mode-cards button,
-  .ch-shell-ready .masthead button {
-    min-height:48px;
+.ch-shell-ready .ch-screen,.ch-shell-ready .ch-extra-screen {border-radius:22px}
+.ch-shell-ready #lobby {
+  background:
+    radial-gradient(circle at 50% 2%,rgba(183,155,91,.15),transparent 50%),
+    radial-gradient(circle at 2% 100%,rgba(57,141,117,.14),transparent 52%),
+    var(--ch-royal-surface-dark);
+  border:1px solid var(--ch-royal-border);
+  border-radius:23px;
+  padding:clamp(12px,3vw,24px);
+  box-shadow:var(--ch-royal-gloss),var(--ch-royal-shadow);
+  max-width:620px;
+}
+.ch-shell-ready #lobby .ch-hero {
+  position:relative;
+  border:1px solid rgba(246,223,169,.29);
+  border-radius:20px;
+  min-height:clamp(170px,36vw,250px);
+  background:
+    radial-gradient(circle at center 36%,rgba(243,193,103,.14),transparent 49%),
+    linear-gradient(180deg,#143537c4,#091e23ea);
+  overflow:hidden;
+}
+.ch-shell-ready #lobby .ch-hero::before {
+  content:'';
+  position:absolute;
+  inset:9px;
+  border:1px solid rgba(226,196,130,.16);
+  border-radius:14px;
+  pointer-events:none;
+}
+.ch-shell-ready #lobby .ch-brand-art {
+  max-width:120px;
+  filter:drop-shadow(0 4px 16px rgba(247,213,153,.34));
+}
+.ch-shell-ready #lobby #lobby-title,
+.ch-shell-ready #ch-profile-title,
+.ch-shell-ready .ch-extra-body>h1,
+.ch-shell-ready .ch-screen h1 {
+  color:#fff5db;
+  text-shadow:0 2px 18px rgba(0,3,5,.4);
+}
+.ch-shell-ready #lobby #guest-greeting,
+.ch-shell-ready .ch-support,
+.ch-shell-ready .ch-feature-card small,
+.ch-shell-ready .ch-profile-identity small,
+.ch-shell-ready .ch-profile-result dt {color:#dbe2d3}
+.ch-shell-ready #lobby .mode-cards {gap:10px}
+.ch-shell-ready #lobby .mode-cards button {
+  --royal-mode-icon:url('/brand/royal-classic.svg');
+  position:relative;
+  min-height:112px;
+  padding:14px 15px;
+  border:1px solid var(--ch-royal-border);
+  border-radius:16px;
+  background:linear-gradient(125deg,#225956,#0d292e 83%);
+  color:#fff5df;
+  box-shadow:inset 0 2px 0 rgba(255,236,184,.15),0 6px 12px #00101399;
+  text-shadow:0 1px 4px #06181b;
+}
+.ch-shell-ready #lobby #lobby-quick {--royal-mode-icon:url('/brand/royal-rapid.svg');background:linear-gradient(135deg,#705135,#283a39)}
+.ch-shell-ready #lobby #lobby-computer {--royal-mode-icon:url('/brand/royal-computer.svg');background:linear-gradient(135deg,#3a5e73,#182f41)}
+.ch-shell-ready #lobby #lobby-online {--royal-mode-icon:url('/brand/royal-online.svg');background:linear-gradient(135deg,#346c5f,#133e37)}
+.ch-shell-ready #lobby .mode-cards button::after {
+  content:'';
+  position:absolute;z-index:0;top:4px;right:3px;bottom:4px;
+  width:44%;height:auto;opacity:.68;
+  background:var(--royal-mode-icon) center/contain no-repeat;
+  pointer-events:none;
+}
+.ch-shell-ready #lobby .mode-cards strong,
+.ch-shell-ready #lobby .mode-cards small {
+  position:relative;z-index:1;color:#fff4db;text-shadow:0 2px 8px #051214;
+}
+.ch-shell-ready #lobby #lobby-resume {
+  border-color:#e5c58f;
+  background:var(--ch-highlight);
+  color:#102d2e;
+}
+.ch-shell-ready #lobby .ch-home-shortcuts {
+  background:linear-gradient(120deg,#18393ce8,#0a2228e8);
+  border:1px solid var(--ch-royal-border);
+}
+.ch-shell-ready #lobby .ch-home-shortcut {
+  --shortcut-piece:url('/brand/royal-daily.svg');
+  background:linear-gradient(115deg,#153639,#0b252bcf);
+  border:1px solid rgba(239,207,145,.34);
+  border-radius:13px;
+  color:#f9ecd3;
+}
+.ch-shell-ready #lobby .ch-home-shortcut[data-shortcut=puzzles]{--shortcut-piece:url('/brand/royal-puzzles.svg')}
+.ch-shell-ready #lobby .ch-home-shortcut[data-shortcut=achievements]{--shortcut-piece:url('/brand/royal-achievement-win.svg')}
+.ch-shell-ready #lobby .ch-home-shortcut[data-shortcut=appearance]{--shortcut-piece:url('/brand/royal-theme-jade.svg')}
+.ch-shell-ready .ch-mode-card {
+  --royal-mode-icon:url('/brand/royal-classic.svg');
+  border:1px solid var(--ch-royal-border);
+  border-radius:16px;
+  background:linear-gradient(130deg,#24534d,#0a272e);
+  color:#fff4de;
+}
+.ch-shell-ready .ch-mode-card[data-setup=quick] {--royal-mode-icon:url('/brand/royal-rapid.svg')}
+.ch-shell-ready .ch-mode-card[data-setup=computer] {--royal-mode-icon:url('/brand/royal-computer.svg')}
+.ch-shell-ready .ch-mode-card[data-setup=local] {--royal-mode-icon:url('/brand/royal-local.svg')}
+.ch-shell-ready .ch-mode-card::after {
+  background:var(--royal-mode-icon) right center/contain no-repeat;
+  opacity:.74;inset:6px 5px 6px auto;width:47%;height:auto;pointer-events:none;
+}
+.ch-shell-ready .ch-mode-card strong,.ch-shell-ready .ch-mode-card small{z-index:1;position:relative;max-width:70%;color:#fff3dc}
+.ch-shell-ready .ch-learn-tile {
+  border:1px solid var(--ch-royal-border);
+  background:linear-gradient(145deg,#254b48,#09252d);
+  color:#ffefd4;
+}
+.ch-shell-ready #ch-open-lessons{--learn-art:url('/brand/royal-lessons.svg')}
+.ch-shell-ready #ch-open-puzzles{--learn-art:url('/brand/royal-puzzles.svg')}
+.ch-shell-ready #ch-open-daily{--learn-art:url('/brand/royal-daily.svg')}
+.ch-shell-ready .ch-learn-tile small{color:#e3e5d7}
+.ch-shell-ready #ch-profile-hub {
+  background:radial-gradient(circle at 50% 0,rgba(95,150,119,.22),transparent 51%),var(--ch-royal-surface-dark);
+}
+.ch-shell-ready #ch-profile-hub .ch-profile-card {
+  border:1px solid var(--ch-royal-border);
+  background:linear-gradient(130deg,#295651,#0b282e);
+  box-shadow:var(--ch-royal-gloss),0 8px 24px #06181a99;
+}
+.ch-shell-ready #ch-profile-hub .ch-profile-tabs {background:#0b292d}
+.ch-shell-ready #ch-profile-hub .ch-profile-tabs [aria-current=page] {background:var(--ch-highlight);color:#143031}
+.ch-shell-ready #ch-profile-hub .ch-profile-equipment>div,
+.ch-shell-ready #ch-profile-hub .ch-profile-result {
+  border:1px solid rgba(230,198,137,.39);
+  background:var(--ch-royal-surface-dark);
+}
+.ch-shell-ready #ch-profile-hub .ch-profile-actions button {
+  --hub-shade:#275851;--hub-edge:#d6ba85;
+  border:1px solid rgba(230,200,148,.47);
+  background:
+    var(--hub-art) right 12px top 9px/42px no-repeat,
+    linear-gradient(140deg,#234c48,#0b2831);
+}
+.ch-shell-ready #ch-profile-hub [data-profile-link=progress] {--hub-art:url('/brand/royal-rank-gold.svg')}
+.ch-shell-ready #ch-profile-hub [data-profile-link=achievements] {--hub-art:url('/brand/royal-achievement-win.svg')}
+.ch-shell-ready #ch-profile-hub [data-profile-link=history] {--hub-art:url('/brand/royal-history.svg')}
+.ch-shell-ready #ch-profile-hub [data-profile-link=avatars] {--hub-art:url('/brand/royal-avatar-guardian.svg')}
+.ch-shell-ready #ch-profile-hub [data-profile-link=appearance] {--hub-art:url('/brand/royal-theme-jade.svg')}
+.ch-shell-ready #ch-profile-hub [data-profile-link=settings] {--hub-art:url('/brand/royal-settings.svg')}
+.ch-shell-ready #ch-profile-hub [data-profile-link=data] {--hub-art:url('/brand/royal-privacy.svg')}
+.ch-shell-ready .ch-tab-bar {
+  border-top:1px solid var(--ch-royal-border);
+  background:linear-gradient(180deg,rgba(20,57,55,.98),#061a1f);
+  box-shadow:0 -9px 22px #0613179e;
+}
+.ch-shell-ready .ch-tab[aria-current=page] {
+  background:linear-gradient(160deg,#315d50,#143c39);
+  box-shadow:inset 0 1px 0 rgba(255,239,197,.2);
+  color:#ffedbd;
+}
+.ch-shell-ready .ch-tab[data-ch-view=home] .ch-tab-icon {background-image:url('/brand/royal-nav-home.svg')}
+.ch-shell-ready .ch-tab[data-ch-view=play] .ch-tab-icon {background-image:url('/brand/royal-nav-play.svg')}
+.ch-shell-ready .ch-tab[data-ch-view=learn] .ch-tab-icon {background-image:url('/brand/royal-nav-learn.svg')}
+.ch-shell-ready .ch-tab[data-ch-view=profile] .ch-tab-icon {background-image:url('/brand/royal-nav-profile.svg')}
+.ch-shell-ready.ch-view-match .player-panel {
+  border:1px solid var(--ch-royal-border);
+  background:var(--ch-royal-surface-dark);
+  color:#fff1d3;
+}
+.ch-shell-ready.ch-view-match .active-player {
+  border-color:#f5d68d;
+  box-shadow:inset 0 0 0 1px rgba(239,205,133,.23),0 0 14px rgba(241,211,149,.2);
+}
+.ch-shell-ready.ch-view-match #board {
+  border-radius:10px;
+  box-shadow:0 0 0 1px #e2c990a8,0 0 0 5px #0d3232,0 12px 32px #010a0ecf;
+}
+.ch-shell-ready.ch-view-match #board .target::after {background:rgba(110,220,191,.5);border-color:#135c54}
+.ch-shell-ready.ch-view-match .ch-match-dock {
+  border:1px solid var(--ch-royal-border);
+  background:var(--ch-royal-surface-dark);
+  color:#fff4e0;
+}
+.ch-shell-ready.ch-view-match #clocks {color:#ffe4ab}
+.ch-shell-ready.ch-view-match #status {color:#f7e6c9}
+.ch-shell-ready .ch-match-toolbar button,
+.ch-shell-ready .ch-match-dock button {border-color:var(--ch-royal-border);background:#20514b;color:#fff1d2}
+.ch-shell-ready .ch-first-move-tip {background:linear-gradient(125deg,#245d53,#153635);border-color:#efcf91}
+.ch-shell-ready .ch-extra-screen,
+.ch-shell-ready .ch-setup-dialog,
+.ch-shell-ready dialog:not(.ch-setup-dialog),
+.ch-shell-ready #learn-dialog,
+.ch-shell-ready #welcome-dialog {
+  border:1px solid var(--ch-royal-border);
+  background:var(--ch-royal-surface-dark);
+  box-shadow:var(--ch-royal-gloss),0 22px 54px #000a;
+  color:#fff3d8;
+}
+.ch-shell-ready #welcome-dialog {
+  background:
+    url('/brand/royal-welcome.svg') center 13px/80px no-repeat,
+    var(--ch-royal-surface-dark);
+}
+.ch-shell-ready #welcome-dialog img {filter:drop-shadow(0 3px 12px #eac78266)}
+.ch-shell-ready .ch-setup-dialog select,
+.ch-shell-ready #learn-dialog select,
+.ch-shell-ready .ch-history-filter {
+  border:1px solid var(--ch-royal-border);
+  background:#0d3135;
+  color:#fff3db;
+}
+.ch-shell-ready .ch-action,
+.ch-shell-ready .ch-feature-card,
+.ch-shell-ready .ch-theme-card,
+.ch-shell-ready .ch-piece-card,
+.ch-shell-ready .ch-setting-row,
+.ch-shell-ready .ch-history-row,
+.ch-shell-ready .ch-achievement,
+.ch-shell-ready .ch-stat,
+.ch-shell-ready .ch-inline-notice {
+  border:1px solid rgba(235,204,148,.4);
+  background:var(--ch-royal-surface-dark);
+  box-shadow:var(--ch-royal-gloss);
+  color:#fff2d7;
+}
+.ch-shell-ready .ch-action.primary,
+.ch-shell-ready .ch-dialog-actions button:last-child {
+  border:1px solid #f2d797;
+  background:var(--ch-highlight);
+  color:#143030;
+  font-weight:800;
+}
+.ch-shell-ready .ch-achievement.ch-unlocked {border-color:#f2d493;box-shadow:0 0 15px #e7bb5a30}
+.ch-shell-ready .ch-achievement-symbol {background:#25564f;color:#f6d18a}
+.ch-shell-ready .ch-stat strong,
+.ch-shell-ready .ch-profile-result dd {color:#f4d48d}
+.ch-shell-ready .ch-setting-row input {accent-color:#d4b46e}
+.ch-shell-ready .ch-setup-dialog::backdrop,
+.ch-shell-ready #welcome-dialog::backdrop {background:rgba(2,9,13,.79);backdrop-filter:blur(5px)}
+.ch-shell-ready #launch {
+  background:
+    linear-gradient(180deg,rgba(2,10,15,.52),rgba(3,17,23,.93)),
+    url('/brand/original-royal-hall.svg') center/cover no-repeat;
+  color:#ffebbb;
+}
+.ch-shell-ready #versus {
+  border:1px solid #e5c486;
+  background:
+    linear-gradient(130deg,#153e42,#071e24);
+  color:#fff4d9;
+}
+.ch-shell-ready #versus strong {color:#ffe2a1}
+.ch-shell-ready :is(button,a,select,input):focus-visible,
+.ch-shell-ready .ch-theme-card:focus-visible {
+  outline:3px solid var(--ch-color-a11y-focus);
+  outline-offset:3px;
+}
+.ch-shell-ready .board button:focus-visible {outline-offset:-3px}
+.ch-shell-ready :is(button,select,input) {max-width:100%;-webkit-tap-highlight-color:transparent}
+.ch-shell-ready button:disabled {cursor:not-allowed;opacity:.54}
+.ch-shell-ready .ch-action:not(:disabled):active,
+.ch-shell-ready .mode-cards button:not(:disabled):active {transform:translateY(1px)}
+@media(max-width:359px) {
+  .ch-shell-ready #lobby {padding:11px;border-radius:15px}
+  .ch-shell-ready #lobby .mode-cards {grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .ch-shell-ready #lobby .mode-cards button {padding:11px 8px;min-height:92px}
+  .ch-shell-ready #lobby .mode-cards strong {font-size:.97rem}
+  .ch-shell-ready #lobby .mode-cards small {font-size:.68rem}
+  .ch-shell-ready .ch-feature-grid,.ch-shell-ready .ch-profile-actions {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ch-shell-ready .ch-review-controls {gap:5px}
+  .ch-shell-ready .ch-tab {font-size:.64rem}
+}
+@media(min-width:768px) {
+  .ch-shell-ready #lobby {max-width:680px}
+  .ch-shell-ready .ch-tab-bar {border-radius:16px 16px 0 0}
+}
+@media(hover:hover) {
+  .ch-shell-ready :is(.ch-feature-card,.ch-mode-card,.ch-theme-card,.ch-piece-card,.ch-home-shortcut):hover {
+    border-color:#ffe3a5;
+    box-shadow:inset 0 1px 0 #fff7cf33,0 10px 24px #0006;
   }
 }
-@media (max-width:359px) {
-  .ch-shell-ready .lobby,
-  .ch-shell-ready .ch-screen {border-radius:18px}
-  .ch-shell-ready .mode-cards button {min-height:76px}
-}
-@media (prefers-reduced-motion:reduce) {
-  .ch-shell-ready .mode-cards button,
-  .ch-shell-ready .ch-play-hub button {
-    animation:none!important;
-    transition:none!important;
+@media(prefers-reduced-motion:reduce) {
+  .ch-shell-ready *, .ch-shell-ready *::before,.ch-shell-ready *::after {
+    animation-duration:.01ms!important;
+    transition-duration:.01ms!important;
+    scroll-behavior:auto!important;
   }
 }
-@media (prefers-contrast:more) {
+@media(prefers-contrast:more) {
   .ch-shell-ready .lobby,
   .ch-shell-ready .ch-screen,
-  .ch-shell-ready .layout>aside {border-color:#ffdf99;background:#07191a}
-  .ch-shell-ready button:focus-visible {outline-width:4px}
+  .ch-shell-ready .ch-extra-screen,
+  .ch-shell-ready .ch-feature-card,
+  .ch-shell-ready .ch-action,
+  .ch-shell-ready .ch-setting-row {
+    background:#07191e;
+    border-color:#ffe9ad;
+    backdrop-filter:none;
+  }
+  .ch-shell-ready :is(button,a,input,select):focus-visible {outline-width:4px}
+}
+@media(forced-colors:active) {
+  .ch-shell-ready .lobby,
+  .ch-shell-ready .ch-screen,
+  .ch-shell-ready .ch-extra-screen {forced-color-adjust:auto}
 }
