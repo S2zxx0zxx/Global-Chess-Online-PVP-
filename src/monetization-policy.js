@@ -22,10 +22,13 @@ export function resolveMonetizationConfig(env={},platform='web'){
      env.VITE_CHESS_ADS_PRIVACY_APPROVED!=='true'){
     return {mode:'disabled',reason:'Ad privacy, audience and policy approvals have not all been recorded'};
   }
+  const privacyUrl=env.VITE_CHESS_AD_PRIVACY_URL??'';
+  if(!/^https:\/\/[^\\s/?#]+\\.[^\\s/?#]+\\S*$/.test(privacyUrl))
+    return {mode:'disabled',reason:'Approved HTTPS advertising privacy-policy link is missing'};
   const rewardedId=env.VITE_CHESS_ADS_REWARDED_ID??'';
   if(!liveUnitPattern.test(rewardedId)||rewardedId===M4_TEST_REWARDED_ID)
     return {mode:'disabled',reason:'Approved real rewarded ad unit is missing'};
-  return {mode:'live',rewardedId,reason:'Native rewarded ads may be offered after UMP review'};
+  return {mode:'live',rewardedId,privacyUrl,reason:'Native rewarded ads may be offered after UMP review'};
 }
 
 export function isNaturalAdBreak({screen,outcome,online}={}){
