@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createMonetizationController} from '../src/monetization.js';
+import {createMonetizationController,findNativeAdMob} from '../src/monetization.js';
 import {M4_SUPPORTER_KEY,M4_AD_PREFERENCE_KEY} from '../src/monetization-policy.js';
 
 function testRig(override={}){
@@ -100,4 +100,57 @@ test('session-only or corrupt local reward storage cannot claim supporter credit
  const h=testRig();h.s.durable=false;h.controller.optIn(true);
  assert.equal((await h.controller.rewarded()).ok,false);
  assert.deepEqual(h.calls,[]);
+});
+
+test('native plugin is discovered only on installed Android, never on PWA',async()=>{
+  const called=[];
+  const cap={getPlatform:()=> 'android',isPluginAvailable:name=>name==='AdMob',
+    nativePromise:async(name,method,opts)=>{called.push([name,method,opts]);return {canRequestAds:false};}};
+  const bridge=findNativeAdMob(cap);
+  assert.ok(bridge);
+  await bridge.requestConsentInfo();
+  assert.deepEqual(called,[['AdMob','requestConsentInfo',{}]]);
+  assert.equal(findNativeAdMob({...cap,getPlatform:()=> 'web'}),null);
+  assert.equal(findNativeAdMob({...cap,isPluginAvailable:()=>false}),null);
+});
+
+test('restart refreshes UMP only for already explicitly opted-in users',async()=>{
+  const h=testRig();
+  assert.equal((await h.controller.onLaunch()).ok,false);
+  assert.deepEqual(h.calls,[]);
+  h.controller.optIn(true);
+  assert.equal((await h.controller.onLaunch()).ok,true);
+  assert.deepEqual(h.calls,['ump','form']);
+  assert.equal(h.calls.includes('init'),false);
+});
+
+test('a failed ad load returns a safe reason and never credits a supporter',async()=>{
+  const h=testRig({native:{async prepareRewardVideoAd(){h.calls.push('prepare');throw Error('No fill');}}});
+  h.controller.optIn(true);
+  const r=await h.controller.rewarded();
+  assert.equal(r.ok,false);
+  assert.equal(h.s.getItem(M4_SUPPORTER_KEY),null);
+  assert.deepEqual(h.calls,['ump','form','init','prepare']);
+});
+
+test('concurrent reward clicks never load two rewarded ads',async()=>{
+  let release;
+  const gate=new Promise(resolve=>{release=resolve;});
+  const h=testRig({native:{async showRewardVideoAd(){h.calls.push('show');await gate;return {type:'Supporter Crest',amount:1};}}});
+  h.controller.optIn(true);
+  const pending=h.controller.rewarded();
+  await Promise.resolve();
+  assert.equal((await h.controller.rewarded()).ok,false);
+  release();
+  assert.equal((await pending).ok,true);
+  assert.equal(h.calls.filter(s=>s==='show').length,1);
+});
+
+test('a reward commit failure never reports the cosmetic as unlocked',async()=>{
+  const h=testRig();
+  h.s.flush=async()=>{throw Error('QuotaExceeded');};
+  h.controller.optIn(true);
+  const result=await h.controller.rewarded();
+  assert.equal(result.ok,false);
+  assert.equal(h.controller.status().earned,false);
 });
