@@ -28,7 +28,7 @@
 | **PROPOSED DEFAULT** | Four-tab Home/Play/Learn/Profile, staged beginner curriculum, starter 12 lessons and 30 puzzles | Retain current good implementation; sign design/content acceptance later |
 | **NOT APPROVED** | Shop, coins, gems, chests, purchase buttons, compulsory login, global Elo or live ads during M0–M2 | Do not surface as working features or claim commercial availability |
 
-## 3. Proposed phased release boundaries (future tasks preserved)
+## 3. Owner-approved phased release boundaries (future tasks preserved)
 
 | Milestone | Deliverable | Gate |
 |---|---|---|
@@ -41,7 +41,7 @@
 
 **Release interpretation:** A feature may be implemented earlier for engineering dependencies, but it must not be *promised, activated or called launch-ready* until its corresponding milestone and gate. Conversely later mandatory master tasks (B03/B05/etc.) are **not cancelled**; they simply do not block the source-derived M1 Web release unless the owner changes scope. `M3/M4/M5` do not automatically become production release dates.
 
-## 4. PRD-001–PRD-016 classification — authoritative proposed scope table
+## 4. PRD-001–PRD-016 classification — owner-approved release-scope table
 
 | Contract | Feature | Original v3 milestone | M0–M2 cut | Owner | Reason / boundary |
 |---|---|---|---|---|---|
@@ -185,11 +185,11 @@ next_task_started: NONE
 | MVP/M3/M4/M5 release boundaries | **OWNER APPROVED** by command above |
 | Product Owner scope signoff | **APPROVED**, original chat instruction logged above |
 | Exact PR #24 baseline CI (before signoff edit) | [Run #45030661367](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45030661367) **SUCCESS** at `5db79bea071fe0f17153e0092ac3f0ee21623d7d` |
-| Exact post-signoff PR head CI and final merge evidence | **VERIFY AFTER THIS DOCUMENT COMMIT**; do not inherit a previous SHA's green status |
+| Owner-signed PR #24 checks | [Run #45033223532](https://github.com/S2zxx0zxx/Global-Chess-Online-PVP-/actions/runs/45033223532) **SUCCESS** at `e2fdddd5cc4895cede1ce36d88633fa5f98f51e8`; verify the final ledger-closure SHA before merging |
 | Original 602-row task tracker independently accepted | **NO**; future `GC-B01-T07` |
 | T03 / B01 gate closed | **NO**; protected `main` and T03 review outstanding |
 
-**Task completion decision:** `GC-B01-T04 = OWNER-APPROVED SCOPE; PENDING POST-SIGNOFF CI/MERGE`. Once exact-head CI and approved documentation-only squash merge are verified, mark T04 `DONE (SCOPE LOCK)` in `GC_EXECUTION_LEDGER.md`; no other engineering task is completed by this signoff.
+**Task completion decision:** `GC-B01-T04 = DONE (OWNER-APPROVED SCOPE LOCK ONLY)` — 16 PRD rows approved, all 30 screen obligations retained, 12 deferrals with role/reason/release boundary signed. The latest documentation-closure head must still pass CI before safe squash merge. **This DONE does not certify the app or unlock T05**, and the original T03 exception remains outstanding.
 
 **Rollback:** Before merge, revert the signoff changes via reviewed PR or close PR #24 only if owner withdraws authorization. After merge, record a versioned `GC-B01-T04-v1.1` scope amendment in a new reviewed PR rather than silently rewriting this user-approved v1.0 or force pushing. No save/database/branch history changes are acceptable as a scope rollback.
 
