@@ -38,6 +38,8 @@ jobs:
         run: npm test
       - name: Build production PWA
         run: npm run build
+      - name: Validate offline lesson and puzzle pack
+        run: node scripts/validate-learning-pack.mjs
       - name: Enforce 3D bundle performance budget
         run: node scripts/check-bundle-budget.js
       - name: Smoke-test playable 2D and mounted 3D in Chromium

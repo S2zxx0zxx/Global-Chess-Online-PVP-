@@ -289,7 +289,8 @@ function commit(move) {
 
 function playComputer() {
   const {game, mode} = state;
-  if (worker || state.paused || mode !== 'computer' || game.turn() === state.playerSide || outcome(game)) return;
+  if (worker || importingBackup || state.paused || mode !== 'computer' || game.turn() === state.playerSide || outcome(game)) return;
+  const requestedFen = game.fen();
   let job;
   try {
     job = new Worker(new URL('./bot.js', import.meta.url), {type:'module'});
@@ -302,6 +303,7 @@ function playComputer() {
   const finish = (move) => {
     if (worker !== job) return;
     stopComputer();
+    if (state.game !== game || game.fen() !== requestedFen || state.paused || importingBackup || online?.active) return;
     const legal = game.moves({verbose:true});
     const candidate = legal.find(option => option.from === move?.from && option.to === move?.to && option.promotion === move?.promotion);
     if (legal.length) commit(candidate ?? legal[0]);
@@ -311,7 +313,7 @@ function playComputer() {
   job.onerror = () => finish();
   job.onmessageerror = () => finish();
   try {
-    job.postMessage({fen:game.fen(), difficulty:state.difficulty});
+    job.postMessage({fen:requestedFen, difficulty:state.difficulty});
   } catch {
     finish();
   }
