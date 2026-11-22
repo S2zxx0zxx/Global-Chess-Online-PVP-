@@ -17,10 +17,26 @@ fi
 if ! [[ "$GAME_ANDROID_VERSION_CODE" =~ ^[1-9][0-9]{0,8}$ ]]; then
   echo 'Version code must be a positive nine-digit integer or shorter' >&2; exit 1
 fi
+if [[ "${CHESS_M4_ADS_TEST:-false}" == 'true' ]]; then
+  echo 'A Play release must NEVER contain Google demo ad traffic' >&2; exit 1
+fi
+extra_plugins=()
+if [[ "${CHESS_M4_ADS_LIVE:-false}" == 'true' ]]; then
+  node scripts/validate-live-ad-config.mjs
+  export VITE_CHESS_ADS_MODE=live
+  export VITE_CHESS_ADS_REWARDED_ID="${CHESS_ADMOB_REWARDED_ID}"
+  export VITE_CHESS_ADS_POLICY_APPROVED=true
+  export VITE_CHESS_ADS_AUDIENCE_APPROVED=true
+  export VITE_CHESS_ADS_PRIVACY_APPROVED=true
+  extra_plugins=('@capacitor-community/admob@8.2.1')
+else
+  export VITE_CHESS_ADS_MODE=disabled
+  unset VITE_CHESS_ADS_REWARDED_ID VITE_CHESS_ADS_POLICY_APPROVED VITE_CHESS_ADS_AUDIENCE_APPROVED VITE_CHESS_ADS_PRIVACY_APPROVED || true
+fi
 npm ci --no-audit --no-fund
 npm run build
 npm install --no-save --package-lock=false --no-audit --no-fund \
-  @capacitor/core@8.6.2 @capacitor/android@8.6.2 @capacitor/cli@8.6.2 @capacitor/app@8.1.0 @resvg/resvg-js@2.6.2
+  @capacitor/core@8.6.2 @capacitor/android@8.6.2 @capacitor/cli@8.6.2 @capacitor/app@8.1.0 @resvg/resvg-js@2.6.2 "${extra_plugins[@]}"
 node - <<'JS'
 import fs from 'node:fs';
 const path='capacitor.config.json';
@@ -31,6 +47,9 @@ fs.writeFileSync(path,JSON.stringify(cfg,null,2)+'\n');
 JS
 npx cap add android
 npx cap sync android
+if [[ "${CHESS_M4_ADS_LIVE:-false}" == 'true' ]]; then
+  node scripts/configure-android-admob.mjs
+fi
 node scripts/generate-android-assets.mjs
 if ! grep -q 'targetSdkVersion = 36' android/variables.gradle; then
   echo 'Target API 36 build contract failed' >&2; exit 1
