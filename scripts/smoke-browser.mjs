@@ -33,6 +33,7 @@ let preview;
 let servedWorker;
 let chrome;
 let ws;
+let secondary;
 
 try {
   const builtWorker = await readFile('dist/sw.js', 'utf8');
@@ -76,31 +77,34 @@ try {
     const pages = await (await fetch('http://127.0.0.1:' + port + '/json/list')).json();
     return pages.find(item => item.type === 'page' && item.webSocketDebuggerUrl);
   });
-  ws = new WebSocket(page.webSocketDebuggerUrl);
-  await new Promise((resolve, reject) => {
-    ws.addEventListener('open', resolve, {once:true});
-    ws.addEventListener('error', reject, {once:true});
-  });
   let nextId = 0;
   const pending = new Map();
   const errors = [];
-  ws.addEventListener('message', event => {
-    const response = JSON.parse(event.data);
-    if (response.method === 'Runtime.exceptionThrown') {
-      errors.push(response.params?.exceptionDetails?.text ?? 'Browser exception');
-    }
-    if (response.method === 'Page.javascriptDialogOpening') {
-      void send('Page.handleJavaScriptDialog',{accept:true}).catch(error=>errors.push(error.message));
-    }
-    if (!response.id) return;
-    const settle = pending.get(response.id);
-    if (!settle) return;
-    pending.delete(response.id);
-    clearTimeout(settle.timeout);
-    if (response.error) settle.reject(new Error(response.error.message));
-    else settle.resolve(response.result);
-  });
-  function send(method, params = {}) {
+  async function connect(url) {
+    const socket = new WebSocket(url);
+    await new Promise((resolve,reject) => {
+      socket.addEventListener('open',resolve,{once:true});
+      socket.addEventListener('error',reject,{once:true});
+    });
+    socket.addEventListener('message', event => {
+      const response = JSON.parse(event.data);
+      if (response.method === 'Runtime.exceptionThrown') {
+        errors.push(response.params?.exceptionDetails?.text ?? 'Browser exception');
+      }
+      if (response.method === 'Page.javascriptDialogOpening') {
+        void send('Page.handleJavaScriptDialog',{accept:true},socket).catch(error=>errors.push(error.message));
+      }
+      const settle = pending.get(response.id);
+      if (!settle) return;
+      pending.delete(response.id);
+      clearTimeout(settle.timeout);
+      if (response.error) settle.reject(new Error(response.error.message));
+      else settle.resolve(response.result);
+    });
+    return socket;
+  }
+  ws = await connect(page.webSocketDebuggerUrl);
+  function send(method, params = {}, socket = ws) {
     const id = ++nextId;
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
@@ -108,13 +112,13 @@ try {
         reject(new Error('CDP command timeout: ' + method));
       }, 20000);
       pending.set(id, {resolve, reject, timeout});
-      ws.send(JSON.stringify({id, method, params}));
+      socket.send(JSON.stringify({id, method, params}));
     });
   }
-  async function evaluate(expression) {
+  async function evaluate(expression, socket = ws) {
     const result = await send('Runtime.evaluate', {
       expression, returnByValue:true, awaitPromise:true, allowUnsafeEvalBlockedByCSP:false,
-    });
+    }, socket);
     if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? result.exceptionDetails.text);
     return result.result?.value;
   }
@@ -577,6 +581,53 @@ try {
   await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:noWebGL.identifier});
   console.log('WebGL disabled: 2D fallback continues the saved match: passed');
 
+  const persistedDestination = `new Promise((resolve,reject) => {
+    const open = indexedDB.open('global-chess',1);
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const db = open.result;
+      const read = db.transaction('saves').objectStore('saves').get('snapshot');
+      read.onerror = () => { db.close(); reject(read.error); };
+      read.onsuccess = () => {
+        db.close();
+        resolve(JSON.parse(read.result['global-chess.match.v1']).moves.at(-1).to);
+      };
+    };
+  })`;
+  await waitUntil(async () => await evaluate(persistedDestination) === 'f6');
+  const stalePageResponse = await fetch('http://127.0.0.1:' + port + '/json/new?about:blank',{method:'PUT'});
+  if (!stalePageResponse.ok) throw new Error('Could not open second browser tab');
+  const stalePage = await stalePageResponse.json();
+  secondary = await connect(stalePage.webSocketDebuggerUrl);
+  await send('Runtime.enable',{},secondary);
+  await send('Page.enable',{},secondary);
+  await send('Page.setDownloadBehavior',{behavior:'deny'},secondary);
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=match'},secondary);
+  await waitUntil(() => evaluate('document.getElementById("launch")?.hidden && document.querySelector("#board [data-square=f6].last-destination")',secondary));
+  await evaluate('document.querySelector("#board [data-square=g1]").click(); document.querySelector("#board [data-square=f3]").click();true');
+  await waitUntil(async () => await evaluate(persistedDestination,secondary) === 'f3');
+  await evaluate('document.querySelector("#board [data-square=b1]").click(); document.querySelector("#board [data-square=c3]").click();true',secondary);
+  await waitUntil(() => evaluate('document.querySelector("#ch-storage-alert")?.textContent.includes("Another tab saved newer changes")',secondary));
+  if (await evaluate(persistedDestination,secondary) !== 'f3') throw new Error('A stale tab replaced the newer match');
+  await evaluate('document.querySelector("#ch-storage-alert button").click();true',secondary);
+  await waitUntil(() => evaluate('document.documentElement.classList.contains("ch-view-recovery")',secondary));
+  await evaluate(`(() => {
+    const original = URL.createObjectURL;
+    URL.createObjectURL = blob => {
+      URL.createObjectURL = original;
+      window.recoveryBackup = blob.text();
+      return original(blob);
+    };
+    document.querySelector('#ch-extra-screen .primary').click();
+  })()`,secondary);
+  await waitUntil(() => evaluate('window.recoveryBackup?.then(raw => JSON.parse(JSON.parse(raw).match).moves.at(-1).to === "c3")',secondary));
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/?screen=match'},secondary);
+  await waitUntil(() => evaluate('document.getElementById("launch")?.hidden && document.querySelector("#board [data-square=f3].last-destination")',secondary));
+  await send('Page.close',{},secondary);
+  secondary.close();
+  secondary = undefined;
+  console.log('Two-tab save conflict preserves the newer match and exports the stale tab’s local move: passed');
+
   // Screen contracts SCR-00/01: denied browser storage must not crash the app,
   // and the UI may NOT claim a durable save for temporary guest play.
   await send('Page.addScriptToEvaluateOnNewDocument',{source:
@@ -595,6 +646,7 @@ try {
   console.log('Blocked browser storage: offline play and honest session-only warning passed');
   if(errors.length)throw new Error('Chromium runtime exceptions: '+errors.join(' | '));
 } finally {
+  secondary?.close();
   ws?.close();
   chrome?.kill('SIGTERM');
   await preview?.close();

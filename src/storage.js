@@ -4,8 +4,14 @@ import { progressKey } from './progression.js';
 const STORAGE_NAME = 'global-chess';
 const STORAGE_KEYS = [matchKey, historyKey, progressKey];
 
-function reportStorageError() {
-  if (typeof window !== 'undefined') window.dispatchEvent(new Event('chess-storage-error'));
+export const storageConflictMessage = 'Another tab saved newer changes. Export this tab’s backup before reloading.';
+
+function reportStorageError(conflict = false) {
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('chess-storage-error', {detail:{conflict}}));
+}
+
+function isSnapshot(value) {
+  return value === undefined || (value !== null && typeof value === 'object' && !Array.isArray(value));
 }
 
 // Browser privacy settings may disable BOTH IndexedDB and localStorage. In that
@@ -85,6 +91,7 @@ export async function openGameStorage() {
   }
 
   const values = new Map();
+  const committed = new Map();
   let needsMigration = false;
   try {
     db.onversionchange = () => {
@@ -96,14 +103,14 @@ export async function openGameStorage() {
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error || new Error('Could not read saved games'));
     });
-    if (saved !== undefined && (typeof saved !== 'object' || saved === null || Array.isArray(saved)))
-      throw new Error('Corrupt saved-game container');
+    if (!isSnapshot(saved)) throw new Error('Corrupt saved-game container');
     needsMigration = saved === undefined;
     for (const key of STORAGE_KEYS) {
       let legacy = null;
       try { legacy = localStorage.getItem(key); } catch { /* IndexedDB still works. */ }
       const value = saved !== undefined ? saved[key] : legacy;
       if (typeof value === 'string') values.set(key,value);
+      if (saved !== undefined) committed.set(key,saved[key]);
     }
   } catch {
     db.close();
@@ -112,12 +119,16 @@ export async function openGameStorage() {
 
   let queued = false;
   const dirty = new Set();
-  const pendingWrites = new Set();
-  function persist(key) {
-    dirty.add(key);
-    if (queued) return;
+  let pending;
+  let lastFailure;
+  function queueWrite() {
+    if (queued || pending || !dirty.size) return;
     queued = true;
     queueMicrotask(writeSnapshot);
+  }
+  function persist(key) {
+    dirty.add(key);
+    queueWrite();
   }
 
   function writeSnapshot() {
@@ -125,36 +136,51 @@ export async function openGameStorage() {
     const changes = [...dirty].map(key => [key, values.get(key)]);
     if (!changes.length) return;
     dirty.clear();
-    const retryLater = () => {
+    const retryLater = (error, conflict) => {
       for (const [key] of changes) dirty.add(key);
-      reportStorageError();
+      lastFailure = error;
+      reportStorageError(conflict);
     };
     try {
       const transaction = db.transaction('saves', 'readwrite');
+      let conflict = false;
       const completed = new Promise((resolve,reject) => {
         transaction.oncomplete = resolve;
         transaction.onabort = () => {
-          retryLater();
-          reject(new Error('Could not commit match save'));
+          reject(new Error(conflict ? storageConflictMessage : 'Could not commit match save'));
         };
       });
-      pendingWrites.add(completed);
-      // A rejected transaction is observed even if no explicit flush is waiting.
-      void completed.then(() => pendingWrites.delete(completed), () => pendingWrites.delete(completed));
-      const store = transaction.objectStore('saves');
-      const read = store.get('snapshot');
-      read.onsuccess = () => {
-        const snapshot = read.result ?? {};
-        for (const [key,value] of changes) {
-          if (value === undefined) delete snapshot[key];
-          else snapshot[key] = value;
-        }
-        try { store.put(snapshot, 'snapshot'); }
-        catch { try { transaction.abort(); } catch {} }
-      };
-      read.onerror = () => { try { transaction.abort(); } catch {} };
-    } catch {
-      retryLater();
+      pending = completed.then(() => {
+        for (const [key,value] of changes) committed.set(key,value);
+        pending = undefined;
+        lastFailure = undefined;
+        queueWrite();
+      }, error => {
+        pending = undefined;
+        retryLater(error,conflict);
+      });
+      const abort = () => { try { transaction.abort(); } catch {} };
+      try {
+        const store = transaction.objectStore('saves');
+        const read = store.get('snapshot');
+        read.onsuccess = () => {
+          if (!isSnapshot(read.result)) { abort(); return; }
+          const snapshot = read.result ?? {};
+          // The comparison and write share one transaction. A stale tab may
+          // retain its own playable copy, but it cannot overwrite newer bytes.
+          conflict = changes.some(([key,value]) => snapshot[key] !== committed.get(key) && snapshot[key] !== value);
+          if (conflict) { abort(); return; }
+          for (const [key,value] of changes) {
+            if (value === undefined) delete snapshot[key];
+            else snapshot[key] = value;
+          }
+          try { store.put(snapshot, 'snapshot'); }
+          catch { abort(); }
+        };
+        read.onerror = abort;
+      } catch { abort(); }
+    } catch (error) {
+      retryLater(error,false);
     }
   }
 
@@ -167,11 +193,11 @@ export async function openGameStorage() {
       // Promise resolution here means the pending IDB transactions have committed,
       // not merely that a save was queued in JavaScript.
       await Promise.resolve();
-      while (queued || pendingWrites.size) {
-        if (queued) { await Promise.resolve(); continue; }
-        await Promise.all([...pendingWrites]);
+      while (queued || pending) {
+        if (pending) await pending;
+        else await Promise.resolve();
       }
-      if (dirty.size) throw new Error('Match changes could not be committed');
+      if (dirty.size) throw lastFailure ?? new Error('Match changes could not be committed');
     },
     setItem(key,value) { values.set(key,String(value)); persist(key); },
     removeItem(key) { values.delete(key); persist(key); },

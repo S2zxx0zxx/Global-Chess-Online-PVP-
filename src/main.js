@@ -4,7 +4,7 @@ import { emitFeedback } from './feedback.js';
 import { loadBrowserMateSolver } from './mate-solver.js';
 import { bindLearning, lessons, puzzles } from './learning.js';
 import { bindLobby } from './lobby.js';
-import { openGameStorage } from './storage.js';
+import { openGameStorage, storageConflictMessage } from './storage.js';
 import { commitHistoryReplacement } from './history-mutation.js';
 import { progressKey, legacyProgressKey, migrateLegacyProgress, currentProgressReport } from './progression.js';
 import { bindOnline } from './online.js';
@@ -816,8 +816,9 @@ backupFile.onchange = async () => {
 bindLearning(names,gameStorage);
 window.addEventListener('chess-appearance-changed', () => render());
 
-window.addEventListener('chess-storage-error', () => {
-  notice = 'Could not write the game save.';
+window.addEventListener('chess-storage-error', event => {
+  if (event.detail?.conflict) notice = storageConflictMessage;
+  else if (notice !== storageConflictMessage) notice = 'Could not write the game save.';
   render();
 });
 }

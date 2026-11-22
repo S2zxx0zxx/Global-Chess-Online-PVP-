@@ -5,6 +5,7 @@ import {summarizeMatches} from './game-stats.js';
 import {renderPieceArt} from './piece-art.js';
 import {feedbackPreferences,setFeedbackPreference} from './feedback.js';
 import {BOARD_THEMES,PIECE_THEMES,ANIMATED_THEMES,applyBoardTheme,applyPieceTheme} from './appearance.js';
+import {storageConflictMessage} from './storage.js';
 
 const el=id=>document.getElementById(id);
 const ls=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback;}catch{return fallback;}};
@@ -458,6 +459,7 @@ export function mountScreenRoutes({main,go,leaveMatch,toggleBoardView,getBoardVi
       const damaged=hasCorruptMatch();
       title('Keep your data safe',damaged?'Unrestorable saved match':'Recovery',
         damaged?'The original match bytes remain stored. They will not be overwritten until you explicitly confirm replacement.':
+        fault==='conflict'?storageConflictMessage:
         fault?'The last match save could not be written.':'Recover from a storage or asset error without clearing your board.');
       paragraph(section,damaged?
         'Export the unvalidated JSON recovery copy first. Do not import it as a verified backup or clear browser data before inspecting it.':
@@ -547,11 +549,15 @@ export function mountScreenRoutes({main,go,leaveMatch,toggleBoardView,getBoardVi
     }
     section.querySelector('h1')?.setAttribute('tabindex','-1');
   }
-  window.addEventListener('chess-storage-error',()=>{
-    fault=true;if(el('ch-storage-alert'))return;
-    const alert=mk('div','ch-storage-alert','Your last game move could not be saved.');
+  window.addEventListener('chess-storage-error',event=>{
+    if(event.detail?.conflict)fault='conflict';
+    else if(!fault)fault=true;
+    const message=fault==='conflict'?storageConflictMessage:'Your last game move could not be saved.';
+    const existing=el('ch-storage-alert');
+    if(existing){existing.firstElementChild.textContent=message;return;}
+    const alert=mk('div','ch-storage-alert');
     alert.id='ch-storage-alert';alert.setAttribute('role','alert');
-    alert.append(btn('Recovery',()=>go('recovery'),'primary'),btn('Dismiss',()=>alert.remove()));
+    alert.append(mk('span','',message),btn('Recovery',()=>go('recovery'),'primary'),btn('Dismiss',()=>alert.remove()));
     main.prepend(alert);
   });
   window.addEventListener('chess-exercise-solved',event=>{

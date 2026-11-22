@@ -33,7 +33,7 @@ This is an implementation/evidence ledger, **not** a claim that any contract is 
 | SCR-24 | Settings | src/screen-routes.js ?screen=settings; src/lobby.js | PARTIAL | Audio/haptics/language/undo and complete persistence failures |
 | SCR-25 | Data & Privacy | src/screen-routes.js ?screen=data | PARTIAL | User-approved privacy/terms links and data deletion policy |
 | SCR-26 | Import / Export | src/screen-routes.js ?screen=transfer; src/backup.js | PARTIAL | Import preview, backup validation UI, storage transaction atomicity |
-| SCR-27 | Error Recovery | src/screen-routes.js ?screen=recovery | PARTIAL | Corrupted DB safe-mode migration and full export rescue |
+| SCR-27 | Error Recovery | A Chromium two-tab test confirms the newer IndexedDB save survives a stale write and the stale local move can still be exported through Recovery. | PARTIAL | Corrupted DB safe-mode migration, localStorage concurrency and real-device interruptions |
 | SCR-28 | PWA Update | Chromium staged a worker, deferred it during an active game, applied it after resignation, and preserved history through a worker rollback. | PARTIAL | Deployed and installed-device updates with real successive application builds |
 | SCR-29 | About / Support / Licenses | src/screen-routes.js ?screen=about | PARTIAL | Version/build ID, support contact approval and final notices |
 
