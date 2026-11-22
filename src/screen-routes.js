@@ -30,7 +30,7 @@ const EXPORT=(data,name,type)=>{
 };
 export const EXTRA_ROUTES=Object.freeze(['menu','pause','result','review','history','lessons','lesson','puzzles','puzzle','puzzle-result','daily','progress','achievements','appearance','avatars','frames','settings','data','transfer','recovery','update','about']);
 
-export function mountScreenRoutes({main,go,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
+export function mountScreenRoutes({main,go,toggleBoardView,getBoardView,readMoves,replayTutorial,readHistory,writeHistory,clearCompletedHistory,openExercise,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch}){
   const screen=mk('section','ch-screen ch-extra-screen');
   screen.id='ch-extra-screen';screen.hidden=true;
   main.insertBefore(screen,el('ch-tab-bar'));
@@ -55,28 +55,51 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
     if(route==='menu'||route==='pause'){
       const details=getMatchSummary();
       const paused=route==='pause'&&!details?.online&&pauseCurrentMatch();
-      title('Game session',route==='pause'?(paused?'Match paused':'Pause unavailable'):'Match menu','Your chessboard and moves remain owned by the game engine.');
-      if(route==='pause')paragraph(section,paused?'Local clock and opponent processing are frozen until you resume.':details?.online?'Online matches cannot be paused; server clocks continue.':'No active offline match is available to pause.','ch-inline-notice');
-      if (!details?.started) {
-        const empty=group();
-        card(empty,'Choose a game mode','Start a new offline chess match',()=>go('play'));
-        card(empty,'Home','Return to the main chess lobby',()=>go('home'));
-        return;
+      const headingText=route==='pause'?(paused?'Match paused':'Pause unavailable'):'Match options';
+      title('Game session',headingText,'');
+      section.querySelector('h1').tabIndex=-1;
+      if(route==='pause'){
+        paragraph(section,paused?'Your local clock and opponent are paused.':details?.online?'Online clocks keep running.':'There is no active local match to pause.','ch-inline-notice');
       }
+      if(details?.online&&!details.outcome) paragraph(section,'Online clock keeps running while this menu is open.');
+      section.append(btn(details?.paused||paused?'Resume match':'Back to board',()=>{
+        resumeCurrentMatch();
+        go('match');
+      },'primary ch-menu-return'));
       const items=group();
-      card(items,'Resume match','Return to the chessboard',()=>{resumeCurrentMatch();go('match');});
-      card(items,'Flip board','Rotate the viewpoint only',()=>{el('flip-board').click();go('match');});
-      card(items,'Save & exit','Return Home without replacing this game',()=>go('home'));
-      card(items,'Restart match','Existing confirmation protects unfinished games',()=>{go('match');el('rematch').click();});
-      card(items,'Settings','Accessibility and board preferences',()=>go('settings'));
-      if(route==='menu' && !getMatchSummary()?.online && !getMatchSummary()?.outcome){
-        card(items,'Pause match','Freeze the local clock and computer until resumed',()=>go('pause'));
+      items.classList.add('ch-match-menu-grid');
+      const boardView=getBoardView();
+      const boardOption=card(items,boardView==='3d'?'Use 2D board':'Use 3D board',
+        boardView==='loading'?'Loading 3D view':'Switch the live board view',()=>{
+          go('match');
+          toggleBoardView();
+        });
+      boardOption.disabled=boardView==='loading';
+      card(items,'Flip board','Swap which side is closest',()=>{el('flip-board').click();go('match');});
+      card(items,'Settings','Sound, motion and board controls',()=>go('settings'));
+      card(items,'Home','Return to the lobby',()=>go('home'));
+      if(!details?.started){
+        card(items,'Choose a game mode','Set up a new match',()=>go('play'));
+      } else if(!details.online){
+        card(items,'Restart match','Start a fresh game with these settings',()=>{go('match');el('rematch').click();});
+        if(!details.outcome && !paused && !details.paused){
+          card(items,'Pause match','Stop the local clock',()=>go('pause'));
+        }
+        if(!details.outcome){
+          card(items,'Resign game','End your current match',()=>{
+            if(resignCurrentMatch())go('result');
+          },'ch-danger-card');
+        }
+        if(!details.outcome) card(items,'How to move','Replay the move and capture guide',()=>{go('match');replayTutorial();});
       }
-      const match=getMatchSummary();
-      if(!match?.online && !match?.outcome){
-        card(items,'Resign game','Ends the current offline match after confirmation',()=>{
-          if(resignCurrentMatch())go('result');
-        },'ch-danger-card');
+      const moves=readMoves();
+      if(moves.length){
+        const moveList=mk('details','ch-match-move-list');
+        moveList.append(mk('summary','','Moves this game'));
+        const list=mk('ol','ch-menu-moves');
+        for(let i=0;i<moves.length;i+=2)list.append(mk('li','',moves.slice(i,i+2).join('  ')));
+        moveList.append(list);
+        section.append(moveList);
       }
     }
     if(route==='result'){
@@ -509,5 +532,5 @@ export function mountScreenRoutes({main,go,readHistory,writeHistory,clearComplet
     go('puzzle-result');
   });
   if(ls('global-chess.reduce-motion.v1',false))document.documentElement.classList.add('ch-reduce-motion');
-  return {routes:EXTRA_ROUTES,show,openExerciseById(x){exercise=x;}};
+  return {routes:EXTRA_ROUTES,show,heading:()=>screen.querySelector('h1'),openExerciseById(x){exercise=x;}};
 }

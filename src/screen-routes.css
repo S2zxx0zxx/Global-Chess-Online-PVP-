@@ -344,3 +344,85 @@
   background: #191613;
 }
 .ch-shell-ready.ch-view-match .player-panel.active-player { border-color: #cfa463; }
+
+.ch-shell-ready.ch-view-match #scene {
+  order: 3;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  border: 1px solid #846137;
+  border-radius: 13px;
+  background: #100e0c;
+  touch-action: manipulation;
+}
+.ch-shell-ready.ch-view-match .ch-3d-loading {
+  display: none;
+  order: 5;
+  margin: 5px 0;
+  color: #f3d594;
+  font-size: .82rem;
+}
+.ch-loading-3d.ch-shell-ready.ch-view-match .ch-3d-loading { display: block; }
+
+.ch-view-menu .ch-match-menu-grid {
+  gap: 8px;
+  margin-top: 2px;
+}
+.ch-view-menu .ch-match-menu-grid .ch-feature-card {
+  display: grid;
+  align-content: center;
+  justify-content: stretch;
+  gap: 4px;
+  min-height: 60px;
+  text-align: left;
+  background: linear-gradient(145deg, #30241b, #181412);
+}
+.ch-view-menu .ch-match-menu-grid .ch-danger-card { background: #3d211f; }
+.ch-view-menu .ch-menu-return { align-self: stretch; max-width: none; }
+.ch-view-menu :is(.masthead,.ch-tab-bar,#ch-extra-screen .ch-back-button) { display: none; }
+.ch-view-menu main { padding-bottom: 24px; }
+.ch-view-menu .ch-match-move-list {
+  padding: 10px 12px;
+  border: 1px solid #5a4430;
+  border-radius: 10px;
+  background: #191512;
+}
+.ch-view-menu .ch-menu-moves {
+  columns: 2;
+  max-height: 11rem;
+  overflow: auto;
+  padding-left: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Shorter controls with touch areas large enough for mobile input. */
+.ch-shell-ready :is(.ch-action,.ch-tab,.ch-dialog-actions button) {
+  min-height: 44px;
+}
+.ch-shell-ready :is(.ch-action,.ch-dialog-actions button) {
+  padding-block: 7px;
+  border-radius: 10px;
+  font-size: .9rem;
+}
+.ch-shell-ready .ch-tab { gap: 2px; }
+.ch-shell-ready .ch-tab-icon { width: 24px; height: 24px; flex-basis: 24px; }
+.ch-shell-ready .ch-feature-card {
+  padding: 8px 10px;
+  gap: 4px;
+}
+.ch-shell-ready #lobby .ch-home-shortcut { min-height: 62px; padding-block: 8px; }
+.ch-shell-ready #ch-profile-hub .ch-profile-actions button { min-height: 94px; padding-top: 32px; }
+.ch-shell-ready .ch-mode-grid .ch-mode-card,
+.ch-shell-ready .ch-learn-grid .ch-learn-tile { min-height: 126px; padding: 12px; }
+.ch-shell-ready .ch-theme-card:not(.ch-selected) { padding: 8px; }
+.ch-shell-ready .ch-theme-card.ch-selected { padding: 6px; }
+.ch-shell-ready .ch-piece-card { min-height: 140px; }
+.ch-shell-ready .ch-piece-preview { width: 76px; height: 76px; }
+.ch-shell-ready .ch-piece-example { width: 72px; height: 72px; }
+
+@media (min-width: 768px) {
+  .ch-shell-ready.ch-view-match :is(#board,#scene) {
+    max-width: min(620px, max(320px, calc(100dvh - 210px)));
+  }
+}

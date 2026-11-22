@@ -142,6 +142,45 @@ function stopComputer() {
   worker?.terminate();
   worker = undefined;
 }
+const canvas = document.querySelector('#scene');
+let renderer;
+let loading3D = false;
+window.addEventListener('chess-match-view-shown', () => {
+  if (renderer) render();
+});
+
+async function toggleBoardView() {
+  if (loading3D) return;
+  if (renderer) {
+    renderer.dispose();
+    renderer = undefined;
+    canvas.hidden = true;
+    board.hidden = false;
+    render();
+    return;
+  }
+
+  loading3D = true;
+  document.documentElement.classList.add('ch-loading-3d');
+  try {
+    const {mountBoard} = await import('./board3d.js');
+    canvas.hidden = false;
+    board.hidden = true;
+    renderer = await mountBoard(canvas, selectSquare);
+    renderer.setFlipped(flipped);
+  } catch {
+    renderer?.dispose();
+    renderer = undefined;
+    canvas.hidden = true;
+    board.hidden = false;
+    notice = '3D could not start. Your match is available in 2D.';
+  } finally {
+    loading3D = false;
+    document.documentElement.classList.remove('ch-loading-3d');
+    render();
+  }
+}
+
 function render(move) {
   rematch.hidden = Boolean(online?.active) || !outcome(state.game);
   displayClock();
@@ -154,6 +193,8 @@ function render(move) {
   const lastMove = move ?? game.history({verbose:true}).at(-1);
   const checkedSide = game.inCheck() ? game.turn() : null;
   const playMoveEffect = move ? prepareMoveEffect(board, move) : null;
+  renderer?.setFlipped(flipped);
+  renderer?.syncTurns(game, selected, targets, move, lastMove, checkedSide);
   board.classList.toggle('flipped',flipped);
   const rows = game.board();
   if (flipped) rows.reverse().forEach(row => row.reverse());
@@ -201,12 +242,6 @@ function render(move) {
   claim.hidden = state.paused || (online?.active && !online.canMove(game.turn())) ||
     Boolean(outcome(game)) || (mode === 'computer' && game.turn() !== state.playerSide) ||
     !drawAllowed;
-  const moves = game.history();
-  document.querySelector('#moves').replaceChildren(...moves.filter((_, index) => index % 2 === 0).map((move, index) => {
-    const item = document.createElement('li');
-    item.textContent = [move, moves[index * 2 + 1]].filter(Boolean).join('  ');
-    return item;
-  }));
 }
 
 function save() {
@@ -274,6 +309,7 @@ async function selectSquare(square) {
   if (piece?.color === game.turn()) {
     selected = selected === square ? undefined : square;
     render();
+    if (selected) window.dispatchEvent(new Event('chess-piece-selected'));
     return;
   }
   if (!selected) return;
@@ -392,7 +428,8 @@ for (const mode of ['local', 'computer']) {
 let offlineState;
 online = bindOnline({
   onMatch(match) {
-    if (!offlineState) {
+    const enteringRoom = !offlineState;
+    if (enteringRoom) {
       offlineState = state;
       stopComputer();
     }
@@ -404,7 +441,7 @@ online = bindOnline({
       ? state.game.history({verbose:true}).at(-1) : undefined;
     render(played);
     if (played) emitFeedback(state.game.inCheck() ? 'check' : played.captured ? 'capture' : 'move');
-    appShell?.go('match');
+    if (enteringRoom) appShell?.go('match');
   },
   onLeave() {
     if (!offlineState) return;
@@ -425,6 +462,9 @@ lobby = bindLobby({
 });
 appShell = mountAppShell({
   startMatch:startLocalMatch,
+  toggleBoardView,
+  getBoardView:()=>loading3D?'loading':renderer?'3d':'2d',
+  readMoves:()=>state.game.history(),
   storagePersistent: gameStorage.durable,
   hasCorruptMatch(){return Boolean(corruptMatchRaw);},
   async preparePwaUpdate(){
@@ -479,7 +519,7 @@ appShell = mountAppShell({
     return {
       outcome:outcome(state.game),mode:state.mode,
       online:Boolean(online?.active),difficulty:state.difficulty,
-      playerSide:state.playerSide,moves:state.game.history().length,paused:state.paused,
+      playerSide:state.playerSide,turn:state.game.turn(),moves:state.game.history().length,paused:state.paused,
       started:Boolean(online?.active) || state.preset !== undefined || state.game.history().length > 0,
     };
   },

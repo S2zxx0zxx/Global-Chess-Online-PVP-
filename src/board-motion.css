@@ -150,7 +150,6 @@
 .ch-match-actions:not(:has(button:not([hidden]))),
 .ch-match-move-list:not(:has(li)) { display: none; }
 .ch-match-move-list summary { cursor: pointer; }
-.ch-match-move-list #moves { margin-bottom: 0; }
 @media (prefers-reduced-motion: reduce) {
   #board button[aria-pressed=true] .piece-art,
   #board button.target::after { animation: none; }

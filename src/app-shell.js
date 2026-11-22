@@ -14,7 +14,7 @@ function element(tag, className, text) {
 
 // The v3 M0 shell intentionally calls existing, tested game commands rather
 // than keeping a separate copy of chess state in the presentation layer.
-export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, clearCompletedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, preparePwaUpdate,hasCorruptMatch, storagePersistent = true}) {
+export function mountAppShell({startMatch, toggleBoardView, getBoardView, readMoves, readSavedHistory, writeSavedHistory, clearCompletedHistory, getMatchSummary, resignCurrentMatch, pauseCurrentMatch, resumeCurrentMatch, preparePwaUpdate,hasCorruptMatch, storagePersistent = true}) {
   const main = document.querySelector('main');
   const lobby = byId('lobby');
   const match = byId('match-area');
@@ -108,22 +108,16 @@ export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, 
   const tools=element('button','ch-match-tools','More options');
   tools.id='ch-match-tools';
   tools.type='button';
-  tools.setAttribute('aria-expanded','false');
-  tools.setAttribute('aria-controls','ch-match-sidebar');
-  tools.addEventListener('click',()=>{
-    const opened=document.documentElement.classList.toggle('ch-tools-open');
-    tools.setAttribute('aria-expanded',String(opened));
-    if(opened) byId('ch-match-sidebar').scrollIntoView({block:'nearest'});
-  });
+  tools.addEventListener('click',()=>go('menu'));
   toolbar.append(back,tools);
   match.prepend(toolbar);
   const sidebar = document.querySelector('.layout>aside');
-  sidebar.id='ch-match-sidebar';
-  const moveList=element('details','ch-match-move-list');
-  moveList.append(element('summary','','Moves this game'),byId('moves'));
-  sidebar.append(byId('flip-board'),moveList);
+  sidebar.append(byId('flip-board'));
   const dock=element('section','ch-match-dock');
   dock.setAttribute('aria-label','Match status and controls');
+  const loadingBoard = element('p','ch-3d-loading','Loading the 3D board...');
+  loadingBoard.setAttribute('role','status');
+  match.append(loadingBoard);
   dock.append(byId('clocks'),byId('status'));
   const matchActions=element('div','ch-match-actions');
   matchActions.append(byId('claim'),byId('result-open'),byId('rematch'));
@@ -166,34 +160,21 @@ export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, 
     }
     lessonStep=1;
     const summary = getMatchSummary();
-    const side = summary.mode === 'computer' && summary.playerSide === 'b' ? 'Black' : 'White';
+    const player = summary.mode === 'computer' ? summary.playerSide : summary.turn;
+    const side = player === 'b' ? 'Black' : 'White';
     tip.textContent='Tap a '+side+' piece to see its legal moves.';
     tutorial.dataset.side = side === 'Black' ? 'b' : 'w';
     tutorial.hidden=false;
   }
-  byId('board').addEventListener('click',()=>{
-    if(tutorial.hidden)return;
-    if(lessonStep===1&&byId('board').querySelector('[aria-pressed=true]')){
-      lessonStep=2;
-      tip.textContent='Now tap a highlighted square to make your move.';
-    } else if(lessonStep===2&&byId('moves').children.length){
-      finishTutorial();
-    }
+  window.addEventListener('chess-piece-selected',()=>{
+    if(tutorial.hidden || lessonStep!==1)return;
+    lessonStep=2;
+    tip.textContent='Tap a teal dot to move, or a gold-marked square to capture.';
   });
   window.addEventListener('chess-move-committed', event => {
     // Works equally with mouse, keyboard, touch drag and 3D board moves.
     if (!tutorial.hidden && event.detail?.color === tutorial.dataset.side) finishTutorial();
   });
-  const replayTutorial=element('button','ch-tutorial-replay','Replay first-move tutorial');
-  replayTutorial.type='button';
-  replayTutorial.addEventListener('click',()=>{
-    document.documentElement.classList.remove('ch-tools-open');
-    tools.setAttribute('aria-expanded','false');
-    startTutorial(true);
-    match.scrollIntoView({block:'start'});
-  });
-  byId('ch-match-sidebar').prepend(replayTutorial);
-
   const setup = element('dialog','ch-setup-dialog');
   setup.id = 'ch-setup-dialog';
   setup.setAttribute('aria-labelledby','ch-setup-title');
@@ -345,11 +326,16 @@ export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, 
     }
     if(next==='profile') refreshProfile();
     if(next!=='match') {
-      root.classList.remove('ch-tools-open');
-      tools.setAttribute('aria-expanded','false');
       window.scrollTo({top:0,behavior:'instant'});
     }
-    if(next==='match') match.focus({preventScroll:true});
+    if(next==='match') {
+      match.focus({preventScroll:true});
+      window.dispatchEvent(new Event('chess-match-view-shown'));
+    }
+    if(next==='menu'){
+      const menuHeading=screenRoutes.heading();
+      menuHeading?.focus({preventScroll:true});
+    }
   }
   byId('lobby-resume').addEventListener('click',()=>{resumeCurrentMatch();go('match');});
   byId('lobby-online').addEventListener('click',()=>{
@@ -360,7 +346,8 @@ export function mountAppShell({startMatch, readSavedHistory, writeSavedHistory, 
   });
   byId('online-leave').addEventListener('click',()=>go('home'));
   screenRoutes=mountScreenRoutes({
-    main,go,readHistory:readSavedHistory,writeHistory:writeSavedHistory,clearCompletedHistory,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch,
+    main,go,toggleBoardView,getBoardView,readMoves,replayTutorial:()=>startTutorial(true),
+    readHistory:readSavedHistory,writeHistory:writeSavedHistory,clearCompletedHistory,getMatchSummary,resignCurrentMatch,pauseCurrentMatch,resumeCurrentMatch,preparePwaUpdate,hasCorruptMatch,
     openExercise(exercise){
       byId('learn').click();
       const list=[...lessons,...puzzles,dailyExercise()];
