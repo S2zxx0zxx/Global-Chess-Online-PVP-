@@ -50,7 +50,7 @@ test('mapping changes must be versioned, never silently relabel original task or
   assert.throws(()=>verifySourceTracker(bad),/invalid\/unmapped batch/);
   const changedSource=structuredClone(original);
   changedSource.taskRows[0].task_id='CH-00-999';
-  assert.throws(()=>verifySourceTracker(changedSource),/Batch registry count disagreement|Origin registry count disagreement|original|Phase|Duplicate|Bad/);
+  assert.throws(()=>verifySourceTracker(changedSource),/Original source task IDs fingerprint mismatch/);
 });
 
 test('missing gate, source screen or provenance attestation blocks promotion',()=>{
@@ -62,11 +62,15 @@ test('missing gate, source screen or provenance attestation blocks promotion',()
   assert.throws(()=>verifySourceTracker(forged),/Original source SHA mismatch/);
 });
 
-test('T03 and batch NO-GO remain explicit while T08 is TODO',()=>{
-  const lost=structuredClone(original);lost.ledgerText=lost.ledgerText.replaceAll('BLOCKED_EXTERNAL','RESOLVED');
-  assert.throws(()=>verifySourceTracker(lost),/Unresolved T03 lost/);
-  const t08=structuredClone(original);t08.ledgerText=t08.ledgerText.replace('GC-B01-T08\` | TODO','GC-B01-T08\` | DONE');
-  // This text might occur twice in the history; target immutable ledger row directly.
-  t08.ledgerText=t08.ledgerText.replaceAll('GC-B01-T08\` | TODO','GC-B01-T08\` | DONE');
-  assert.throws(()=>verifySourceTracker(t08),/T08 started before T07 closed/);
+test('no GO while T03 blocked, and future T08 can start only after T07 closes',()=>{
+  const falseGo=structuredClone(original);
+  falseGo.ledgerText=falseGo.ledgerText.replace('| `GC-B01-GATE` | NOT_ELIGIBLE','| `GC-B01-GATE` | BATCH_GO');
+  assert.throws(()=>verifySourceTracker(falseGo),/Cannot mark B01 GO/);
+  const premature=structuredClone(original);
+  premature.ledgerText=premature.ledgerText.replace('| `GC-B01-T08` | TODO','| `GC-B01-T08` | IN_PROGRESS');
+  assert.throws(()=>verifySourceTracker(premature),/T08 progression cannot predate T07/);
+  const legitimate=structuredClone(original);
+  legitimate.ledgerText=legitimate.ledgerText.replace('| `GC-B01-T07` | TODO','| `GC-B01-T07` | DONE (SOURCE INVENTORY)');
+  legitimate.ledgerText=legitimate.ledgerText.replace('| `GC-B01-T08` | TODO','| `GC-B01-T08` | IN_PROGRESS');
+  assert.equal(verifySourceTracker(legitimate).tasks,602);
 });
