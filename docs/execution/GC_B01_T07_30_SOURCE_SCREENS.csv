@@ -1,0 +1,31 @@
+screen_id,route_or_modal,entry_precondition,primary_action,secondary_actions,states_to_design,acceptance_criterion,milestone,product_requirement,status,verification_state,independent_acceptance_evidence,release_gate_signoff
+SCR-00,/boot,App icon,Complete bootstrap,Recover/Retry,"Boot,loading,offline,migration,error","No network block, not fake timer",M0,PRD-001,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-01,/welcome,No local profile,Play as Guest,"Privacy,Terms","Fresh,storage-error,retry","Saves local guest, returns not repeat",M0,PRD-001,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-02,/tutorial,First game/help,Try first move,"Skip,replay","Intro,step,skip",Nonblocking and legally accurate,M0,PRD-001,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-03,/home,Guest/profile exists,Classic Chess,"Quick,VS,Local,Continue,Daily","New,active-save,no-save,error",Primary cards above fold; no fake social,M0,PRD-002,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-04,/play,Bottom tab,Select match,"Continue,Local Friend","Fresh,config,error",Format and opponent separated,M0,PRD-004,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-05,/play/setup,Choose mode,Start Match,"Side,time,difficulty,flip","Invalid,persisted,ready",Validated config and saved default,M0,PRD-003,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-06,/play/versus,Match configured,Start/Skip,Cancel,"Animating,reduced-motion,background",No fake human opponent; <=900ms,M0,PRD-003,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-07,/match/:id,Start/Resume,Submit legal move,"Undo,Menu,Flip,Hint conditionally","Select,drag,promo,check,AI,paused,terminal","Big board, h1 light, state correct",M0,PRD-003,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-08,/match/:id/promotion,Last rank pawn move,Choose Q/R/B/N,Cancel precommit,"Modal,keyboard,screen-reader",All underpromotions work,M0,PRD-003,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-09,/match/:id/menu,Menu/back,Resume,"Restart,Resign,Flip,SaveExit","Open,confirm,error",Back never kills unsaved game,M0,PRD-003,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-10,/match/:id/pause,Paused,Resume,"SaveExit,Resign","Clock-paused,background,resume",Clock policy exact,M0,PRD-006,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-11,/result/:id,Terminal state,Rematch,"Review,Home","Win,loss,draw,already-credited",Outcome reason exact/XP once,M0,PRD-003,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-12,/review/:id,History/result,Step next,"Step back,export,flip","Replay,invalid-PGN,no-analysis",No unverified best-move label,M1,PRD-008,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-13,/history,Profile/Result,Open match,"Filter,delete,export","Empty,paged,corrupt,loaded",Scalable list and safe delete,M1,PRD-008,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-14,/learn,Learn tab,Continue lesson,"Puzzles,help","New,in-progress,finished",Curriculum clear,M1,PRD-009,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-15,/learn/lesson/:id,Lesson selected,Play example,"Hint,retry,next","Guide,wrong,right,complete",FEN+teaching verified,M1,PRD-009,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-16,/learn/puzzles,Learn/lobby,Start puzzle,"Filter,daily","Empty,available,completed",Valid content packs,M1,PRD-010,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-17,/puzzle/:id,Puzzle selected,Play move,"Hint,retry","Solving,wrong,checkmate,pack-error",Alternative line validated,M1,PRD-010,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-18,/puzzle/:id/result,Puzzle resolved,Next,"Retry,explanation","Solved,failed,already-awarded",No fake IQ uplift,M1,PRD-010,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-19,/daily,Lobby/learn,Solve daily,Previous score,"Not-started,completed,date-change",Single daily award / offline,M1,PRD-012,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-20,/profile,Profile tab,View progress,"Edit name,avatar,history","New,editing,storage-error",Clearly local profile,M0,PRD-001,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-21,/profile/progress,Profile,Inspect progress,"History,puzzles","No-data,real-data",No fake Elo/global rank,M1,PRD-011,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-22,/profile/achievements,Profile,View award,Return,"Locked,earned",XP event idempotent,M1,PRD-011,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-23,/profile/appearance,Profile,Preview theme,"Apply,reset","Loading,available,invalid",Accessible original asset sets,M1,PRD-013,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-24,/settings,Header/profile,Save preferences,"Accessibility,audio,privacy","Changed,reset,failed",Preferences persist and apply,M0,PRD-001,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-25,/privacy-data,Settings,Export or delete,View policy,"Local,backup-warning,confirm",Data ownership truthful,M1,PRD-008,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-26,/data/import-export,Settings/history,Export PGN/JSON,"Import,review","Invalid,large,success",No unvalidated import stored,M1,PRD-008,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-27,/recovery,Corruption/quota error,Try recovery,"Export,new game","Blocked,recovered,failed",Original data preserved on fault,M1,PRD-007,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-28,/update,PWA new assets ready,Update after game,Update now,"No-update,pending,ready,error",No mid-game data loss,M1,PRD-007,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
+SCR-29,/about,Settings,View licenses,"Support,version","Available,offline",Notices and build info,M1,PRD-008,NOT_STARTED,NOT_VERIFIED,,NOT_APPROVED
