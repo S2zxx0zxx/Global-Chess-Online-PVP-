@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://global-chess.invalid/contracts/legacy-match-save-v1",
+  "title": "Legacy local chess match save (current canonical serializer v1)",
+  "description": "Schema of serialization emitted by src/game.js; importer may accept older compatible fields. Must not replace restoreGame runtime legality checks.",
+  "type": "object",
+  "required": [
+    "version",
+    "mode",
+    "moves"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "mode": {
+      "enum": [
+        "local",
+        "computer"
+      ]
+    },
+    "moves": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "from",
+          "to"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "pattern": "^[a-h][1-8]$"
+          },
+          "to": {
+            "type": "string",
+            "pattern": "^[a-h][1-8]$"
+          },
+          "promotion": {
+            "enum": [
+              "q",
+              "r",
+              "b",
+              "n"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "drawClaim": {
+      "type": "string"
+    },
+    "clock": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "w",
+            "b"
+          ],
+          "properties": {
+            "w": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 900000
+            },
+            "b": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 900000
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "difficulty": {
+      "enum": [
+        "easy",
+        "standard",
+        "hard"
+      ]
+    },
+    "claimMove": {
+      "type": "object",
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": "string",
+          "pattern": "^[a-h][1-8]$"
+        },
+        "to": {
+          "type": "string",
+          "pattern": "^[a-h][1-8]$"
+        },
+        "promotion": {
+          "enum": [
+            "q",
+            "r",
+            "b",
+            "n"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "preset": {
+      "enum": [
+        "untimed",
+        "quick",
+        "classic"
+      ]
+    },
+    "playerSide": {
+      "enum": [
+        "w",
+        "b"
+      ]
+    },
+    "resignedBy": {
+      "enum": [
+        "w",
+        "b"
+      ]
+    },
+    "paused": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}
